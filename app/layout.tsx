@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "rsuite/dist/rsuite.min.css";
 import { TenantProvider } from "@/lib/tenant-context";
 
 export const metadata: Metadata = {

@@ -1,12 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
+import { CustomProvider } from "rsuite";
+import koKR from "rsuite/locales/ko_KR";
 import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
 import { getSidebarCollapsed } from "@/lib/tenant-store";
 import { SessionProvider } from "@/lib/session";
+import { ToastProvider } from "@/components/ui/Toast";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+/**
+ * AppShell + rsuite <CustomProvider>로 전체 감싸기.
+ *
+ * CustomProvider가 있어야:
+ *  - useToaster() 가 정상 동작 (없으면 "Feature is disabled" 경고)
+ *  - DatePicker / Toggle / CheckPicker 등 hook 의존 컴포넌트 정상
+ *  - locale 적용 (한국어)
+ *
+ * 중첩 구조:
+ *   CustomProvider (rsuite)
+ *     └ ToastProvider (components/ui/Toast)
+ *         └ SessionProvider (lib/session) — SidebarUserMenu 등 layout 레벨에서 useSession 사용 가능
+ *             └ TopHeader / Sidebar / <main>
+ */
+export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -21,20 +38,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    // SessionProvider: 보호된 페이지에서 useSession()이 동작하도록 전역 마운트.
-    // login/signup 페이지에도 자체적으로 SessionProvider가 있지만 거기선 페이지 단위로만 필요.
-    // AppShell에 두면 SidebarUserMenu 같은 layout 컴포넌트가 user/tenant에 접근 가능.
-    <SessionProvider>
-      <TopHeader />
-      <div className="pt-[60px] min-h-screen flex">
-        <Sidebar />
-        <main
-          className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200"
-          style={{ marginLeft: collapsed ? 64 : 232 }}
-        >
-          {children}
-        </main>
-      </div>
-    </SessionProvider>
+    <CustomProvider locale={koKR}>
+      <ToastProvider>
+        <SessionProvider>
+          <TopHeader />
+          <div className="pt-[60px] min-h-screen flex">
+            <Sidebar />
+            <main
+              className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200"
+              style={{ marginLeft: collapsed ? 64 : 232 }}
+            >
+              {children}
+            </main>
+          </div>
+        </SessionProvider>
+      </ToastProvider>
+    </CustomProvider>
   );
 }

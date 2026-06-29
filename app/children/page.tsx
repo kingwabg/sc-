@@ -3,7 +3,8 @@
 import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { Baby, Search, Plus, CheckCircle2, Clock, X } from "lucide-react";
+import { Baby, Search, Plus, CheckCircle2, Clock, X, SlidersHorizontal, ListFilter, FileDown } from "lucide-react";
+import { Button, Input, InputGroup } from "rsuite";
 import { cn } from "@/lib/utils";
 import type { Child, AttendanceStatus, CapacityGroup } from "@/lib/features/children/types";
 import { MOCK_CHILDREN, MOCK_ATTENDANCES } from "@/lib/features/children/data";
@@ -18,10 +19,12 @@ import { getTenantSettings } from "@/lib/tenant-store";
 import { ChildrenSidebar } from "./_components/ChildrenSidebar";
 import { ChildrenTable } from "./_components/ChildrenTable";
 import { AddChildModal } from "./_components/AddChildModal";
+import { ChildrenFilterDrawer, type ChildrenFilter } from "./_components/ChildrenFilterDrawer";
+import { TableOptionsDrawer, DEFAULT_TABLE_OPTIONS, type TableOptions } from "@/components/ui/TableOptionsDrawer";
+import { useToast } from "@/components/ui/Toast";
 
 type SortKey = "name" | "grade" | "today" | "age";
 
-// ─── Page ────────────────────────────────────────────────────
 export default function ChildrenPage() {
   return (
     <AppShell>
@@ -32,10 +35,19 @@ export default function ChildrenPage() {
   );
 }
 
-// ─── Body ─────────────────────────────────────────────────────
 function ChildrenPageBody() {
+  const toast = useToast();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filter, setFilter] = useState<ChildrenFilter>({
+    enrolledRange: null,
+    grades: [],
+    allergies: [],
+    statuses: [],
+  });
+  const [tableOptions, setTableOptions] = useState<TableOptions>(DEFAULT_TABLE_OPTIONS);
+  const [tableOptionsOpen, setTableOptionsOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("today");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -65,9 +77,9 @@ function ChildrenPageBody() {
     if (!demo || typeof window === "undefined") return;
     const today = new Date().toISOString().slice(0, 10);
     const demoChildren: Child[] = [
-      { id: "c-demo-001", tenantId: "t_acme", name: "박서연", birthDate: "2018-03-15", gender: "F", capacityGroup: 50, grade: "초2", guardian: { name: "박지원", relation: "모", phone: "010-2345-6789", job: "간호사" }, health: { allergies: ["새우", "게"], medications: ["알레르기약 (세티리진)"], notes: "운동 후 호흡곤란 주의" }, enrolledAt: today, status: "active" },
-      { id: "c-demo-002", tenantId: "t_acme", name: "장민서", birthDate: "2019-07-22", gender: "M", capacityGroup: 50, grade: "초1", guardian: { name: "장성훈", relation: "부", phone: "010-9876-5432", job: "회사원" }, health: { allergies: [], medications: [], notes: "내성적이라 조용한 친구" }, enrolledAt: today, status: "active" },
-      { id: "c-demo-003", tenantId: "t_acme", name: "한지유", birthDate: "2016-11-08", gender: "F", capacityGroup: 50, grade: "초5", guardian: { name: "한소영", relation: "모", phone: "010-5555-7777" }, health: { allergies: ["복숭아"], medications: [], notes: "리더십 활발, 친구들과 잘 어울림" }, enrolledAt: today, status: "active" },
+      { id: "c-demo-001", tenantId: "t_acme", name: "박서연", nameLast: "박", nameFirst: "서연", birthDate: "2018-03-15", gender: "F", capacityGroup: 50, grade: "초2", guardian: { name: "박지원", relation: "모", phone: "010-2345-6789", job: "간호사" }, health: { allergies: ["새우", "게"], medications: ["알레르기약 (세티리진)"], notes: "운동 후 호흡곤란 주의" }, enrolledAt: today, status: "active" },
+      { id: "c-demo-002", tenantId: "t_acme", name: "장민서", nameLast: "장", nameFirst: "민서", birthDate: "2019-07-22", gender: "M", capacityGroup: 50, grade: "초1", guardian: { name: "장성훈", relation: "부", phone: "010-9876-5432", job: "회사원" }, health: { allergies: [], medications: [], notes: "내성적이라 조용한 친구" }, enrolledAt: today, status: "active" },
+      { id: "c-demo-003", tenantId: "t_acme", name: "한지유", nameLast: "한", nameFirst: "지유", birthDate: "2016-11-08", gender: "F", capacityGroup: 50, grade: "초5", guardian: { name: "한소영", relation: "모", phone: "010-5555-7777" }, health: { allergies: ["복숭아"], medications: [], notes: "리더십 활발, 친구들과 잘 어울림" }, enrolledAt: today, status: "active" },
     ];
     const demoAttendances: Record<string, { id: string; tenantId: string; childId: string; date: string; status: AttendanceStatus; arrivedAt?: string; reason?: string; guardianNotified: boolean; authorId: string }> = {
       "c-demo-001": { id: "a-demo-001", tenantId: "t_acme", childId: "c-demo-001", date: today, status: "등원", arrivedAt: "09:05", guardianNotified: true, authorId: "u_1" },
@@ -87,24 +99,29 @@ function ChildrenPageBody() {
     for (const [childId, att] of Object.entries(demoAttendances)) {
       setAttendanceOverride(childId, { ...att, capacityGroup: cap } as Parameters<typeof setAttendanceOverride>[1]);
     }
-    if (added > 0) console.log(`[demo] ${added}명 등록 완료`);
+    if (added > 0) toast.success(`${added}명의 데모 아동을 등록했어요`);
     const url = new URL(window.location.href);
     url.searchParams.delete("demo");
     window.history.replaceState({}, "", url.toString());
     window.location.reload();
-  }, [searchParams]);
+  }, [searchParams, toast]);
 
-  // ── Data ──────────────────────────────────────────────────
   const allChildren = useMemo(
     () => (mounted ? [...MOCK_CHILDREN, ...extraChildren] : MOCK_CHILDREN),
     [mounted, extraChildren],
   );
 
-  // Count by group
   const groupCounts = useMemo(() => {
     const counts: Record<CapacityGroup | "all", number> = { all: allChildren.length, 30: 0, 40: 0, 50: 0 };
     for (const c of allChildren) counts[c.capacityGroup]++;
     return counts;
+  }, [allChildren]);
+
+  // 알레르기 옵션 (현재 데이터에서 추출)
+  const allergyOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of allChildren) for (const a of c.health.allergies) set.add(a);
+    return Array.from(set).sort();
   }, [allChildren]);
 
   const filtered = useMemo(() => {
@@ -112,13 +129,38 @@ function ChildrenPageBody() {
     let list = selectedGroup === "all"
       ? allChildren
       : allChildren.filter((c) => c.capacityGroup === selectedGroup);
+
+    // 텍스트 검색
     if (query) {
       const q = query.toLowerCase();
       list = list.filter((c) => c.name.toLowerCase().includes(q) || c.guardian.name.toLowerCase().includes(q));
     }
+    // 출석 상단 필터 (가로 chip)
     if (statusFilter !== "all") {
       list = list.filter((c) => attendanceState[c.id]?.status === statusFilter);
     }
+    // Drawer 상세 필터
+    if (filter.enrolledRange) {
+      const [a, b] = filter.enrolledRange;
+      const aStr = a.toISOString().slice(0, 10);
+      const bStr = b.toISOString().slice(0, 10);
+      list = list.filter((c) => c.enrolledAt >= aStr && c.enrolledAt <= bStr);
+    }
+    if (filter.grades.length > 0) {
+      list = list.filter((c) => c.grade && filter.grades.includes(c.grade));
+    }
+    if (filter.allergies.length > 0) {
+      list = list.filter((c) =>
+        filter.allergies.some((a) => c.health.allergies.includes(a)),
+      );
+    }
+    if (filter.statuses.length > 0) {
+      list = list.filter((c) => {
+        const s = attendanceState[c.id]?.status;
+        return s ? filter.statuses.includes(s) : false;
+      });
+    }
+    // 정렬
     list.sort((a, b) => {
       let av: string | number = "", bv: string | number = "";
       switch (sortKey) {
@@ -129,7 +171,7 @@ function ChildrenPageBody() {
       return sortDir === "asc" ? (av < bv ? -1 : av > bv ? 1 : 0) : (av > bv ? -1 : av < bv ? 1 : 0);
     });
     return list;
-  }, [query, statusFilter, sortKey, sortDir, attendanceState, selectedGroup, allChildren]);
+  }, [query, statusFilter, filter, attendanceState, selectedGroup, allChildren, sortKey, sortDir]);
 
   const stats = useMemo(() => {
     const arr = filtered.map((c) => attendanceState[c.id]).filter(Boolean) as typeof MOCK_ATTENDANCES;
@@ -160,6 +202,7 @@ function ChildrenPageBody() {
       if (typeof window !== "undefined") setAttendanceOverride(childId, next);
       return { ...prev, [childId]: next };
     });
+    toast.info(`출석 상태가 ${status}(으)로 변경되었습니다`);
   }
 
   function handleAddChild(child: Omit<Child, "id" | "tenantId" | "status" | "enrolledAt">) {
@@ -172,14 +215,50 @@ function ChildrenPageBody() {
     };
     setExtraChildren(addExtraChild(newChild));
     setShowAddModal(false);
+    toast.success(`${newChild.name} 아동이 등록되었습니다`);
   }
 
-  // ─── Render ────────────────────────────────────────────────
+  function handleExportCSV() {
+    if (filtered.length === 0) {
+      toast.warning("내보낼 데이터가 없습니다");
+      return;
+    }
+    const header = ["성", "이름", "학년", "나이", "보호자", "연락처", "알레르기", "오늘"];
+    const rows = filtered.map((c) => {
+      const a = attendanceState[c.id];
+      const age = Math.floor(
+        (Date.now() - new Date(c.birthDate).getTime()) / (365.25 * 86400 * 1000),
+      );
+      return [
+        c.nameLast,
+        c.nameFirst,
+        c.grade ?? "",
+        age,
+        c.guardian.name,
+        c.guardian.phone,
+        c.health.allergies.join("/"),
+        a?.status ?? "",
+      ].join(",");
+    });
+    const csv = [header.join(","), ...rows].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const today = new Date().toISOString().slice(0, 10);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `children_${today}.csv`;
+    a.click();
+    toast.success(`${filtered.length}명 CSV 다운로드`);
+  }
+
+  const filterActive =
+    filter.enrolledRange != null ||
+    filter.grades.length > 0 ||
+    filter.allergies.length > 0 ||
+    filter.statuses.length > 0;
+
   return (
     <>
-    <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
-
-        {/* Left sidebar */}
+      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
         <div className="h-[calc(100vh-100px)] sticky top-[80px]">
           <ChildrenSidebar
             selectedGroup={selectedGroup}
@@ -189,10 +268,8 @@ function ChildrenPageBody() {
           />
         </div>
 
-        {/* Right main */}
         <div className="min-w-0 space-y-3">
-
-          {/* Page title + stats strip */}
+          {/* 페이지 헤더 + 통계 */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-card px-5 py-4">
             <div className="flex items-end justify-between flex-wrap gap-3 mb-0">
               <div className="flex items-center gap-2">
@@ -200,13 +277,29 @@ function ChildrenPageBody() {
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 m-0">
                   {selectedGroup === "all" ? "전체 아동" : `${selectedGroup}명 그룹`}
                 </h1>
-                <span className="text-[12px] text-slate-400">
-                  {filtered.length}명
-                </span>
+                <span className="text-[12px] text-slate-400">{filtered.length}명</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  appearance="subtle"
+                  onClick={handleExportCSV}
+                  startIcon={<FileDown className="w-3.5 h-3.5" />}
+                >
+                  내보내기
+                </Button>
+                <Button
+                  size="sm"
+                  appearance="primary"
+                  onClick={() => setShowAddModal(true)}
+                  startIcon={<Plus className="w-3.5 h-3.5" />}
+                >
+                  아동 추가
+                </Button>
               </div>
             </div>
 
-            {/* Stats row */}
+            {/* 정원 진행률 + 출석 통계 */}
             <div className="flex items-center gap-6 mt-3 flex-wrap">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 shrink-0">
@@ -235,22 +328,47 @@ function ChildrenPageBody() {
             </div>
           </div>
 
-          {/* Search + filter */}
+          {/* 검색 + 출석 chip + 옵션 + 추가 */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center h-9 px-3 bg-white border border-slate-200 rounded-[10px] shadow-sm flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="이름 또는 보호자 검색"
-                className="flex-1 bg-transparent outline-none text-[13px] placeholder:text-slate-400" />
-            </div>
+            <InputGroup style={{ flex: 1, minWidth: 200 }}>
+              <InputGroup.Addon>
+                <Search className="w-3.5 h-3.5 text-slate-400" />
+              </InputGroup.Addon>
+              <Input
+                value={query}
+                onChange={setQuery}
+                placeholder="이름 또는 보호자 검색"
+              />
+            </InputGroup>
             <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+            <Button
+              size="sm"
+              appearance={filterActive ? "primary" : "default"}
+              onClick={() => setFilterOpen(true)}
+              startIcon={<ListFilter className="w-3.5 h-3.5" />}
+            >
+              필터{filterActive && <span className="ml-1 text-[10px]">●</span>}
+            </Button>
+            <Button
+              size="sm"
+              appearance={tableOptions !== DEFAULT_TABLE_OPTIONS ? "primary" : "default"}
+              onClick={() => setTableOptionsOpen(true)}
+              startIcon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+            >
+              옵션
+            </Button>
           </div>
 
-          {/* Table */}
-          <ChildrenTable children={filtered} attendanceMap={attendanceState} onStatusChange={handleStatusChange} />
+          {/* 테이블 */}
+          <ChildrenTable
+            children={filtered}
+            attendanceMap={attendanceState}
+            options={tableOptions}
+            onStatusChange={handleStatusChange}
+          />
         </div>
       </div>
 
-      {/* Add Modal */}
       {showAddModal && (
         <AddChildModal
           capacityGroup={selectedGroup === "all" ? 50 : selectedGroup}
@@ -258,6 +376,26 @@ function ChildrenPageBody() {
           onSubmit={handleAddChild}
         />
       )}
+
+      <ChildrenFilterDrawer
+        open={filterOpen}
+        value={filter}
+        onChange={setFilter}
+        onClose={() => setFilterOpen(false)}
+        allergyOptions={allergyOptions}
+        matched={filtered.length}
+        total={
+          selectedGroup === "all"
+            ? allChildren.length
+            : allChildren.filter((c) => c.capacityGroup === selectedGroup).length
+        }
+      />
+      <TableOptionsDrawer
+        open={tableOptionsOpen}
+        value={tableOptions}
+        onChange={setTableOptions}
+        onClose={() => setTableOptionsOpen(false)}
+      />
     </>
   );
 }
