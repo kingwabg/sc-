@@ -140,7 +140,9 @@ function ChildrenPageBody() {
     const selectedGroup = groups.find((g) => g.id === selectedGroupId);
     let list = selectedGroupId === "all" || !selectedGroup
       ? allChildren
-      : allChildren.filter((c) => c.capacityGroup === (selectedGroup.capacity as CapacityGroup));
+      : selectedGroup.capacity == null
+        ? allChildren // 폴더만 있고 capacity 없으면 전체
+        : allChildren.filter((c) => c.capacityGroup === (selectedGroup.capacity as CapacityGroup));
 
     // 텍스트 검색
     if (query) {
@@ -196,25 +198,28 @@ function ChildrenPageBody() {
   }, [filtered, attendanceState]);
 
   const fillPct = (() => {
+    if (selectedGroupId === "all") {
+      const total = allChildren.length;
+      return total > 0 ? Math.round((stats.present / total) * 100) : 0;
+    }
     const selectedGroup = groups.find((g) => g.id === selectedGroupId);
-    if (selectedGroupId === "all" || !selectedGroup) {
-      const total = Object.entries(groupCounts)
-        .filter(([k]) => k !== "all")
-        .reduce((sum, [, v]) => sum + v, 0);
-      return Math.round((stats.present / total) * 100);
+    if (!selectedGroup) return 0;
+    if (selectedGroup.capacity == null) {
+      const childCount = groupCounts[selectedGroupId] ?? 0;
+      return childCount > 0 ? Math.round((stats.present / childCount) * 100) : 0;
     }
     return Math.round((stats.present / selectedGroup.capacity) * 100);
   })();
 
   // ── Handlers ───────────────────────────────────────────────
-  function handleAddGroup(label: string, capacity: number) {
-    addChildGroup(label, capacity);
+  function handleAddGroup(label: string, parentId: string | null) {
+    addChildGroup(label, parentId, null);
     setGroups(getChildGroups());
-    toast.success(`"${label}" 그룹이 추가되었습니다`);
+    toast.success(`"${label}" 폴더가 추가되었습니다`);
   }
 
-  function handleUpdateGroup(id: string, label: string, capacity: number) {
-    updateChildGroup(id, { label, capacity });
+  function handleUpdateGroup(id: string, label: string) {
+    updateChildGroup(id, { label });
     setGroups(getChildGroups());
   }
 
@@ -356,7 +361,7 @@ function ChildrenPageBody() {
                   </div>
                 </div>
                 <div className="leading-tight">
-                  <div className="text-[12px] font-semibold text-slate-900">등원 {stats.present}{selectedGroupId !== "all" ? ` / ${groups.find((g) => g.id === selectedGroupId)?.capacity ?? ""}` : ""}</div>
+                  <div className="text-[12px] font-semibold text-slate-900">등원 {stats.present}{selectedGroupId !== "all" && (groups.find((g) => g.id === selectedGroupId)?.capacity ?? 0) > 0 ? ` / ${groups.find((g) => g.id === selectedGroupId)?.capacity}` : ""}</div>
                   <div className="text-[10px] text-slate-500">정원 진행률</div>
                 </div>
               </div>
@@ -415,7 +420,7 @@ function ChildrenPageBody() {
 
       {showAddModal && (
         <AddChildModal
-          capacityGroup={selectedGroupId !== "all" ? (groups.find((g) => g.id === selectedGroupId)?.capacity as CapacityGroup) ?? 50 : 50}
+          capacityGroup={50}
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddChild}
         />
@@ -428,14 +433,7 @@ function ChildrenPageBody() {
         onClose={() => setFilterOpen(false)}
         allergyOptions={allergyOptions}
         matched={filtered.length}
-        total={
-          selectedGroupId === "all"
-            ? allChildren.length
-            : allChildren.filter((c) => {
-                const cap = groups.find((g) => g.id === selectedGroupId)?.capacity;
-                return c.capacityGroup === cap;
-              }).length
-        }
+        total={allChildren.length}
       />
       <TableOptionsDrawer
         open={tableOptionsOpen}

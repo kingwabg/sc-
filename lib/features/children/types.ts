@@ -6,7 +6,9 @@ export type CapacityGroup = 30 | 40 | 50;
 export type ChildGroup = {
   id: string;
   label: string;
-  capacity: number;
+  parentId: string | null;
+  /** 정원 (아동 capacityGroup과 매핑, null이면 capacityGroup 없이 폴더만) */
+  capacity: number | null;
   order: number;
 };
 
