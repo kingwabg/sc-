@@ -131,8 +131,9 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
         locale={{ emptyMessage: "검색 결과가 없습니다", loading: "불러오는 중…" }}
       >
         {/* 이름 (펼침 토글 + 직원 정보) */}
-        <Table.Column flexGrow={2}
-          minWidth={50}
+        <Table.Column flexGrow={1}
+          minWidth={200}
+          width={220}
           sortable={options.sortable}
           resizable={options.resizable}
           fullText={options.fullText}
@@ -228,8 +229,9 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
         </Table.Column>
 
         {/* 이메일 */}
-        <Table.Column flexGrow={2}
-          minWidth={50}
+        <Table.Column
+          width={170}
+          minWidth={120}
           sortable={options.sortable}
           resizable={options.resizable}
           fullText={options.fullText}
