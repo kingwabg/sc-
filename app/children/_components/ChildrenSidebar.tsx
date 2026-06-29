@@ -13,7 +13,6 @@ type Props = {
   onAddGroup: (label: string, parentId: string | null) => void;
   onUpdateGroup: (id: string, label: string) => void;
   onDeleteGroup: (id: string) => void;
-  onAddChild: () => void;
 };
 
 export function ChildrenSidebar({
@@ -24,7 +23,6 @@ export function ChildrenSidebar({
   onAddGroup,
   onUpdateGroup,
   onDeleteGroup,
-  onAddChild,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -93,18 +91,9 @@ export function ChildrenSidebar({
   return (
     <aside className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3.5 border-b border-slate-200 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-brand-600" />
-          <h2 className="text-[13px] font-bold text-slate-900 m-0">아동 관리</h2>
-        </div>
-        <button
-          onClick={onAddChild}
-          className="w-7 h-7 rounded-lg bg-brand-600 text-white grid place-items-center hover:bg-brand-700 transition shrink-0"
-          title="아동 등록"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+      <div className="px-4 py-3.5 border-b border-slate-200 flex items-center gap-2">
+        <Users className="w-4 h-4 text-brand-600" />
+        <h2 className="text-[13px] font-bold text-slate-900 m-0">아동 관리</h2>
       </div>
 
       {/* Folder tree */}

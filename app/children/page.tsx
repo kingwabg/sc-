@@ -311,7 +311,6 @@ function ChildrenPageBody() {
             onAddGroup={handleAddGroup}
             onUpdateGroup={handleUpdateGroup}
             onDeleteGroup={handleDeleteGroup}
-            onAddChild={() => setShowAddModal(true)}
           />
         </div>
 
