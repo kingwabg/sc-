@@ -360,12 +360,14 @@ function ChildrenPageBody() {
           </div>
 
           {/* 테이블 */}
-          <ChildrenTable
-            children={filtered}
-            attendanceMap={attendanceState}
-            options={tableOptions}
-            onStatusChange={handleStatusChange}
-          />
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+            <ChildrenTable
+              children={filtered}
+              attendanceMap={attendanceState}
+              options={tableOptions}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
         </div>
       </div>
 

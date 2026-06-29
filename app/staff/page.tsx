@@ -247,15 +247,13 @@ function StaffBody() {
           </div>
 
           {/* 테이블 */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
-            <StaffTable
-              staff={filtered}
-              attendanceMap={attendanceMap}
-              options={tableOptions}
-              onEdit={(s) => setEditing(s)}
-              onDelete={(s) => handleRemove(s)}
-            />
-          </div>
+          <StaffTable
+            staff={filtered}
+            attendanceMap={attendanceMap}
+            options={tableOptions}
+            onEdit={(s) => setEditing(s)}
+            onDelete={(s) => handleRemove(s)}
+          />
         </div>
       </div>
 
