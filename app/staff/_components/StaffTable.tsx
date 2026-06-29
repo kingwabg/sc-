@@ -130,10 +130,9 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
         rowExpandedHeight={160}
         locale={{ emptyMessage: "검색 결과가 없습니다", loading: "불러오는 중…" }}
       >
-        {/* 이름 (펼침 토글 + 직원 정보) */}
-        <Table.Column flexGrow={1}
-          minWidth={200}
-          width={220}
+        {/* 이름 (펼침 토글 + 직원 정보) — flexGrow로 자동 폭, minWidth=140으로 이름 최소 보장 */}
+        <Table.Column flexGrow={3}
+          minWidth={140}
           sortable={options.sortable}
           resizable={options.resizable}
           fullText={options.fullText}
@@ -228,10 +227,9 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
           </Table.Cell>
         </Table.Column>
 
-        {/* 이메일 */}
-        <Table.Column
-          width={170}
-          minWidth={120}
+        {/* 이메일 — flexGrow로 자동 폭 */}
+        <Table.Column flexGrow={2}
+          minWidth={140}
           sortable={options.sortable}
           resizable={options.resizable}
           fullText={options.fullText}
