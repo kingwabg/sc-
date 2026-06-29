@@ -10,7 +10,6 @@ import {
   CalendarDays,
   Baby,
   ClipboardList,
-  Calculator,
   MessageSquare,
   Users,
   Settings,
@@ -26,6 +25,9 @@ import {
   PanelLeft,
   UserCog,
   ExternalLink,
+  BookOpen,
+  CalendarRange,
+  NotebookPen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -63,13 +65,17 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/attendance/members": { label: "전체 출결 관리", href: "/attendance/members", icon: CalendarCheck },
   "/my-attendance": { label: "내 근태", href: "/my-attendance", icon: Clock },
   "/children": { label: "아동관리", href: "/children", icon: Baby },
-  "/daily-log": { label: "업무관리", href: "/daily-log", icon: ClipboardList },
+  "/daily-log": { label: "운영일지", href: "/daily-log", icon: NotebookPen },
   "/staff": { label: "종사자관리", href: "/staff", icon: UserCog },
   "/board": { label: "게시판", href: "/board", icon: MessageSquare },
   "/org": { label: "조직도", href: "/org", icon: Users },
-  "/monthly-plan": { label: "경리관리", href: "/monthly-plan", icon: Calculator },
+  "/monthly-plan": { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
+  "/annual-plan": { label: "연간계획", href: "/annual-plan", icon: BookOpen },
   "/settings": { label: "환경설정", href: "/settings", icon: Settings },
 };
+
+// 운영관리 그룹의 하위 메뉴 (연간 → 월간 → 일지 흐름)
+const OPERATIONS_CHILDREN = ["/annual-plan", "/monthly-plan", "/daily-log"];
 
 // ─── 고정 그룹 ──────────────────────────────────────────────
 const FIXED_GROUPS: { label: string; items: string[] }[] = [
@@ -79,17 +85,22 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "돌봄운영",
-    items: ["/children", "/staff", "/daily-log", "/documents"],
+    items: ["/children", "/staff", "/documents"],
+  },
+  {
+    label: "운영관리",
+    items: OPERATIONS_CHILDREN,
   },
   {
     label: "지원",
-    items: ["/board", "/org", "/monthly-plan", "/settings"],
+    items: ["/board", "/org", "/settings"],
   },
 ];
 
 const GROUP_LABEL_KR: Record<string, string> = {
   Home: "Home",
   돌봄운영: "돌봄운영",
+  운영관리: "운영관리",
   지원: "지원",
 };
 
