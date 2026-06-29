@@ -23,23 +23,11 @@ export default function PortalHomePage() {
   }, [ready, tenant, router]);
 
   if (!ready) {
-    return (
-      <AppShell>
-        <div className="flex items-center justify-center min-h-[60vh] text-slate-400">
-          불러오는 중…
-        </div>
-      </AppShell>
-    );
+    return null;
   }
 
   if (!tenant) {
-    return (
-      <AppShell>
-        <div className="flex items-center justify-center min-h-[60vh] text-slate-400">
-          사이트를 선택하는 중…
-        </div>
-      </AppShell>
-    );
+    return null;
   }
 
   return (
