@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "rsuite/dist/rsuite.min.css";
 import { TenantProvider } from "@/lib/tenant-context";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Office - 돌봄·교육 시설 통합 운영",
-  description: "지역아동센터, 요양원, 요양학원, 간호학원 통합 운영 플랫폼",
+  description: "지역아동센터, 요양원, 요양학원, 간호학원 통합 플랫폼",
 };
 
 export default function RootLayout({
@@ -22,7 +23,9 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans">
-        <TenantProvider>{children}</TenantProvider>
+        <TenantProvider>
+          <Providers>{children}</Providers>
+        </TenantProvider>
       </body>
     </html>
   );

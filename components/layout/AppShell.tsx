@@ -1,27 +1,16 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
-import { CustomProvider } from "rsuite";
-import koKR from "rsuite/locales/ko_KR";
 import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
 import { getSidebarCollapsed } from "@/lib/tenant-store";
-import { SessionProvider } from "@/lib/session";
-import { ToastProvider } from "@/components/ui/Toast";
 
 /**
- * AppShell + rsuite <CustomProvider>로 전체 감싸기.
+ * 보호된 페이지의 layout shell.
  *
- * CustomProvider가 있어야:
- *  - useToaster() 가 정상 동작 (없으면 "Feature is disabled" 경고)
- *  - DatePicker / Toggle / CheckPicker 등 hook 의존 컴포넌트 정상
- *  - locale 적용 (한국어)
- *
- * 중첩 구조:
- *   CustomProvider (rsuite)
- *     └ ToastProvider (components/ui/Toast)
- *         └ SessionProvider (lib/session) — SidebarUserMenu 등 layout 레벨에서 useSession 사용 가능
- *             └ TopHeader / Sidebar / <main>
+ * Provider 트리(CustomProvider > ToastProvider > SessionProvider)는
+ * app/layout.tsx > app/providers.tsx에서 이미 모든 페이지를 감싸고 있음.
+ * 여기서는 shell layout(헤더 + 사이드바 + 메인)만 담당.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -38,21 +27,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <CustomProvider locale={koKR}>
-      <ToastProvider>
-        <SessionProvider>
-          <TopHeader />
-          <div className="pt-[60px] min-h-screen flex">
-            <Sidebar />
-            <main
-              className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200"
-              style={{ marginLeft: collapsed ? 64 : 232 }}
-            >
-              {children}
-            </main>
-          </div>
-        </SessionProvider>
-      </ToastProvider>
-    </CustomProvider>
+    <>
+      <TopHeader />
+      <div className="pt-[60px] min-h-screen flex">
+        <Sidebar />
+        <main
+          className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200"
+          style={{ marginLeft: collapsed ? 64 : 232 }}
+        >
+          {children}
+        </main>
+      </div>
+    </>
   );
 }
