@@ -64,7 +64,15 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/servicemap": { label: "서비스 맵", href: "/servicemap", icon: LayoutGrid },
   "/attendance/members": { label: "전체 출결 관리", href: "/attendance/members", icon: CalendarCheck },
   "/my-attendance": { label: "내 근태", href: "/my-attendance", icon: Clock },
-  "/children": { label: "아동관리", href: "/children", icon: Baby },
+  "/children": {
+    label: "아동관리",
+    href: "/children",
+    icon: Baby,
+    children: [
+      { label: "아동 목록", href: "/children", icon: Baby },
+      { label: "출결대장", href: "/children/attendance", icon: CalendarCheck },
+    ],
+  },
   "/daily-log": { label: "운영일지", href: "/daily-log", icon: NotebookPen },
   "/staff": { label: "종사자관리", href: "/staff", icon: UserCog },
   "/board": { label: "게시판", href: "/board", icon: MessageSquare },
@@ -360,6 +368,28 @@ function CollapsedSidebar({
         })}
       </nav>
 
+      {/* 하위 메뉴 라벨 (접힘 상태에서 children이 active면 라벨로 표시) */}
+      {(() => {
+        const activeChild = orderedHrefs
+          .map((h) => ALL_MENU_ITEMS[h])
+          .find(
+            (i) =>
+              i?.children?.some(
+                (c) => pathname === c.href || pathname.startsWith(c.href + "/"),
+              ),
+          );
+        if (!activeChild?.children) return null;
+        const child = activeChild.children.find(
+          (c) => pathname === c.href || pathname.startsWith(c.href + "/"),
+        );
+        if (!child) return null;
+        return (
+          <div className="px-2 py-1 text-center text-[10px] text-slate-400 truncate">
+            {activeChild.label} · {child.label}
+          </div>
+        );
+      })()}
+
       {/* 사용자 메뉴 (로그아웃) — 스크롤 영역 밖, 항상 보임 */}
       <div className="mt-2 pt-2 border-t border-slate-100">
         <SidebarUserMenu collapsed />
@@ -398,6 +428,15 @@ function NavGroup({
               ? pathname === "/"
               : pathname === item.href || pathname.startsWith(item.href + "/");
 
+          // children이 있으면: 해당 그룹에 속한 페이지면 펼침, 아니면 닫힘
+          const hasChildren = !!item.children?.length;
+          const childActive = hasChildren
+            ? item.children!.some(
+                (c) => pathname === c.href || pathname.startsWith(c.href + "/"),
+              )
+            : false;
+          const expanded = hasChildren && childActive;
+
           return (
             <div key={item.label} className="group relative">
               <Link
@@ -406,7 +445,7 @@ function NavGroup({
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
                   "flex items-center gap-2.5 h-9 px-3 rounded-lg text-[13.5px] font-medium transition",
-                  isActive
+                  isActive || childActive
                     ? "bg-brand-50 text-brand-700"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                 )}
@@ -414,7 +453,7 @@ function NavGroup({
                 <item.icon
                   className={cn(
                     "w-[18px] h-[18px]",
-                    isActive ? "text-brand-600" : "text-slate-500",
+                    isActive || childActive ? "text-brand-600" : "text-slate-500",
                   )}
                 />
                 <span className="flex-1 truncate">{item.label}</span>
@@ -427,6 +466,32 @@ function NavGroup({
                   </span>
                 ) : null}
               </Link>
+
+              {/* 하위 메뉴 — children이 있고, 그 중 하나가 active면 펼침 */}
+              {hasChildren && expanded && (
+                <div className="mt-0.5 ml-4 pl-2 border-l border-slate-200 space-y-0.5">
+                  {item.children!.map((child) => {
+                    const isChildActive =
+                      pathname === child.href ||
+                      pathname.startsWith(child.href + "/");
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={cn(
+                          "flex items-center gap-2 h-7 px-2.5 rounded-md text-[12.5px] transition",
+                          isChildActive
+                            ? "bg-brand-50 text-brand-700 font-semibold"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900",
+                        )}
+                      >
+                        <child.icon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{child.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
 
               {!editingFavorites && (
                 <button
