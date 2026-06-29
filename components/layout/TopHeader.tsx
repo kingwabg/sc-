@@ -81,29 +81,42 @@ export function TopHeader() {
         <div className="w-px h-5 bg-slate-200 mx-2" />
 
         {/* Tenant switcher */}
-        <div ref={ref} className="relative">
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className={`flex items-center gap-2 py-1 pr-2.5 pl-1 rounded-full transition ${
+        <div ref={ref} className="relative flex items-center gap-1">
+          {/* 사업장 이름/아이콘 — 클릭하면 사업자 선택 페이지로 */}
+          <Link
+            href="/"
+            className={`flex items-center gap-2 py-1 pl-1 pr-2 rounded-full transition ${
               tenant ? `${tenant.accent.bg} hover:brightness-95` : "hover:bg-slate-50"
             }`}
+            title="사업자 선택 페이지로 이동"
           >
             {tenant ? (
               <>
                 <span className={`w-[30px] h-[30px] rounded-full bg-gradient-to-br ${tenant.gradient} text-white grid place-items-center text-base`}>
                   {tenant.emoji}
                 </span>
-                <span className={`text-[13px] font-semibold ${tenant.accent.text}`}>{tenant.label}</span>
+                <span className={`text-[13px] font-semibold ${tenant.accent.text} hover:underline`}>
+                  {tenant.label}
+                </span>
               </>
             ) : (
               <>
                 <span className="w-[30px] h-[30px] rounded-full bg-slate-200 text-slate-600 grid place-items-center">
                   <Building2 className="w-4 h-4" />
                 </span>
-                <span className="text-[13px] font-semibold text-slate-700">사이트 선택</span>
+                <span className="text-[13px] font-semibold text-slate-700 hover:underline">사이트 선택</span>
               </>
             )}
-            <ChevronDown className={`w-3.5 h-3.5 transition ${open ? "rotate-180" : ""} ${tenant ? tenant.accent.text : "text-slate-500"}`} />
+          </Link>
+          {/* 드롭다운 토글 */}
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-label="사이트 목록 열기"
+            className={`w-7 h-7 rounded-md grid place-items-center transition ${
+              tenant ? `${tenant.accent.bg} hover:brightness-95 ${tenant.accent.text}` : "hover:bg-slate-50 text-slate-500"
+            }`}
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition ${open ? "rotate-180" : ""}`} />
           </button>
 
           {open && (
@@ -132,15 +145,6 @@ export function TopHeader() {
                   </li>
                 ))}
               </ul>
-              <div className="border-t border-slate-100 px-3 py-2">
-                <Link
-                  href="/"
-                  onClick={() => setOpen(false)}
-                  className="text-[12px] text-slate-500 hover:text-slate-900"
-                >
-                  사이트 전환 →
-                </Link>
-              </div>
             </div>
           )}
         </div>
