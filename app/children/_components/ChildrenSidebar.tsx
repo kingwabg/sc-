@@ -28,6 +28,8 @@ export function ChildrenSidebar({
   const [editLabel, setEditLabel] = useState("");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [addingParent, setAddingParent] = useState<string | null>(null);
+  // "__root__" = 상위 폴더 추가 중 (null이면 아무것도 안 함)
+  const [addingDepth, setAddingDepth] = useState(0);
   const [newLabel, setNewLabel] = useState("");
   const editRef = useRef<HTMLInputElement | null>(null);
   const addRef = useRef<HTMLInputElement | null>(null);
@@ -64,8 +66,9 @@ export function ChildrenSidebar({
     if (e.key === "Escape") setEditingId(null);
   }
 
-  function startAdd(parentId: string | null) {
-    setAddingParent(parentId);
+  function startAdd(parentId: string | null, depth: number) {
+    setAddingParent(parentId ?? "__root__");
+    setAddingDepth(depth);
     setNewLabel("");
     setTimeout(() => addRef.current?.focus(), 0);
   }
@@ -73,7 +76,8 @@ export function ChildrenSidebar({
   function saveAdd() {
     const t = newLabel.trim();
     if (!t) { setAddingParent(null); return; }
-    onAddGroup(t, addingParent);
+    const pid = addingParent === "__root__" ? null : addingParent;
+    onAddGroup(t, pid);
     setAddingParent(null);
     setNewLabel("");
   }
@@ -101,7 +105,7 @@ export function ChildrenSidebar({
         {/* Add top-level folder */}
         {addingParent === null && (
           <button
-            onClick={() => startAdd(null)}
+            onClick={() => startAdd(null, 0)}
             className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[12px] text-slate-400 hover:bg-brand-50 hover:text-brand-600 transition mb-1"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -109,14 +113,33 @@ export function ChildrenSidebar({
           </button>
         )}
 
-        {/* Add top-level form */}
-        {addingParent === null && addingParent === null && null}
+        {/* Top-level add form */}
+        {addingParent === "__root__" && (
+          <div className="flex items-center gap-1.5 pl-6 pr-2 py-1">
+            <Folder className="w-4 h-4 text-slate-300 shrink-0" />
+            <input
+              ref={addRef}
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              onKeyDown={handleAddKey}
+              placeholder="폴더 이름"
+              className="flex-1 px-2 py-1 text-[12px] border border-slate-200 rounded-md outline-none focus:border-brand-500"
+            />
+            <button onClick={saveAdd} className="w-6 h-6 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700">
+              <Check className="w-3 h-3" />
+            </button>
+            <button onClick={() => setAddingParent(null)} className="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
         {roots.map((g) => renderGroup(g))}
 
-        {/* Add folder inline form */}
-        {addingParent !== null && (
-          <div className="flex items-center gap-1.5 pl-6 pr-2 py-1">
+        {/* Sub-folder add form */}
+        {addingParent !== null && addingParent !== "__root__" && (
+          <div className="flex items-center gap-1.5 pr-2 py-1"
+            style={{ paddingLeft: (addingDepth + 1) * 16 + 20 }}>
             <Folder className="w-4 h-4 text-slate-300 shrink-0" />
             <input
               ref={addRef}
@@ -206,7 +229,7 @@ export function ChildrenSidebar({
 
               {/* Actions */}
               <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 bg-white border border-slate-200 rounded-md shadow-sm px-0.5">
-                <button onClick={() => startAdd(g.id)} className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
+                <button onClick={() => startAdd(g.id, depth + 1)} className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
                   <Plus className="w-3 h-3" />
                 </button>
                 {g.id !== "all" && (
