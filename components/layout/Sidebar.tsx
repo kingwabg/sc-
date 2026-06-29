@@ -38,6 +38,7 @@ import {
   getSidebarCollapsed,
   setSidebarCollapsed,
 } from "@/lib/tenant-store";
+import { SidebarUserMenu } from "./SidebarUserMenu";
 
 // ─── 타입 ───────────────────────────────────────────────────
 type NavItem = {
@@ -278,6 +279,11 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* 사용자 메뉴 (로그아웃) — 스크롤 영역 밖, 항상 보임 */}
+      <div className="mt-2 pt-2 border-t border-slate-100 px-2">
+        <SidebarUserMenu />
+      </div>
     </aside>
   );
 }
@@ -342,6 +348,11 @@ function CollapsedSidebar({
           );
         })}
       </nav>
+
+      {/* 사용자 메뉴 (로그아웃) — 스크롤 영역 밖, 항상 보임 */}
+      <div className="mt-2 pt-2 border-t border-slate-100">
+        <SidebarUserMenu collapsed />
+      </div>
     </aside>
   );
 }
