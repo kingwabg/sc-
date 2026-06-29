@@ -138,7 +138,7 @@ export function TopHeader() {
                   onClick={() => setOpen(false)}
                   className="text-[12px] text-slate-500 hover:text-slate-900"
                 >
-                  다른 사이트 추가/관리 →
+                  사이트 전환 →
                 </Link>
               </div>
             </div>

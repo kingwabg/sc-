@@ -67,7 +67,7 @@ export default function TenantSelectPage() {
         />
 
         <p className="text-xs text-slate-400 text-center mt-10">
-          나중에 우측 상단 사용자 메뉴에서 다른 사이트로 전환할 수 있어요.
+          헤더의 사이트 메뉴에서 다른 사이트로 전환할 수 있어요.
         </p>
       </div>
     </main>
