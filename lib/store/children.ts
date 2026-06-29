@@ -69,6 +69,32 @@ export function removeChildGroup(id: string): void {
   setChildGroups(groups.filter((g) => !idsToRemove.has(g.id)));
 }
 
+/**
+ * 폴더 이동 (드래그앤드롭).
+ * 자기 자신이나 자기 하위로 이동하는 경우 (순환참조) 거부.
+ */
+export function moveChildGroup(id: string, newParentId: string | null): { ok: boolean; reason?: string } {
+  if (id === "all") return { ok: false, reason: "전체 폴더는 이동할 수 없어요" };
+  const groups = getChildGroups();
+  // 자기 자신으로 이동 불가
+  if (id === newParentId) return { ok: false, reason: "같은 폴더로는 이동할 수 없어요" };
+  // 자기 하위로 이동 불가 (순환참조 방지)
+  if (newParentId != null) {
+    let cursor: string | null = newParentId;
+    const visited = new Set<string>();
+    while (cursor != null) {
+      if (cursor === id) return { ok: false, reason: "하위 폴더로는 이동할 수 없어요" };
+      if (visited.has(cursor)) break; // 무한루프 방지 (보수적)
+      visited.add(cursor);
+      const parent: ChildGroup | undefined = groups.find((g) => g.id === cursor);
+      cursor = parent?.parentId ?? null;
+    }
+  }
+  const next = groups.map((g) => (g.id === id ? { ...g, parentId: newParentId } : g));
+  setChildGroups(next);
+  return { ok: true };
+}
+
 export function getExtraChildren(): Child[] {
   return readLS<Child[]>(CHILDREN_KEY, []);
 }

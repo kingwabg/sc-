@@ -18,6 +18,7 @@ import {
   addChildGroup,
   updateChildGroup,
   removeChildGroup,
+  moveChildGroup,
 } from "@/lib/store/children";
 import { getTenantSettings } from "@/lib/tenant-store";
 import { ChildrenSidebar } from "./_components/ChildrenSidebar";
@@ -231,6 +232,19 @@ function ChildrenPageBody() {
     toast.info(`"${g?.label ?? ""}" 그룹이 삭제되었습니다`);
   }
 
+  function handleMoveGroup(id: string, newParentId: string | null) {
+    const result = moveChildGroup(id, newParentId);
+    if (!result.ok) {
+      toast.warning(result.reason ?? "이동할 수 없어요");
+      return { ok: false, reason: result.reason };
+    }
+    setGroups(getChildGroups());
+    const moved = groups.find((g) => g.id === id);
+    const target = newParentId ? groups.find((g) => g.id === newParentId) : null;
+    toast.success(`"${moved?.label ?? ""}" → ${target ? `"${target.label}"` : "최상위"}로 이동됨`);
+    return { ok: true };
+  }
+
   function handleStatusChange(childId: string, status: AttendanceStatus, time?: string, reason?: string) {
     setAttendanceState((prev) => {
       const cur = prev[childId];
@@ -311,6 +325,7 @@ function ChildrenPageBody() {
             onAddGroup={handleAddGroup}
             onUpdateGroup={handleUpdateGroup}
             onDeleteGroup={handleDeleteGroup}
+            onMoveGroup={handleMoveGroup}
           />
         </div>
 

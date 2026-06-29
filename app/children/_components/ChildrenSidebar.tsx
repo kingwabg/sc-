@@ -13,6 +13,7 @@ type Props = {
   onAddGroup: (label: string, parentId: string | null) => void;
   onUpdateGroup: (id: string, label: string) => void;
   onDeleteGroup: (id: string) => void;
+  onMoveGroup: (id: string, newParentId: string | null) => { ok: boolean; reason?: string };
 };
 
 export function ChildrenSidebar({
@@ -23,6 +24,7 @@ export function ChildrenSidebar({
   onAddGroup,
   onUpdateGroup,
   onDeleteGroup,
+  onMoveGroup,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -31,6 +33,10 @@ export function ChildrenSidebar({
   // "__root__" = 상위 폴더 추가 중 (null이면 아무것도 안 함)
   const [addingDepth, setAddingDepth] = useState(0);
   const [newLabel, setNewLabel] = useState("");
+  // ── Drag state ─────────────────────────────────
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null); // "ROOT" = 상위로
+  const [dragInvalid, setDragInvalid] = useState(false);
   const editRef = useRef<HTMLInputElement | null>(null);
   const addRef = useRef<HTMLInputElement | null>(null);
 
@@ -92,6 +98,61 @@ export function ChildrenSidebar({
     onDeleteGroup(id);
   }
 
+  // ── Drag and drop ──────────────────────────────────────
+  function isInvalidTarget(targetId: string | null, sourceId: string): boolean {
+    if (targetId === null) return false; // ROOT 는 항상 가능
+    if (targetId === sourceId) return true; // 자기 자신
+    // source의 하위인지 확인
+    const childrenOf = (parentId: string): string[] => groups.filter((g) => g.parentId === parentId).flatMap((g) => [g.id, ...childrenOf(g.id)]);
+    return childrenOf(sourceId).includes(targetId);
+  }
+
+  function handleDragStart(e: React.DragEvent, id: string) {
+    setDraggingId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  }
+
+  function handleDragOver(e: React.DragEvent, targetId: string | null) {
+    if (!draggingId) return;
+    e.preventDefault();
+    if (isInvalidTarget(targetId, draggingId)) {
+      e.dataTransfer.dropEffect = "none";
+      setDragInvalid(true);
+      setDragOverId(targetId);
+    } else {
+      e.dataTransfer.dropEffect = "move";
+      setDragInvalid(false);
+      setDragOverId(targetId);
+    }
+  }
+
+  function handleDragLeave() {
+    setDragOverId(null);
+    setDragInvalid(false);
+  }
+
+  function handleDrop(e: React.DragEvent, targetId: string | null) {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData("text/plain") || draggingId;
+    setDraggingId(null);
+    setDragOverId(null);
+    setDragInvalid(false);
+    if (!sourceId) return;
+    if (isInvalidTarget(targetId, sourceId)) return;
+    onMoveGroup(sourceId, targetId);
+    // 이동된 폴더의 상위가 펼쳐져 있어야 보임
+    if (targetId != null && !expanded.has(targetId)) {
+      setExpanded((prev) => new Set([...prev, targetId]));
+    }
+  }
+
+  function handleDragEnd() {
+    setDraggingId(null);
+    setDragOverId(null);
+    setDragInvalid(false);
+  }
+
   return (
     <aside className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden flex flex-col h-full">
       {/* Header */}
@@ -102,16 +163,37 @@ export function ChildrenSidebar({
 
       {/* Folder tree */}
       <div className="px-2 py-2 flex-1 overflow-y-auto">
-        {/* Add top-level folder */}
-        {addingParent === null && (
-          <button
-            onClick={() => startAdd(null, 0)}
-            className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[12px] text-slate-400 hover:bg-brand-50 hover:text-brand-600 transition mb-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            폴더 추가
-          </button>
-        )}
+        {/* ROOT drop zone (상위로 이동) */}
+        <div
+          onDragOver={(e) => handleDragOver(e, null)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, null)}
+          className={cn(
+            "transition border-2 border-dashed rounded-md mb-1 px-2 py-1.5 text-[12px] flex items-center justify-center gap-1.5",
+            dragOverId === null && draggingId
+              ? dragInvalid
+                ? "border-red-300 bg-red-50 text-red-500"
+                : "border-brand-400 bg-brand-50 text-brand-700 font-semibold"
+              : "border-transparent",
+          )}
+        >
+          {addingParent === null && draggingId === null ? (
+            <>
+              <button
+                onClick={() => startAdd(null, 0)}
+                className="w-full flex items-center gap-1.5 text-slate-400 hover:text-brand-600 transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                폴더 추가
+              </button>
+              {/* ROOT drop 안내 */}
+              {draggingId && (
+                <span className="text-[10px] text-slate-400">여기에 놓으면 최상위로 이동</span>
+              )}
+            </>
+          ) : addingParent === null ? null : null}
+          {addingParent === "__root__" && null}
+        </div>
 
         {/* Top-level add form */}
         {addingParent === "__root__" && (
@@ -177,10 +259,27 @@ export function ChildrenSidebar({
     const isActive = g.id === selectedGroupId;
     const isEditing = editingId === g.id;
     const isAdding = addingParent === g.id;
+    const isDragging = draggingId === g.id;
+    const isDragOver = dragOverId === g.id && draggingId != null;
+    const isInvalidDrop = isDragOver && dragInvalid;
 
     return (
       <div key={g.id}>
-        <div className="group relative flex items-center" style={{ paddingLeft: depth * 16 }}>
+        <div
+          draggable={!isEditing && g.id !== "all"}
+          onDragStart={(e) => handleDragStart(e, g.id)}
+          onDragEnd={handleDragEnd}
+          onDragOver={(e) => handleDragOver(e, g.id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, g.id)}
+          className={cn(
+            "group relative flex items-center rounded-md transition",
+            isDragging && "opacity-40",
+            isInvalidDrop && "ring-2 ring-red-400 bg-red-50",
+            !isInvalidDrop && isDragOver && "ring-2 ring-brand-400 bg-brand-50",
+          )}
+          style={{ paddingLeft: depth * 16 }}
+        >
           {/* Expand toggle */}
           <button
             onClick={() => toggleExpand(g.id)}
