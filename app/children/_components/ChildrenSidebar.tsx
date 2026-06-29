@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Plus, Folder, FolderOpen, CalendarDays } from "lucide-react";
+import { Users, Plus, Folder, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import type { CapacityGroup } from "@/lib/features/children/types";
@@ -82,19 +82,7 @@ export function ChildrenSidebar({ selectedGroup, counts, onSelect, onAdd }: Prop
           );
         })}
 
-        {/* 하위 메뉴 — 출결대장 */}
-        <div className="mt-3 pt-3 border-t border-slate-100">
-          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-1 mb-1">
-            출결
-          </div>
-          <Link
-            href="/children/attendance"
-            className="flex items-center gap-2 px-2 py-2 rounded-lg text-[13px] text-slate-600 hover:bg-slate-50 hover:text-brand-700 transition"
-          >
-            <CalendarDays className="w-4 h-4 shrink-0" />
-            <span className="flex-1">출결대장</span>
-          </Link>
-        </div>
+
       </div>
 
       {/* Total */}
