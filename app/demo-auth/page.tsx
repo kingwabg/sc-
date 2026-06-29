@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 function DemoAuthInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get("to") || "/home";
+  const redirect = params.get("to") || "/portal";
 
   useEffect(() => {
     const demoSession = {

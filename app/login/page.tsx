@@ -6,7 +6,15 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SessionProvider, useSession } from "@/lib/session";
 import { toast } from "@/components/ui/toaster";
-import { ArrowLeft, Eye, EyeOff, Mail, Lock, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  Sparkles,
+  LayoutGrid,
+} from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -27,133 +35,172 @@ function LoginForm() {
     setTimeout(() => {
       signIn(email);
       toast({ type: "success", message: `${email}로 로그인했어요` });
-      router.push("/home");
+      router.push("/portal");
     }, 400);
   };
 
   const demo = () => {
-    setLoading(true);
-    setTimeout(() => {
-      signIn("[email protected]", "김지민");
-      router.push("/home");
-    }, 200);
+    // /demo-auth 페이지가 localStorage + officex-session 쿠키를 한 번에 세팅하고
+    // 쿼리 파라미터로 받은 경로로 redirect 해준다. 여기서 직접 signIn을 호출하면
+    // 쿠키 동기화가 빠지므로 demo-auth 경유가 정석.
+    router.push("/demo-auth?to=/portal");
   };
 
   return (
-    <div className="min-h-screen flex flex-1 bg-background">
-      {/* 좌측 폼 */}
-      <div className="flex-1 flex flex-col p-6 md:p-10 max-w-md mx-auto w-full">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-foreground w-fit">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-10 bg-gradient-to-br from-slate-50 via-white to-indigo-50/60">
+      {/* 배경 mesh blobs — 은은한 분위기, 정렬은 중앙 카드를 향함 */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-32 -left-24 h-96 w-96 rounded-full bg-indigo-300/30 blur-3xl" />
+        <div className="absolute -bottom-40 -right-24 h-[28rem] w-[28rem] rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-72 w-72 rounded-full bg-violet-200/20 blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-[420px]">
+        {/* 홈으로 — 카드 위에 작게 */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-5 transition"
+        >
           <ArrowLeft className="h-4 w-4" />
           홈으로
         </Link>
 
-        <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto">
-          <div className="mb-8">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-white font-bold mb-4">
-              O
+        {/* 메인 카드 */}
+        <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/[0.04] border border-slate-200/60 p-8 sm:p-10">
+          {/* 로고 + 브랜드 */}
+          <div className="flex items-center gap-2.5 mb-8">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-700 text-white grid place-items-center shadow-lg shadow-brand-600/30">
+              <LayoutGrid className="h-5 w-5" strokeWidth={2.4} />
             </div>
-            <h1 className="text-2xl font-bold">로그인</h1>
-            <p className="text-sm text-text-muted mt-1">회사 계정으로 이어서 진행해요</p>
+            <div className="leading-tight">
+              <div className="text-base font-bold text-slate-900 tracking-tight">
+                Office
+              </div>
+              <div className="text-[11px] text-slate-500 -mt-0.5">
+                임직원 포털
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={submit} className="space-y-3">
+          {/* 제목 */}
+          <h1 className="text-[1.7rem] sm:text-2xl font-bold tracking-tight text-slate-900">
+            로그인
+          </h1>
+          <p className="text-sm text-slate-500 mt-1.5 mb-7">
+            회사 계정으로 이어서 진행해요
+          </p>
+
+          {/* 폼 */}
+          <form onSubmit={submit} className="space-y-3.5">
+            {/* 이메일 */}
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               <input
                 type="email"
                 placeholder="이메일"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-11 pl-9 pr-3 rounded-lg border border-border bg-surface text-sm placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
+                className="w-full h-12 pl-11 pr-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm placeholder:text-slate-400 transition focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
               />
             </div>
+
+            {/* 비밀번호 */}
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               <input
                 type={showPw ? "text" : "password"}
                 placeholder="비밀번호"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-11 pl-9 pr-10 rounded-lg border border-border bg-surface text-sm placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
+                className="w-full h-12 pl-11 pr-12 rounded-xl border border-slate-200 bg-slate-50/50 text-sm placeholder:text-slate-400 transition focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
               />
               <button
                 type="button"
                 onClick={() => setShowPw((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-text-muted hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
                 aria-label="비밀번호 보기"
               >
                 {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
 
-            <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" className="rounded" />
-                <span className="text-text-muted">로그인 상태 유지</span>
+            {/* remember + forgot */}
+            <div className="flex items-center justify-between text-xs pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-600 select-none">
+                <input
+                  type="checkbox"
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500/30 focus:ring-offset-0"
+                />
+                <span>로그인 상태 유지</span>
               </label>
-              <a href="#" className="text-primary hover:underline">
+              <a
+                href="#"
+                className="text-slate-500 hover:text-brand-600 transition"
+              >
                 비밀번호를 잊으셨나요?
               </a>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" disabled={loading}>
-              {loading ? "로그인 중..." : "로그인"}
-            </Button>
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-background px-2 text-text-muted">또는</span>
-              </div>
-            </div>
-
+            {/* 로그인 버튼 */}
             <Button
-              type="button"
-              variant="secondary"
+              type="submit"
               size="lg"
-              className="w-full"
-              onClick={demo}
+              className="w-full h-12 mt-2 text-[15px] font-semibold rounded-xl bg-brand-600 hover:bg-brand-700 shadow-lg shadow-brand-600/20"
               disabled={loading}
             >
-              <Sparkles className="h-4 w-4" />
-              데모 계정으로 둘러보기
+              {loading ? "로그인 중..." : "로그인"}
             </Button>
           </form>
 
-          <p className="text-sm text-center mt-6 text-text-muted">
+          {/* 또는 */}
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-3 text-slate-400">또는</span>
+            </div>
+          </div>
+
+          {/* 데모 버튼 (로그인 아래) */}
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="w-full h-12 text-[15px] font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700"
+            onClick={demo}
+            disabled={loading}
+          >
+            <Sparkles className="h-4 w-4 text-brand-600" />
+            데모 계정으로 둘러보기
+          </Button>
+
+          {/* 카드 내부 하단: 회사 만들기 */}
+          <p className="text-sm text-center mt-7 text-slate-500">
             아직 회사가 없으신가요?{" "}
-            <Link href="/signup" className="text-primary font-semibold hover:underline">
+            <Link
+              href="/signup"
+              className="text-brand-600 font-semibold hover:underline"
+            >
               회사 만들기
             </Link>
           </p>
         </div>
-      </div>
 
-      {/* 우측 일러스트 */}
-      <div className="hidden lg:flex flex-1 bg-primary relative overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
-        <div className="relative z-10 max-w-md text-white p-12">
-          <div className="text-xs font-semibold uppercase tracking-wider opacity-80 mb-3">
-            일 잘러의 시작
-          </div>
-          <h2 className="text-3xl font-bold leading-tight">
-            흩어져 있던 업무 툴을<br />
-            하나로 모았어요
-          </h2>
-          <p className="mt-4 text-white/80 leading-relaxed">
-            메신저 탭, 결재 탭, 메일 탭을 왔다 갔다 하던 시간은 끝.
-            필요한 건 전부 한 화면에서.
-          </p>
-          <div className="mt-8 flex gap-2">
-            {["메일", "결재", "일정", "메신저"].map((t) => (
-              <span key={t} className="px-3 py-1 rounded-full bg-white/15 backdrop-blur text-xs font-medium">
-                {t}
-              </span>
-            ))}
-          </div>
+        {/* 카드 외부 하단: 모듈 칩 */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+          <span className="px-2.5 py-1 rounded-full bg-white/80 border border-slate-200/80">
+            메일
+          </span>
+          <span className="px-2.5 py-1 rounded-full bg-white/80 border border-slate-200/80">
+            결재
+          </span>
+          <span className="px-2.5 py-1 rounded-full bg-white/80 border border-slate-200/80">
+            일정
+          </span>
+          <span className="px-2.5 py-1 rounded-full bg-white/80 border border-slate-200/80">
+            메신저
+          </span>
         </div>
       </div>
     </div>
