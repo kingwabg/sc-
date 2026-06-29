@@ -66,11 +66,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.user) setUser(parsed.user);
-        if (parsed.tenant) setTenant(parsed.tenant);
+        // null/falsy 여도 state는 명시적으로 set 해야 UserMenu의 hydration race를 피한다.
+        // (이전 signOut이 user:null, tenant:null 로 저장한 경우에도 portal이 stale tenant만 보고 잘못 렌더하던 문제 해결)
+        setUser(parsed.user ?? null);
+        setTenant(parsed.tenant ?? null);
         if (parsed.widgets) setWidgetsState(parsed.widgets);
-        // 이미 로그인된 상태로 페이지를 열면 미들웨어가 통과할 수 있도록 쿠키도 동기화.
+        // 쿠키 sync: user가 명시적으로 set 된 경우에만 (signOut 후에도 쿠키는 이미 cleared 상태)
         if (parsed.user) setSessionCookie();
+      } else {
+        // localStorage에 키 자체가 없으면 두 키 모두 확실히 비움 + 쿠키도 정리
+        localStorage.removeItem("office-portal:tenant");
+        clearSessionCookie();
       }
     } catch {
       // ignore

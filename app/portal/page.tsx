@@ -12,17 +12,28 @@ import { NoticeCard } from "@/components/dashboard/NoticeCard";
 import { TeamAttendanceCard } from "@/components/dashboard/TeamAttendanceCard";
 import { MyDocsCard } from "@/components/dashboard/MyDocsCard";
 import { useTenant } from "@/lib/tenant-context";
+import { useSession } from "@/lib/session";
 
 export default function PortalHomePage() {
   const router = useRouter();
   const { ready, tenant } = useTenant();
+  const { isAuthenticated, user } = useSession();
 
-  // If no tenant picked yet, bounce to selector
+  // No user → /login (clears stale cookie-only state where localStorage user is null)
   useEffect(() => {
-    if (ready && !tenant) router.replace("/");
-  }, [ready, tenant, router]);
+    if (ready && !user) router.replace("/login");
+  }, [ready, user, router]);
+
+  // No tenant → /
+  useEffect(() => {
+    if (ready && user && !tenant) router.replace("/");
+  }, [ready, user, tenant, router]);
 
   if (!ready) {
+    return null;
+  }
+
+  if (!user) {
     return null;
   }
 
