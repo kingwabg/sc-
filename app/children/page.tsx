@@ -6,7 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Baby, Search, Plus, CheckCircle2, Clock, X, SlidersHorizontal, ListFilter, FileDown } from "lucide-react";
 import { Button, Input, InputGroup } from "rsuite";
 import { cn } from "@/lib/utils";
-import type { Child, AttendanceStatus, CapacityGroup } from "@/lib/features/children/types";
+import type { Child, AttendanceStatus, CapacityGroup, ChildGroup } from "@/lib/features/children/types";
 import { MOCK_CHILDREN, MOCK_ATTENDANCES } from "@/lib/features/children/data";
 import {
   getExtraChildren,
@@ -14,6 +14,10 @@ import {
   getAttendanceOverrides,
   setAttendanceOverride,
   type AttendanceMap,
+  getChildGroups,
+  addChildGroup,
+  updateChildGroup,
+  removeChildGroup,
 } from "@/lib/store/children";
 import { getTenantSettings } from "@/lib/tenant-store";
 import { ChildrenSidebar } from "./_components/ChildrenSidebar";
@@ -51,11 +55,13 @@ function ChildrenPageBody() {
   const [sortKey, setSortKey] = useState<SortKey>("today");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<CapacityGroup | "all">(50);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("all");
+  const [groups, setGroups] = useState<ChildGroup[]>([]);
   const searchParams = useSearchParams();
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setGroups(getChildGroups()); }, []);
 
   const [extraChildren, setExtraChildren] = useState<Child[]>([]);
   useEffect(() => {
@@ -112,10 +118,15 @@ function ChildrenPageBody() {
   );
 
   const groupCounts = useMemo(() => {
-    const counts: Record<CapacityGroup | "all", number> = { all: allChildren.length, 30: 0, 40: 0, 50: 0 };
-    for (const c of allChildren) counts[c.capacityGroup]++;
+    const counts: Record<string, number> = {};
+    for (const g of groups) counts[g.id] = 0;
+    counts["all"] = allChildren.length;
+    for (const c of allChildren) {
+      const key = String(c.capacityGroup);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
     return counts;
-  }, [allChildren]);
+  }, [allChildren, groups]);
 
   // 알레르기 옵션 (현재 데이터에서 추출)
   const allergyOptions = useMemo(() => {
@@ -126,9 +137,10 @@ function ChildrenPageBody() {
 
   const filtered = useMemo(() => {
     const gradeOrder: Record<string, number> = { "초1": 1, "초2": 2, "초3": 3, "초4": 4, "초5": 5, "초6": 6 };
-    let list = selectedGroup === "all"
+    const selectedGroup = groups.find((g) => g.id === selectedGroupId);
+    let list = selectedGroupId === "all" || !selectedGroup
       ? allChildren
-      : allChildren.filter((c) => c.capacityGroup === selectedGroup);
+      : allChildren.filter((c) => c.capacityGroup === (selectedGroup.capacity as CapacityGroup));
 
     // 텍스트 검색
     if (query) {
@@ -171,7 +183,7 @@ function ChildrenPageBody() {
       return sortDir === "asc" ? (av < bv ? -1 : av > bv ? 1 : 0) : (av > bv ? -1 : av < bv ? 1 : 0);
     });
     return list;
-  }, [query, statusFilter, filter, attendanceState, selectedGroup, allChildren, sortKey, sortDir]);
+  }, [query, statusFilter, filter, attendanceState, selectedGroupId, allChildren, sortKey, sortDir, groups]);
 
   const stats = useMemo(() => {
     const arr = filtered.map((c) => attendanceState[c.id]).filter(Boolean) as typeof MOCK_ATTENDANCES;
@@ -183,11 +195,37 @@ function ChildrenPageBody() {
     };
   }, [filtered, attendanceState]);
 
-  const fillPct = selectedGroup === "all"
-    ? Math.round((stats.present / (groupCounts[30] + groupCounts[40] + groupCounts[50])) * 100)
-    : Math.round((stats.present / selectedGroup) * 100);
+  const fillPct = (() => {
+    const selectedGroup = groups.find((g) => g.id === selectedGroupId);
+    if (selectedGroupId === "all" || !selectedGroup) {
+      const total = Object.entries(groupCounts)
+        .filter(([k]) => k !== "all")
+        .reduce((sum, [, v]) => sum + v, 0);
+      return Math.round((stats.present / total) * 100);
+    }
+    return Math.round((stats.present / selectedGroup.capacity) * 100);
+  })();
 
   // ── Handlers ───────────────────────────────────────────────
+  function handleAddGroup(label: string, capacity: number) {
+    addChildGroup(label, capacity);
+    setGroups(getChildGroups());
+    toast.success(`"${label}" 그룹이 추가되었습니다`);
+  }
+
+  function handleUpdateGroup(id: string, label: string, capacity: number) {
+    updateChildGroup(id, { label, capacity });
+    setGroups(getChildGroups());
+  }
+
+  function handleDeleteGroup(id: string) {
+    const g = groups.find((x) => x.id === id);
+    removeChildGroup(id);
+    setGroups(getChildGroups());
+    if (selectedGroupId === id) setSelectedGroupId("all");
+    toast.info(`"${g?.label ?? ""}" 그룹이 삭제되었습니다`);
+  }
+
   function handleStatusChange(childId: string, status: AttendanceStatus, time?: string, reason?: string) {
     setAttendanceState((prev) => {
       const cur = prev[childId];
@@ -259,12 +297,16 @@ function ChildrenPageBody() {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
-        <div className="h-[calc(100vh-100px)] sticky top-[80px]">
+        <div className="h-[calc(100vh-100px)] sticky top-[80px] overflow-y-auto">
           <ChildrenSidebar
-            selectedGroup={selectedGroup}
+            selectedGroupId={selectedGroupId}
+            groups={groups}
             counts={groupCounts}
-            onSelect={setSelectedGroup}
-            onAdd={() => setShowAddModal(true)}
+            onSelectGroup={setSelectedGroupId}
+            onAddGroup={handleAddGroup}
+            onUpdateGroup={handleUpdateGroup}
+            onDeleteGroup={handleDeleteGroup}
+            onAddChild={() => setShowAddModal(true)}
           />
         </div>
 
@@ -275,7 +317,7 @@ function ChildrenPageBody() {
               <div className="flex items-center gap-2">
                 <Baby className="w-5 h-5 text-amber-500" />
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 m-0">
-                  {selectedGroup === "all" ? "전체 아동" : `${selectedGroup}명 그룹`}
+                  {selectedGroupId === "all" ? "전체 아동" : groups.find((g) => g.id === selectedGroupId)?.label ?? "그룹"}
                 </h1>
                 <span className="text-[12px] text-slate-400">{filtered.length}명</span>
               </div>
@@ -314,7 +356,7 @@ function ChildrenPageBody() {
                   </div>
                 </div>
                 <div className="leading-tight">
-                  <div className="text-[12px] font-semibold text-slate-900">등원 {stats.present}{selectedGroup !== "all" ? ` / ${selectedGroup}` : ""}</div>
+                  <div className="text-[12px] font-semibold text-slate-900">등원 {stats.present}{selectedGroupId !== "all" ? ` / ${groups.find((g) => g.id === selectedGroupId)?.capacity ?? ""}` : ""}</div>
                   <div className="text-[10px] text-slate-500">정원 진행률</div>
                 </div>
               </div>
@@ -373,7 +415,7 @@ function ChildrenPageBody() {
 
       {showAddModal && (
         <AddChildModal
-          capacityGroup={selectedGroup === "all" ? 50 : selectedGroup}
+          capacityGroup={selectedGroupId !== "all" ? (groups.find((g) => g.id === selectedGroupId)?.capacity as CapacityGroup) ?? 50 : 50}
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddChild}
         />
@@ -387,9 +429,12 @@ function ChildrenPageBody() {
         allergyOptions={allergyOptions}
         matched={filtered.length}
         total={
-          selectedGroup === "all"
+          selectedGroupId === "all"
             ? allChildren.length
-            : allChildren.filter((c) => c.capacityGroup === selectedGroup).length
+            : allChildren.filter((c) => {
+                const cap = groups.find((g) => g.id === selectedGroupId)?.capacity;
+                return c.capacityGroup === cap;
+              }).length
         }
       />
       <TableOptionsDrawer

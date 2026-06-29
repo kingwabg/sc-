@@ -3,6 +3,13 @@
  */
 export type CapacityGroup = 30 | 40 | 50;
 
+export type ChildGroup = {
+  id: string;
+  label: string;
+  capacity: number;
+  order: number;
+};
+
 export type AttendanceStatus = "등원" | "결석" | "조퇴" | "보건휴식" | "미등원";
 
 export type Child = {
