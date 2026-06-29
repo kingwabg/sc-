@@ -1,7 +1,7 @@
 /**
  * Children Feature — Helper Functions
  */
-import type { Child, Attendance, AttendanceStatus, CareLog, CareLogCategory, CapacityGroup } from "./types";
+import type { Child, Attendance, AttendanceStatus, CareLog, CareLogCategory, CapacityGroup, GroupFilter } from "./types";
 
 // ─── Age ──────────────────────────────────────────────────────
 export function ageFromBirthDate(birthDate: string): number {
@@ -77,4 +77,56 @@ export function buildAttendanceMap(
     map[a.childId] = overrides[a.childId] ?? a;
   }
   return map;
+}
+
+// ─── Group Filter (스마트 폴더) ──────────────────────────────
+export function isFilterEmpty(filter?: GroupFilter): boolean {
+  if (!filter) return true;
+  return (
+    (!filter.grades || filter.grades.length === 0) &&
+    (!filter.genders || filter.genders.length === 0) &&
+    (!filter.allergies || filter.allergies.length === 0) &&
+    !filter.enrolledAfter &&
+    !filter.enrolledBefore &&
+    (!filter.statuses || filter.statuses.length === 0)
+  );
+}
+
+export function matchesFilter(
+  child: Child,
+  filter: GroupFilter | undefined,
+  attendanceMap?: Record<string, Attendance>,
+): boolean {
+  if (isFilterEmpty(filter)) return true;
+  if (!filter) return true;
+  if (filter.grades && filter.grades.length > 0) {
+    if (!child.grade || !filter.grades.includes(child.grade)) return false;
+  }
+  if (filter.genders && filter.genders.length > 0) {
+    if (!filter.genders.includes(child.gender)) return false;
+  }
+  if (filter.allergies && filter.allergies.length > 0) {
+    const has = filter.allergies.some((a) => child.health.allergies.includes(a));
+    if (!has) return false;
+  }
+  if (filter.enrolledAfter) {
+    if (child.enrolledAt < filter.enrolledAfter) return false;
+  }
+  if (filter.enrolledBefore) {
+    if (child.enrolledAt > filter.enrolledBefore) return false;
+  }
+  if (filter.statuses && filter.statuses.length > 0 && attendanceMap) {
+    const status = attendanceMap[child.id]?.status;
+    if (!status || !filter.statuses.includes(status)) return false;
+  }
+  return true;
+}
+
+export function filterChildren(
+  children: Child[],
+  filter: GroupFilter | undefined,
+  attendanceMap?: Record<string, Attendance>,
+): Child[] {
+  if (isFilterEmpty(filter)) return children;
+  return children.filter((c) => matchesFilter(c, filter, attendanceMap));
 }

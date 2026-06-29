@@ -14,8 +14,9 @@ import {
   useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
-import { Users, Plus, Folder, FolderOpen, ChevronRight, Pencil, Trash2, Check, X, GripVertical } from "lucide-react";
+import { Users, Plus, Folder, FolderOpen, ChevronRight, Pencil, Trash2, Check, X, GripVertical, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isFilterEmpty } from "@/lib/features/children/utils";
 import type { ChildGroup } from "@/lib/features/children/types";
 
 type Props = {
@@ -27,6 +28,7 @@ type Props = {
   onUpdateGroup: (id: string, label: string) => void;
   onDeleteGroup: (id: string) => void;
   onMoveGroup: (id: string, newParentId: string | null) => { ok: boolean; reason?: string };
+  onOpenGroupOptions: (id: string) => void;
 };
 
 const ROOT_DROPPABLE_ID = "__ROOT__";
@@ -40,6 +42,7 @@ export function ChildrenSidebar({
   onUpdateGroup,
   onDeleteGroup,
   onMoveGroup,
+  onOpenGroupOptions,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -291,6 +294,7 @@ export function ChildrenSidebar({
           setEditingId={setEditingId}
           selectedGroupId={selectedGroupId}
           onSelectGroup={onSelectGroup}
+          onOpenGroupOptions={onOpenGroupOptions}
           activeDragId={activeDragId}
           overId={overId}
           ROOT_DROPPABLE_ID={ROOT_DROPPABLE_ID}
@@ -375,6 +379,7 @@ function FolderRow({
   setEditingId,
   selectedGroupId,
   onSelectGroup,
+  onOpenGroupOptions,
   activeDragId,
   overId,
   ROOT_DROPPABLE_ID,
@@ -399,6 +404,7 @@ function FolderRow({
   setEditingId: (id: string | null) => void;
   selectedGroupId: string;
   onSelectGroup: (id: string) => void;
+  onOpenGroupOptions: (id: string) => void;
   activeDragId: string | null;
   overId: string | null;
   ROOT_DROPPABLE_ID: string;
@@ -476,21 +482,34 @@ function FolderRow({
               isActive ? "bg-brand-50 text-brand-700 font-semibold" : "text-slate-600 hover:bg-slate-50",
             )}
           >
-            {isActive ? <FolderOpen className="w-4 h-4 shrink-0 text-brand-500" /> : <Folder className="w-4 h-4 shrink-0 text-slate-400" />}
-            <span className="truncate flex-1">{g.label}</span>
-            {g.id !== "all" && (
-              <span className={cn("text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0",
-                isActive ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500"
-              )}>
-                {counts[g.id] ?? 0}
-              </span>
-            )}
+{isActive ? <FolderOpen className="w-4 h-4 shrink-0 text-brand-500" /> : <Folder className="w-4 h-4 shrink-0 text-slate-400" />}
+                <span className="truncate flex-1">{g.label}</span>
+                {!isFilterEmpty(g.filter) && (
+                  <span title="스마트 폴더 (필터 조건 적용됨)" className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />
+                )}
+                {g.id !== "all" && (
+                  <span className={cn("text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0",
+                    isActive ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500"
+                  )}>
+                    {counts[g.id] ?? 0}
+                  </span>
+                )}
           </button>
 
           {/* Actions */}
           <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 bg-white border border-slate-200 rounded-md shadow-sm px-0.5">
             <button onClick={() => startAdd(g.id, depth + 1)} className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
               <Plus className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => onOpenGroupOptions(g.id)}
+              className={cn(
+                "w-6 h-6 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
+                g.filter && !isFilterEmpty(g.filter) ? "text-brand-600" : "text-slate-400",
+              )}
+              title="폴더 조건 (필터)"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
             </button>
             {g.id !== "all" && (
               <>

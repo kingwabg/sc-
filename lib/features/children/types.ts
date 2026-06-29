@@ -3,6 +3,20 @@
  */
 export type CapacityGroup = 30 | 40 | 50;
 
+export type GroupFilter = {
+  /** 학년 매칭 (예: ["초3"]) */
+  grades?: string[];
+  /** 성별 매칭 (예: ["F"] = 여학생만) */
+  genders?: ("M" | "F")[];
+  /** 알레르기 매칭 (예: ["새우", "복숭아"]) — 1개 이상 보유 시 매칭 */
+  allergies?: string[];
+  /** 등록일 범위 (inclusive) */
+  enrolledAfter?: string;
+  enrolledBefore?: string;
+  /** 출석 상태 매칭 (예: ["등원"]) — attendanceMap 기반 */
+  statuses?: AttendanceStatus[];
+};
+
 export type ChildGroup = {
   id: string;
   label: string;
@@ -10,6 +24,8 @@ export type ChildGroup = {
   /** 정원 (아동 capacityGroup과 매핑, null이면 capacityGroup 없이 폴더만) */
   capacity: number | null;
   order: number;
+  /** 스마트 폴더 필터 — 비어있으면 단순 capacity 매칭, 있으면 동적 필터링 */
+  filter?: GroupFilter;
 };
 
 export type AttendanceStatus = "등원" | "결석" | "조퇴" | "보건휴식" | "미등원";

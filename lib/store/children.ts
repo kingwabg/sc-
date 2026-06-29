@@ -1,7 +1,7 @@
 /**
  * Children (아동) 저장소
  */
-import type { Child, Attendance, CareLog, ChildGroup } from "../features/children/types";
+import type { Child, Attendance, CareLog, ChildGroup, GroupFilter } from "../features/children/types";
 import { readLS, writeLS } from "./_ls";
 
 const CHILDREN_KEY = "officex:extra-children";
@@ -93,6 +93,19 @@ export function moveChildGroup(id: string, newParentId: string | null): { ok: bo
   const next = groups.map((g) => (g.id === id ? { ...g, parentId: newParentId } : g));
   setChildGroups(next);
   return { ok: true };
+}
+
+/**
+ * 스마트 폴더 필터 업데이트.
+ * 빈 필터를 전달하면 filter 제거 (단순 폴더로 동작).
+ */
+export function updateGroupFilter(id: string, filter: GroupFilter | null): void {
+  if (id === "all") return;
+  const groups = getChildGroups();
+  const next = groups.map((g) =>
+    g.id === id ? { ...g, filter: filter ?? undefined } : g,
+  );
+  setChildGroups(next);
 }
 
 export function getExtraChildren(): Child[] {

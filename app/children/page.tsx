@@ -6,7 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Baby, Search, Plus, CheckCircle2, Clock, X, SlidersHorizontal, ListFilter, FileDown } from "lucide-react";
 import { Button, Input, InputGroup } from "rsuite";
 import { cn } from "@/lib/utils";
-import type { Child, AttendanceStatus, CapacityGroup, ChildGroup } from "@/lib/features/children/types";
+import type { Child, AttendanceStatus, CapacityGroup, ChildGroup, GroupFilter } from "@/lib/features/children/types";
 import { MOCK_CHILDREN, MOCK_ATTENDANCES } from "@/lib/features/children/data";
 import {
   getExtraChildren,
@@ -19,12 +19,15 @@ import {
   updateChildGroup,
   removeChildGroup,
   moveChildGroup,
+  updateGroupFilter,
 } from "@/lib/store/children";
+import { filterChildren, isFilterEmpty, matchesFilter } from "@/lib/features/children/utils";
 import { getTenantSettings } from "@/lib/tenant-store";
 import { ChildrenSidebar } from "./_components/ChildrenSidebar";
 import { ChildrenTable } from "./_components/ChildrenTable";
 import { AddChildModal } from "./_components/AddChildModal";
 import { ChildrenFilterDrawer, type ChildrenFilter } from "./_components/ChildrenFilterDrawer";
+import { GroupOptionsDrawer } from "./_components/GroupOptionsDrawer";
 import { TableOptionsDrawer, DEFAULT_TABLE_OPTIONS, type TableOptions } from "@/components/ui/TableOptionsDrawer";
 import { useToast } from "@/components/ui/Toast";
 
@@ -58,6 +61,7 @@ function ChildrenPageBody() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string>("all");
   const [groups, setGroups] = useState<ChildGroup[]>([]);
+  const [groupOptionsId, setGroupOptionsId] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   const [mounted, setMounted] = useState(false);
@@ -122,12 +126,23 @@ function ChildrenPageBody() {
     const counts: Record<string, number> = {};
     for (const g of groups) counts[g.id] = 0;
     counts["all"] = allChildren.length;
-    for (const c of allChildren) {
-      const key = String(c.capacityGroup);
-      counts[key] = (counts[key] ?? 0) + 1;
+    for (const g of groups) {
+      if (g.id === "all") continue;
+      // 스마트 필터가 있으면 filter 기준으로 카운트
+      if (!isFilterEmpty(g.filter)) {
+        counts[g.id] = allChildren.filter((c) => matchesFilter(c, g.filter, attendanceState)).length;
+        continue;
+      }
+      // capacity만 있으면 capacityGroup 기준
+      if (g.capacity != null && g.capacity !== 999) {
+        counts[g.id] = allChildren.filter((c) => c.capacityGroup === (g.capacity as CapacityGroup)).length;
+        continue;
+      }
+      // 둘 다 없으면 capacityGroup 안 매칭 = 0
+      counts[g.id] = 0;
     }
     return counts;
-  }, [allChildren, groups]);
+  }, [allChildren, groups, attendanceState]);
 
   // 알레르기 옵션 (현재 데이터에서 추출)
   const allergyOptions = useMemo(() => {
@@ -139,11 +154,17 @@ function ChildrenPageBody() {
   const filtered = useMemo(() => {
     const gradeOrder: Record<string, number> = { "초1": 1, "초2": 2, "초3": 3, "초4": 4, "초5": 5, "초6": 6 };
     const selectedGroup = groups.find((g) => g.id === selectedGroupId);
-    let list = selectedGroupId === "all" || !selectedGroup
-      ? allChildren
-      : selectedGroup.capacity == null
-        ? allChildren // 폴더만 있고 capacity 없으면 전체
-        : allChildren.filter((c) => c.capacityGroup === (selectedGroup.capacity as CapacityGroup));
+    let list = allChildren;
+    if (selectedGroup) {
+      // 1순위: 스마트 필터
+      if (!isFilterEmpty(selectedGroup.filter)) {
+        list = filterChildren(allChildren, selectedGroup.filter, attendanceState);
+      } else if (selectedGroup.id === "all") {
+        list = allChildren;
+      } else if (selectedGroup.capacity != null) {
+        list = allChildren.filter((c) => c.capacityGroup === (selectedGroup.capacity as CapacityGroup));
+      }
+    }
 
     // 텍스트 검색
     if (query) {
@@ -245,6 +266,12 @@ function ChildrenPageBody() {
     return { ok: true };
   }
 
+  function handleUpdateGroupFilter(id: string, filter: GroupFilter | null) {
+    updateGroupFilter(id, filter);
+    setGroups(getChildGroups());
+    toast.success(filter && !isFilterEmpty(filter) ? "폴더 조건이 저장되었어요" : "폴더 조건이 해제되었어요");
+  }
+
   function handleStatusChange(childId: string, status: AttendanceStatus, time?: string, reason?: string) {
     setAttendanceState((prev) => {
       const cur = prev[childId];
@@ -326,6 +353,7 @@ function ChildrenPageBody() {
             onUpdateGroup={handleUpdateGroup}
             onDeleteGroup={handleDeleteGroup}
             onMoveGroup={handleMoveGroup}
+            onOpenGroupOptions={setGroupOptionsId}
           />
         </div>
 
@@ -454,6 +482,26 @@ function ChildrenPageBody() {
         value={tableOptions}
         onChange={setTableOptions}
         onClose={() => setTableOptionsOpen(false)}
+      />
+
+      <GroupOptionsDrawer
+        open={groupOptionsId !== null}
+        groupLabel={groups.find((g) => g.id === groupOptionsId)?.label ?? ""}
+        initial={groups.find((g) => g.id === groupOptionsId)?.filter}
+        allergyOptions={allergyOptions}
+        matchedCount={
+          (() => {
+            const g = groups.find((x) => x.id === groupOptionsId);
+            if (!g || !g.filter || isFilterEmpty(g.filter)) return allChildren.length;
+            return allChildren.filter((c) => matchesFilter(c, g.filter, attendanceState)).length;
+          })()
+        }
+        totalCount={allChildren.length}
+        onClose={() => setGroupOptionsId(null)}
+        onSave={(filter) => {
+          if (groupOptionsId) handleUpdateGroupFilter(groupOptionsId, filter);
+          setGroupOptionsId(null);
+        }}
       />
     </>
   );
