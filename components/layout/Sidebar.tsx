@@ -1,0 +1,424 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Home,
+  Mail,
+  FileCheck2,
+  CalendarDays,
+  Baby,
+  ClipboardList,
+  Calculator,
+  MessageSquare,
+  Users,
+  Settings,
+  Star,
+  Plus,
+  X,
+  LayoutGrid,
+  Folder,
+  FileText,
+  Clock,
+  CalendarCheck,
+  PanelLeftClose,
+  PanelLeft,
+  UserCog,
+  ExternalLink,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  getFavoriteHrefs,
+  addFavoriteHref,
+  removeFavoriteHref,
+  getMailUnreadCount,
+  getApprovalPendingCount,
+  getTodayScheduleCount,
+  getSidebarCollapsed,
+  setSidebarCollapsed,
+} from "@/lib/tenant-store";
+
+// ─── 타입 ───────────────────────────────────────────────────
+type NavItem = {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: number;
+  /** 외부 링크 (새 탭 열기) */
+  external?: boolean;
+  children?: NavItem[];
+};
+
+// ─── 전체 메뉴 풀 ────────────────────────────────────────────
+const ALL_MENU_ITEMS: Record<string, NavItem> = {
+  "/portal": { label: "홈", href: "/portal", icon: Home },
+  "/mail": { label: "메일", href: "/mail", icon: Mail },
+  "/approval": { label: "결재", href: "/approval", icon: FileCheck2 },
+  "/calendar": { label: "일정", href: "/calendar", icon: CalendarDays },
+  "/documents": { label: "문서관리", href: "/documents", icon: Folder },
+  "/docs": { label: "내 문서", href: "/docs", icon: FileText },
+  "/servicemap": { label: "서비스 맵", href: "/servicemap", icon: LayoutGrid },
+  "/attendance/members": { label: "전체 출결 관리", href: "/attendance/members", icon: CalendarCheck },
+  "/my-attendance": { label: "내 근태", href: "/my-attendance", icon: Clock },
+  "/children": { label: "아동관리", href: "/children", icon: Baby },
+  "/daily-log": { label: "업무관리", href: "/daily-log", icon: ClipboardList },
+  "/staff": { label: "종사자관리", href: "/staff", icon: UserCog },
+  "/board": { label: "게시판", href: "/board", icon: MessageSquare },
+  "/org": { label: "조직도", href: "/org", icon: Users },
+  "/monthly-plan": { label: "경리관리", href: "/monthly-plan", icon: Calculator },
+  "/settings": { label: "환경설정", href: "/settings", icon: Settings },
+};
+
+// ─── 고정 그룹 ──────────────────────────────────────────────
+const FIXED_GROUPS: { label: string; items: string[] }[] = [
+  {
+    label: "Home",
+    items: ["/portal", "/my-attendance", "/calendar", "/mail", "/approval"],
+  },
+  {
+    label: "돌봄운영",
+    items: ["/children", "/staff", "/daily-log", "/documents"],
+  },
+  {
+    label: "지원",
+    items: ["/board", "/org", "/monthly-plan", "/settings"],
+  },
+];
+
+const GROUP_LABEL_KR: Record<string, string> = {
+  Home: "Home",
+  돌봄운영: "돌봄운영",
+  지원: "지원",
+};
+
+const BADGE_FN: Record<string, () => number> = {
+  "/mail": getMailUnreadCount,
+  "/approval": getApprovalPendingCount,
+  "/calendar": getTodayScheduleCount,
+};
+
+function useBadges() {
+  const [badges, setBadges] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const result: Record<string, number> = {};
+    for (const href of Object.keys(BADGE_FN)) {
+      result[href] = BADGE_FN[href]();
+    }
+    setBadges(result);
+  }, []);
+  return badges;
+}
+
+function useFavorites() {
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    setFavorites(getFavoriteHrefs());
+  }, []);
+
+  const toggle = useCallback((href: string) => {
+    if (favorites.includes(href)) {
+      const next = favorites.filter((f) => f !== href);
+      removeFavoriteHref(href);
+      setFavorites(next);
+    } else {
+      const next = [...favorites, href];
+      addFavoriteHref(href);
+      setFavorites(next);
+    }
+  }, [favorites]);
+
+  return { favorites, toggle, editing, setEditing };
+}
+
+function useCollapsed() {
+  const [collapsed, setCollapsedState] = useState(false);
+  useEffect(() => {
+    setCollapsedState(getSidebarCollapsed());
+  }, []);
+  const toggle = useCallback(() => {
+    setCollapsedState((prev) => {
+      const next = !prev;
+      setSidebarCollapsed(next);
+      window.dispatchEvent(new Event("officex:sidebar-collapsed"));
+      return next;
+    });
+  }, []);
+  return { collapsed, toggle };
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────
+export function Sidebar() {
+  const pathname = usePathname();
+  const badges = useBadges();
+  const { favorites, toggle, editing, setEditing } = useFavorites();
+  const { collapsed, toggle: toggleCollapse } = useCollapsed();
+
+  if (collapsed) {
+    return <CollapsedSidebar pathname={pathname} badges={badges} onExpand={toggleCollapse} />;
+  }
+
+  return (
+    <aside className="fixed top-[60px] left-0 bottom-0 w-[220px] bg-white border-r border-slate-200 flex flex-col py-3 transition-[width] duration-200">
+      {/* 접기 버튼 */}
+      <div className="flex items-center justify-between px-3 mb-2">
+        <span className="text-[11px] font-semibold tracking-wide text-slate-400">메뉴</span>
+        <button
+          onClick={toggleCollapse}
+          title="사이드바 접기"
+          className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+        >
+          <PanelLeftClose className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* 즐겨찾기 영역 */}
+      {favorites.length > 0 && (
+        <div className="mb-3 px-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="px-2 text-[11px] font-semibold tracking-wide text-slate-400">
+              ★ 즐겨찾기
+            </span>
+            <button
+              onClick={() => setEditing((v) => !v)}
+              className={cn(
+                "text-[11px] px-1.5 py-0.5 rounded transition",
+                editing
+                  ? "bg-brand-100 text-brand-700 font-semibold"
+                  : "text-slate-400 hover:text-brand-600 hover:bg-brand-50",
+              )}
+            >
+              {editing ? "완료" : "편집"}
+            </button>
+          </div>
+          <nav className="space-y-0.5">
+            {favorites.map((href) => {
+              const item = ALL_MENU_ITEMS[href];
+              if (!item) return null;
+              const isActive = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <div key={href} className="group relative flex items-center">
+                  <Link
+                    href={href}
+                    className={cn(
+                      "flex items-center gap-2.5 h-8 px-3 rounded-lg text-[13px] font-medium flex-1 transition",
+                      isActive
+                        ? "bg-brand-50 text-brand-700"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                    )}
+                  >
+                    <item.icon
+                      className={cn("w-[16px] h-[16px]", isActive ? "text-brand-600" : "text-slate-500")}
+                    />
+                    <span className="flex-1 truncate">{item.label}</span>
+                  </Link>
+                  {editing && (
+                    <button
+                      onClick={() => toggle(href)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded text-red-400 hover:bg-red-50"
+                      title="즐겨찾기에서 제거"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </div>
+      )}
+
+      {/* 고정 그룹 */}
+      <div className="flex-1 overflow-y-auto px-2">
+        {FIXED_GROUPS.map((group) => {
+          const items = group.items
+            .filter((href) => !favorites.includes(href))
+            .map((href) => ALL_MENU_ITEMS[href])
+            .filter(Boolean) as NavItem[];
+
+          if (items.length === 0) return null;
+
+          return (
+            <NavGroup
+              key={group.label}
+              label={GROUP_LABEL_KR[group.label] ?? group.label}
+              items={items}
+              pathname={pathname}
+              badges={badges}
+              editingFavorites={editing}
+              onToggleFavorite={toggle}
+              favorites={favorites}
+            />
+          );
+        })}
+
+        {!editing && (
+          <div className="mt-2 pt-2 border-t border-slate-100">
+            <p className="px-3 text-[10px] text-slate-400 mb-1">즐겨찾기에 추가</p>
+            <div className="flex flex-wrap gap-1 px-2">
+              {Object.keys(ALL_MENU_ITEMS)
+                .filter((href) => !favorites.includes(href))
+                .slice(0, 6)
+                .map((href) => {
+                  const item = ALL_MENU_ITEMS[href];
+                  return (
+                    <button
+                      key={href}
+                      onClick={() => { toggle(href); setEditing(true); }}
+                      className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] text-slate-500 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 transition"
+                    >
+                      <Plus className="w-3 h-3" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+// ─── 접힌 사이드바 (64px 아이콘 바) ─────────────────────────
+function CollapsedSidebar({
+  pathname,
+  badges,
+  onExpand,
+}: {
+  pathname: string;
+  badges: Record<string, number>;
+  onExpand: () => void;
+}) {
+  const { favorites } = useFavorites();
+
+  // 펼쳤을 때와 같은 순서로 보여줄 메뉴
+  const orderedHrefs = [
+    ...favorites,
+    ...FIXED_GROUPS.flatMap((g) =>
+      g.items.filter((h) => !favorites.includes(h)),
+    ),
+  ];
+
+  return (
+    <aside className="fixed top-[60px] left-0 bottom-0 w-[64px] bg-white border-r border-slate-200 flex flex-col py-3 transition-[width] duration-200">
+      <div className="flex justify-center mb-2">
+        <button
+          onClick={onExpand}
+          title="사이드바 펼치기"
+          className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+        >
+          <PanelLeft className="w-4 h-4" />
+        </button>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-2 space-y-0.5">
+        {orderedHrefs.map((href) => {
+          const item = ALL_MENU_ITEMS[href];
+          if (!item) return null;
+          const isActive = pathname === href || pathname.startsWith(href + "/");
+          const badge = badges[href];
+          return (
+            <Link
+              key={href}
+              href={href}
+              title={item.label}
+              className={cn(
+                "relative w-10 h-10 grid place-items-center rounded-lg transition mx-auto",
+                isActive
+                  ? "bg-brand-50 text-brand-700"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
+              )}
+            >
+              <item.icon className={cn("w-[18px] h-[18px]", isActive ? "text-brand-600" : "")} />
+              {badge ? (
+                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold grid place-items-center">
+                  {badge}
+                </span>
+              ) : null}
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+// ─── NavGroup ────────────────────────────────────────────────
+function NavGroup({
+  label,
+  items,
+  pathname,
+  badges,
+  editingFavorites,
+  onToggleFavorite,
+  favorites,
+}: {
+  label: string;
+  items: NavItem[];
+  pathname: string;
+  badges: Record<string, number>;
+  editingFavorites: boolean;
+  onToggleFavorite: (href: string) => void;
+  favorites: string[];
+}) {
+  return (
+    <div className="mb-3">
+      <h3 className="px-3 mb-1 text-[11px] font-semibold tracking-wide text-slate-400">
+        {label}
+      </h3>
+      <nav className="space-y-0.5">
+        {items.map((item) => {
+          const isActive =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
+
+          return (
+            <div key={item.label} className="group relative">
+              <Link
+                href={item.href}
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noopener noreferrer" : undefined}
+                className={cn(
+                  "flex items-center gap-2.5 h-9 px-3 rounded-lg text-[13.5px] font-medium transition",
+                  isActive
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                )}
+              >
+                <item.icon
+                  className={cn(
+                    "w-[18px] h-[18px]",
+                    isActive ? "text-brand-600" : "text-slate-500",
+                  )}
+                />
+                <span className="flex-1 truncate">{item.label}</span>
+                {item.external && (
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                )}
+                {badges[item.href] ? (
+                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center">
+                    {badges[item.href]}
+                  </span>
+                ) : null}
+              </Link>
+
+              {!editingFavorites && (
+                <button
+                  onClick={() => onToggleFavorite(item.href)}
+                  className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition"
+                  title="즐겨찾기에 추가"
+                >
+                  <Star className={cn("w-3.5 h-3.5", favorites.includes(item.href) ? "fill-amber-400 text-amber-400" : "")} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
