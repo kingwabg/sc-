@@ -94,15 +94,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       name: name ?? email.split("@")[0],
     };
     setUser(u);
-    if (!tenant) setTenant(MOCK_TENANT);
-    // 미들웨어 인증 가드 통과용 쿠키 동기화.
+    // tenant는 signIn에서 자동 세팅하지 않는다.
+    // → portal 진입 시 미선택이면 `/`(사업장 선택)로 자동 redirect 된다.
+    // → 로그아웃 후 재로그인하면 tenant selector가 항상 먼저 뜨는 흐름.
     setSessionCookie();
   };
 
   const signOut = () => {
     setUser(null);
+    setTenant(null); // 재로그인 시 사업장 선택 페이지(`/`)가 먼저 뜨도록 tenant도 비운다.
     if (typeof window !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY);          // 세션 스토리지 (user+tenant+widgets) 삭제
+      localStorage.removeItem("office-portal:tenant"); // tenant-context 의 별도 키도 직접 제거
     }
     clearSessionCookie();
   };
