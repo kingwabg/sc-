@@ -1,0 +1,45 @@
+#!/bin/sh
+# Post-commit hook: auto-push to origin main after every commit.
+# To disable temporarily, set OFFICEX_AUTO_PUSH=0 in your shell.
+
+if [ "$OFFICEX_AUTO_PUSH" = "0" ]; then
+  echo "[officex] auto-push disabled (OFFICEX_AUTO_PUSH=0)"
+  exit 0
+fi
+
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ -z "$BRANCH" ]; then
+  exit 0
+fi
+
+# Only push main by default — extra safety. Edit this if you work on feature branches.
+case "$BRANCH" in
+  main)
+    REMOTE="origin"
+    ;;
+  *)
+    # For non-main branches, still push, but tag it.
+    REMOTE="origin"
+    ;;
+esac
+
+# Check if remote exists
+if ! git remote get-url "$REMOTE" >/dev/null 2>&1; then
+  echo "[officex] no remote '$REMOTE' configured — skipping push"
+  exit 0
+fi
+
+# Skip if no upstream and nothing to push
+UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>/dev/null)
+if [ -z "$UPSTREAM" ]; then
+  echo "[officex] no upstream for $BRANCH — run 'git push -u $REMOTE $BRANCH' once to set it up"
+  exit 0
+fi
+
+echo "[officex] auto-pushing $BRANCH → $REMOTE..."
+if git push "$REMOTE" "$BRANCH"; then
+  echo "[officex] ✓ pushed"
+else
+  echo "[officex] ✗ push failed (commit still saved locally)"
+  exit 1
+fi
