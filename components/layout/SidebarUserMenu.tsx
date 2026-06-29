@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "@/lib/session";
+import { useTenant } from "@/lib/tenant-context";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
@@ -19,6 +20,7 @@ type Props = { collapsed?: boolean };
  */
 export function SidebarUserMenu({ collapsed = false }: Props) {
   const { user, signOut } = useSession();
+  const { clearTenant } = useTenant();
   const router = useRouter();
 
   if (!user) return null;
@@ -31,8 +33,8 @@ export function SidebarUserMenu({ collapsed = false }: Props) {
     if (typeof window !== "undefined" && !window.confirm("로그아웃 하시겠어요?")) {
       return;
     }
-    signOut();
-    // signOut 내부에서 쿠키도 만료시키므로 미들웨어가 다음 라우트를 /login으로 보냄.
+    signOut();        // 세션 (user/쿠키) 정리
+    clearTenant();    // 사업장 context 정리 — 이게 빠져 있어서 /portal이 tenant 있다고 판단해 `/`로 redirect 안 했음.
     router.push("/login");
   };
 
