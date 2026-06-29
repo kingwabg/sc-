@@ -8,7 +8,15 @@ export type AttendanceStatus = "등원" | "결석" | "조퇴" | "보건휴식" |
 export type Child = {
   id: string;
   tenantId: string;
+  /**
+   * 전체 이름 (호환용 — `${nameLast}${nameFirst}` 와 동일하게 유지).
+   * 새 코드에서는 nameLast/nameFirst를 직접 사용하는 것을 권장.
+   */
   name: string;
+  /** 성 (surname) — 예: "김" */
+  nameLast: string;
+  /** 이름 (given name) — 예: "민준" */
+  nameFirst: string;
   birthDate: string; // YYYY-MM-DD
   gender: "M" | "F";
   photoUrl?: string;

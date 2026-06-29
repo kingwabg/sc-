@@ -15,7 +15,9 @@ type Props = {
 };
 
 export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
-  const [name, setName] = useState("");
+  // 성 / 이름 분리 — 한국 이름 관행 (1글자 성 + 2~3글자 이름)
+  const [nameLast, setNameLast] = useState("");
+  const [nameFirst, setNameFirst] = useState("");
   const [gender, setGender] = useState<"M" | "F">("M");
   const [birthDate, setBirthDate] = useState("");
   const [grade, setGrade] = useState("초1");
@@ -26,8 +28,10 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
   const [allergiesText, setAllergiesText] = useState("");
   const [notes, setNotes] = useState("");
 
+  const fullName = `${nameLast}${nameFirst}`;
   const isValid =
-    name.trim().length > 0 &&
+    nameLast.trim().length > 0 &&
+    nameFirst.trim().length > 0 &&
     birthDate.length > 0 &&
     guardianName.trim().length > 0 &&
     phone.trim().length > 0;
@@ -35,7 +39,9 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
   function handleSubmit() {
     if (!isValid) return;
     onSubmit({
-      name: name.trim(),
+      name: fullName.trim(),
+      nameLast: nameLast.trim(),
+      nameFirst: nameFirst.trim(),
       gender,
       birthDate,
       grade,
@@ -72,8 +78,10 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+            aria-label="닫기"
           >
             <X className="w-4 h-4" />
           </button>
@@ -81,17 +89,46 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
 
         {/* Form */}
         <div className="p-6 space-y-4">
-          {/* 기본 정보 */}
+          {/* 기본 정보 — 성/이름 분리 */}
           <Section title="기본 정보">
             <Grid>
-              <Field label="이름" required>
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="홍길동" className={inputCls} />
+              <Field label="성" required>
+                <input
+                  value={nameLast}
+                  onChange={(e) => setNameLast(e.target.value)}
+                  placeholder="김"
+                  maxLength={4}
+                  className={cn(inputCls, "font-bold")}
+                />
               </Field>
+              <Field label="이름" required>
+                <input
+                  value={nameFirst}
+                  onChange={(e) => setNameFirst(e.target.value)}
+                  placeholder="민준"
+                  maxLength={10}
+                  className={inputCls}
+                />
+              </Field>
+            </Grid>
+
+            {/* 미리보기 — 합쳐진 이름 */}
+            {fullName.length > 0 && (
+              <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-brand-50 border border-brand-200 rounded-[10px] text-[12px]">
+                <span className="text-slate-500">미리보기</span>
+                <span className="font-bold text-brand-700 text-[13px] tabular-nums">
+                  {fullName}
+                </span>
+              </div>
+            )}
+
+            <div className="mt-3">
               <Field label="성별">
                 <div className="flex gap-2">
                   {(["M", "F"] as const).map((g) => (
                     <button
                       key={g}
+                      type="button"
                       onClick={() => setGender(g)}
                       className={cn(
                         "flex-1 h-9 rounded-[10px] text-[13px] font-semibold border transition",
@@ -105,13 +142,27 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
                   ))}
                 </div>
               </Field>
+            </div>
+
+            <Grid>
               <Field label="생년월일" required>
-                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className={inputCls} />
+                <input
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  className={inputCls}
+                />
               </Field>
               <Field label="학년">
-                <select value={grade} onChange={(e) => setGrade(e.target.value)} className={inputCls}>
+                <select
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  className={inputCls}
+                >
                   {["초1", "초2", "초3", "초4", "초5", "초6"].map((g) => (
-                    <option key={g} value={g}>{g}</option>
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
                   ))}
                 </select>
               </Field>
@@ -122,7 +173,12 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
           <Section title="보호자">
             <Grid>
               <Field label="보호자명" required>
-                <input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} placeholder="홍길순" className={inputCls} />
+                <input
+                  value={guardianName}
+                  onChange={(e) => setGuardianName(e.target.value)}
+                  placeholder="홍길순"
+                  className={inputCls}
+                />
               </Field>
               <Field label="관계">
                 <select
@@ -131,15 +187,27 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
                   className={inputCls}
                 >
                   {["모", "부", "조부모", "기타"].map((r) => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
                   ))}
                 </select>
               </Field>
               <Field label="연락처" required>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="010-0000-0000" className={inputCls} />
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="010-0000-0000"
+                  className={inputCls}
+                />
               </Field>
               <Field label="직업">
-                <input value={job} onChange={(e) => setJob(e.target.value)} placeholder="회사원" className={inputCls} />
+                <input
+                  value={job}
+                  onChange={(e) => setJob(e.target.value)}
+                  placeholder="회사원"
+                  className={inputCls}
+                />
               </Field>
             </Grid>
           </Section>
@@ -147,7 +215,12 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
           {/* 건강 */}
           <Section title="건강 정보">
             <Field label="알레르기" hint="쉼표로 구분 (예: 복숭아, 땅콩)">
-              <input value={allergiesText} onChange={(e) => setAllergiesText(e.target.value)} placeholder="복숭아, 우유" className={inputCls} />
+              <input
+                value={allergiesText}
+                onChange={(e) => setAllergiesText(e.target.value)}
+                placeholder="복숭아, 우유"
+                className={inputCls}
+              />
             </Field>
             <Field label="특이사항">
               <textarea
@@ -163,12 +236,14 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
         {/* Footer */}
         <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-3 flex items-center justify-end gap-2">
           <button
+            type="button"
             onClick={onClose}
             className="h-9 px-4 bg-white border border-slate-200 text-slate-700 text-[13px] font-medium rounded-[10px] hover:bg-slate-50"
           >
             취소
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={!isValid}
             className={cn(
@@ -198,7 +273,17 @@ function Grid({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-3">{children}</div>;
 }
 
-function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  hint,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <label className="block text-[12px] font-medium text-slate-600 mb-1">

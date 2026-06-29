@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
+import { CustomProvider } from "rsuite";
+import koKR from "rsuite/locales/ko_KR";
 import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
 import { getSidebarCollapsed } from "@/lib/tenant-store";
+import { ToastProvider } from "@/components/ui/Toast";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+/**
+ * AppShell + rsuite <CustomProvider>로 전체 감싸기.
+ *
+ * CustomProvider가 있어야:
+ *  - useToaster() 가 정상 동작 (없으면 "Feature is disabled" 경고)
+ *  - DatePicker / Toggle / CheckPicker 등 hook 의존 컴포넌트 정상
+ *  - locale 적용 (한국어)
+ */
+export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -20,17 +31,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <>
-      <TopHeader />
-      <div className="pt-[60px] min-h-screen flex">
-        <Sidebar />
-        <main
-          className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200"
-          style={{ marginLeft: collapsed ? 64 : 232 }}
-        >
-          {children}
-        </main>
-      </div>
-    </>
+    <CustomProvider locale={koKR}>
+      <ToastProvider>
+        <TopHeader />
+        <div className="pt-[60px] min-h-screen flex">
+          <Sidebar />
+          <main
+            className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200"
+            style={{ marginLeft: collapsed ? 64 : 232 }}
+          >
+            {children}
+          </main>
+        </div>
+      </ToastProvider>
+    </CustomProvider>
   );
 }

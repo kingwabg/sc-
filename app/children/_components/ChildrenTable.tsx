@@ -1,272 +1,439 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+/**
+ * ChildrenTable — RSuite Table (옵션 + 행 펼침 적용 버전)
+ */
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Pencil } from "lucide-react";
+import { Table, Pagination, IconButton } from "rsuite";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Stethoscope,
+  Cake,
+  UserCircle2,
+  Phone,
+  CalendarPlus,
+  Pill,
+  ClipboardList,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Child, AttendanceStatus, Attendance, CapacityGroup } from "@/lib/features/children/types";
-import { ageFromBirthDate, statusTone, ATTENDANCE_STATUSES } from "@/lib/features/children/utils";
+import { ageFromBirthDate } from "@/lib/features/children/utils";
+import type {
+  Child,
+  Attendance,
+  AttendanceStatus,
+} from "@/lib/features/children/types";
+import { StatusEditor } from "./StatusEditor";
+import type { TableOptions, TableDensity } from "@/components/ui/TableOptionsDrawer";
 
-type SortKey = "name" | "grade" | "today" | "age";
+type ChildRow = {
+  id: string;
+  name: string;
+  nameLast: string;
+  nameFirst: string;
+  gender: "M" | "F";
+  age: number;
+  grade: string;
+  guardianName: string;
+  guardianRelation: string;
+  guardianPhone: string;
+  allergies: string[];
+  attendance: Attendance | undefined;
+  original: Child; // 펼친 영역에서 전체 데이터 접근
+};
+
 type Props = {
   children: Child[];
   attendanceMap: Record<string, Attendance>;
+  options: TableOptions;
   onStatusChange: (childId: string, status: AttendanceStatus, time?: string, reason?: string) => void;
 };
 
-export function ChildrenTable({ children: list, attendanceMap, onStatusChange }: Props) {
-  return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <Th className="text-center">이름</Th>
-              <Th className="text-center">보호자</Th>
-              <Th className="text-center">알레르기</Th>
-              <Th className="text-center">오늘</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="text-center py-12 text-slate-400 text-sm">
-                  검색 결과가 없습니다
-                </td>
-              </tr>
-            ) : (
-              list.map((child) => (
-                <ChildRow
-                  key={child.id}
-                  child={child}
-                  attendance={attendanceMap[child.id]}
-                  onStatusChange={onStatusChange}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 text-[11px] text-slate-500 flex items-center justify-between">
-        <span>총 {list.length}명</span>
-        <span>상태 배지를 클릭하면 출석을 변경할 수 있어요</span>
-      </div>
-    </div>
+const ROW_HEIGHT: Record<TableDensity, number> = {
+  compact: 36,
+  normal: 46,
+  comfortable: 56,
+};
+const HEADER_HEIGHT: Record<TableDensity, number> = {
+  compact: 36,
+  normal: 40,
+  comfortable: 44,
+};
+
+export function ChildrenTable({ children: list, attendanceMap, options, onStatusChange }: Props) {
+  const [page, setPage] = useState(1);
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+
+  const rows: ChildRow[] = useMemo(
+    () =>
+      list.map((c) => ({
+        id: c.id,
+        name: c.name,
+        nameLast: c.nameLast,
+        nameFirst: c.nameFirst,
+        gender: c.gender,
+        age: ageFromBirthDate(c.birthDate),
+        grade: c.grade ?? "-",
+        guardianName: c.guardian.name,
+        guardianRelation: c.guardian.relation,
+        guardianPhone: c.guardian.phone,
+        allergies: c.health.allergies,
+        attendance: attendanceMap[c.id],
+        original: c,
+      })),
+    [list, attendanceMap],
   );
-}
 
-// ─── Row ─────────────────────────────────────────────────────
-function ChildRow({
-  child,
-  attendance,
-  onStatusChange,
-}: {
-  child: Child;
-  attendance?: Attendance;
-  onStatusChange: (childId: string, status: AttendanceStatus, time?: string, reason?: string) => void;
-}) {
-  const tone = attendance ? statusTone(attendance.status) : null;
-
-  return (
-    <tr className="border-t border-slate-100 hover:bg-brand-50/30 transition group">
-      {/* 이름 */}
-      <td className="py-2.5 px-4">
-        <Link href={`/children/${child.id}`} className="flex items-center gap-2.5 justify-center">
-          <div
-            className={cn(
-              "w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold shrink-0",
-              child.gender === "M" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700",
-            )}
-          >
-            {child.name[0]}
-          </div>
-          <div className="text-left">
-            <div className="font-semibold text-slate-900 text-[13px]">{child.name}</div>
-            <div className="text-[10.5px] text-slate-400">
-              {ageFromBirthDate(child.birthDate)}세 · {child.grade ?? "-"}
-            </div>
-          </div>
-        </Link>
-      </td>
-
-      {/* 보호자 */}
-      <td className="text-center">
-        <div className="inline-block text-left">
-          <div className="text-[13px] text-slate-900">{child.guardian.name}</div>
-          <div className="text-[11px] text-slate-500">
-            {child.guardian.relation} · {child.guardian.phone}
-          </div>
-        </div>
-      </td>
-
-      {/* 알레르기 */}
-      <td className="text-center">
-        {child.health.allergies.length > 0 ? (
-          <div className="inline-flex items-center gap-1 flex-wrap justify-center">
-            {child.health.allergies.map((a) => (
-              <span
-                key={a}
-                className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium"
-              >
-                <AlertTriangle className="w-3 h-3" />
-                {a}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <span className="text-slate-300 text-[12px]">없음</span>
-        )}
-      </td>
-
-      {/* 오늘 출석 */}
-      <td className="text-center pr-4">
-        {tone && (
-          <StatusEditor
-            childId={child.id}
-            attendance={attendance}
-            onStatusChange={onStatusChange}
-          />
-        )}
-      </td>
-    </tr>
+  const pageRows = useMemo(
+    () => rows.slice((page - 1) * options.pageSize, page * options.pageSize),
+    [rows, page, options.pageSize],
   );
-}
 
-// ─── Status Editor Popover ────────────────────────────────────
-function StatusEditor({
-  childId,
-  attendance,
-  onStatusChange,
-}: {
-  childId: string;
-  attendance?: Attendance;
-  onStatusChange: (childId: string, status: AttendanceStatus, time?: string, reason?: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState<AttendanceStatus>(attendance?.status ?? "미등원");
-  const [time, setTime] = useState(attendance?.arrivedAt ?? "09:00");
-  const [reasonText, setReasonText] = useState(attendance?.reason ?? "");
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
-
-  function apply() {
-    const needsTime = status === "등원" || status === "조퇴";
-    const needsReason = status === "결석" || status === "미등원" || status === "조퇴" || status === "보건휴식";
-    onStatusChange(
-      childId,
-      status,
-      needsTime ? time : undefined,
-      needsReason ? reasonText : undefined,
+  function toggleExpand(id: string) {
+    setExpandedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
-    setOpen(false);
   }
 
-  const tone = statusTone(status);
+  return (
+    <>
+      <Table
+        data={pageRows}
+        rowKey="id"
+        height={options.autoHeight ? undefined : options.height || 520}
+        autoHeight={options.autoHeight}
+        minHeight={options.minHeight > 0 ? options.minHeight : undefined}
+        maxHeight={options.maxHeight > 0 ? options.maxHeight : undefined}
+        hover={options.hover}
+        bordered={options.bordered}
+        cellBordered={options.cellBordered}
+        loading={options.loading}
+        headerHeight={HEADER_HEIGHT[options.density]}
+        rowHeight={ROW_HEIGHT[options.density]}
+        wordWrap={options.wordWrap}
+        expandedRowKeys={expandedIds}
+        onExpandChange={(expanded, rowData: ChildRow) =>
+          setExpandedIds((prev) =>
+            expanded
+              ? Array.from(new Set([...prev, rowData.id]))
+              : prev.filter((id) => id !== rowData.id),
+          )
+        }
+        renderRowExpanded={(rowData?: ChildRow) =>
+          rowData ? <ChildExpandedPanel row={rowData} onStatusChange={onStatusChange} /> : null
+        }
+        rowExpandedHeight={180}
+        locale={{ emptyMessage: "검색 결과가 없습니다", loading: "불러오는 중…" }}
+      >
+        {/* 이름 (펼침 토글 + 아바타 + 성/이름 합친 풀네임 + 학년) */}
+        <Table.Column flexGrow={2}
+          minWidth={50}
+          sortable={options.sortable}
+          resizable={options.resizable}
+          fullText={options.fullText}
+        >
+          <Table.HeaderCell>이름</Table.HeaderCell>
+          <Table.Cell>
+            {(row: ChildRow) => {
+              const open = expandedIds.includes(row.id);
+              return (
+                <div className="flex items-center gap-2 min-w-0">
+                  <IconButton
+                    size="xs"
+                    appearance="subtle"
+                    icon={
+                      <ChevronRight
+                        className={cn(
+                          "w-3.5 h-3.5 transition-transform text-slate-500",
+                          open && "rotate-90 text-brand-600",
+                        )}
+                      />
+                    }
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      toggleExpand(row.id);
+                    }}
+                    aria-label={open ? "접기" : "펼치기"}
+                    title={open ? "상세 접기" : "상세 펼치기"}
+                  />
+                  <Link
+                    href={`/children/${row.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-2.5 min-w-0"
+                    prefetch={false}
+                  >
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold shrink-0",
+                        row.gender === "M" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700",
+                      )}
+                    >
+                      {row.name?.[0] ?? "?"}
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="font-semibold text-slate-900 text-[13px] truncate">
+                        {row.name}
+                      </div>
+                      <div className="text-[10.5px] text-slate-400">{row.age}세 · {row.grade}</div>
+                    </div>
+                  </Link>
+                </div>
+              );
+            }}
+          </Table.Cell>
+        </Table.Column>
+
+        <Table.Column width={70} align="center" sortable={options.sortable}
+          resizable={options.resizable}
+          minWidth={50}>
+          <Table.HeaderCell>학년</Table.HeaderCell>
+          <Table.Cell dataKey="grade" />
+        </Table.Column>
+
+        <Table.Column width={70} align="center" sortable={options.sortable}
+          resizable={options.resizable}
+          minWidth={50}>
+          <Table.HeaderCell>나이</Table.HeaderCell>
+          <Table.Cell>{(row: ChildRow) => `${row.age}세`}</Table.Cell>
+        </Table.Column>
+
+        <Table.Column flexGrow={2}
+          minWidth={50}
+          sortable={options.sortable}
+          resizable={options.resizable}
+          fullText={options.fullText}
+        >
+          <Table.HeaderCell>보호자</Table.HeaderCell>
+          <Table.Cell>
+            {(row: ChildRow) => (
+              <div className="leading-tight">
+                <div className="text-[13px] text-slate-900">{row.guardianName}</div>
+                <div className="text-[11px] text-slate-500">
+                  {row.guardianRelation} · {row.guardianPhone}
+                </div>
+              </div>
+            )}
+          </Table.Cell>
+        </Table.Column>
+
+        <Table.Column flexGrow={2}
+          minWidth={50} sortable={false} fullText={options.fullText}>
+          <Table.HeaderCell>알레르기</Table.HeaderCell>
+          <Table.Cell>
+            {(row: ChildRow) => {
+              if (row.allergies.length === 0) {
+                return <span className="text-slate-300 text-[12px]">없음</span>;
+              }
+              return (
+                <div className="flex items-center gap-1 flex-wrap py-1">
+                  {row.allergies.map((a) => (
+                    <span
+                      key={a}
+                      className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium"
+                    >
+                      <AlertTriangle className="w-3 h-3" />
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              );
+            }}
+          </Table.Cell>
+        </Table.Column>
+
+        <Table.Column flexGrow={2}
+          minWidth={50} sortable={false} fullText={options.fullText}>
+          <Table.HeaderCell>오늘 출석</Table.HeaderCell>
+          <Table.Cell>
+            {(row: ChildRow) => {
+              if (!row.attendance) {
+                return <span className="text-slate-300 text-[12px]">미기록</span>;
+              }
+              return (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <StatusEditor
+                    childId={row.id}
+                    attendance={row.attendance}
+                    onStatusChange={onStatusChange}
+                  />
+                </div>
+              );
+            }}
+          </Table.Cell>
+        </Table.Column>
+      </Table>
+
+      <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-3 border-t border-slate-100 bg-slate-50/60 text-[12px] text-slate-600">
+        <span>
+          총 <strong className="text-slate-900">{rows.length}</strong>명
+          {options.paginated && (
+            <> · {(page - 1) * options.pageSize + 1}–{Math.min(page * options.pageSize, rows.length)} 표시</>
+          )}
+        </span>
+        {options.paginated && rows.length > options.pageSize && (
+          <Pagination
+            prev
+            next
+            first
+            last
+            total={rows.length}
+            limit={options.pageSize}
+            activePage={page}
+            onChangePage={setPage}
+            maxButtons={5}
+            size="sm"
+          />
+        )}
+      </div>
+    </>
+  );
+}
+
+// ─── 펼쳐진 영역 ────────────────────────────────────────────────
+
+function ChildExpandedPanel({
+  row,
+  onStatusChange,
+}: {
+  row: ChildRow;
+  onStatusChange: Props["onStatusChange"];
+}) {
+  const c = row.original;
+  const att = row.attendance;
 
   return (
-    <div className="relative inline-block" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11.5px] font-semibold transition hover:ring-2 hover:ring-brand-200 cursor-pointer",
-          tone.bg, tone.text,
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-slate-50/70 border-l-4 border-brand-300 rounded-r-lg">
+      {/* 보호자 정보 */}
+      <section>
+        <Header4 icon={UserCircle2}>보호자</Header4>
+        <KV label="이름" value={c.guardian.name} />
+        <KV label="관계" value={c.guardian.relation} />
+        <KV label="연락처">
+          <a href={`tel:${c.guardian.phone}`} className="text-brand-600 hover:underline">
+            {c.guardian.phone}
+          </a>
+        </KV>
+        {c.guardian.job && <KV label="직업" value={c.guardian.job} />}
+        {c.emergencyContact && (
+          <>
+            <div className="text-[10px] font-bold text-slate-400 uppercase mt-2 mb-1 tracking-wider">비상 연락처</div>
+            <KV label="이름" value={c.emergencyContact.name} />
+            <KV label="연락처">
+              <a href={`tel:${c.emergencyContact.phone}`} className="text-brand-600 hover:underline">
+                {c.emergencyContact.phone}
+              </a>
+            </KV>
+          </>
         )}
-        title="클릭하여 출석 상태 변경"
-      >
-        {tone.label}
-        {attendance?.arrivedAt && (
-          <span className="text-slate-500 font-normal ml-0.5">{attendance.arrivedAt}</span>
-        )}
-        <Pencil className="w-3 h-3 opacity-40" />
-      </button>
+      </section>
 
-      {open && (
-        <div
-          className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-xl shadow-lg p-3 w-64 text-left"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="text-[11px] font-semibold text-slate-500 mb-2">출석 상태 변경</div>
-
-          {/* Status buttons */}
-          <div className="grid grid-cols-3 gap-1 mb-3">
-            {ATTENDANCE_STATUSES.map((s) => {
-              const t = statusTone(s);
-              const active = status === s;
-              return (
-                <button
-                  key={s}
-                  onClick={() => setStatus(s)}
-                  className={cn(
-                    "px-2 py-1.5 rounded-md text-[11.5px] font-semibold transition",
-                    active
-                      ? cn(t.bg, t.text, "ring-2 ring-brand-400")
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100",
-                  )}
-                >
-                  {s}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Time input */}
-          {(status === "등원" || status === "조퇴") && (
-            <div className="mb-2">
-              <label className="text-[11px] text-slate-500 block mb-1">
-                {status === "조퇴" ? "조퇴 시간" : "등원 시간"}
-              </label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full h-8 px-2 border border-slate-200 rounded-md text-[13px]"
-              />
+      {/* 보건 정보 */}
+      <section>
+        <Header4 icon={Stethoscope}>보건</Header4>
+        <KV label="생년월일" value={c.birthDate} />
+        <KV label="성별" value={c.gender === "M" ? "남" : "여"} />
+        <KV label="정원 그룹" value={`${c.capacityGroup}명`} />
+        <div className="mt-2">
+          <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">알레르기</div>
+          {c.health.allergies.length === 0 ? (
+            <span className="text-[12px] text-slate-400">없음</span>
+          ) : (
+            <div className="flex flex-wrap gap-1">
+              {c.health.allergies.map((a) => (
+                <span key={a} className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">
+                  <AlertTriangle className="w-3 h-3" />
+                  {a}
+                </span>
+              ))}
             </div>
           )}
-
-          {/* Reason input */}
-          {(status === "결석" || status === "미등원" || status === "조퇴" || status === "보건휴식") && (
-            <div className="mb-2">
-              <label className="text-[11px] text-slate-500 block mb-1">사유</label>
-              <input
-                value={reasonText}
-                onChange={(e) => setReasonText(e.target.value)}
-                placeholder="병원 진료, 가족 여행 등"
-                className="w-full h-8 px-2 border border-slate-200 rounded-md text-[13px]"
-              />
-            </div>
-          )}
-
-          <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-100">
-            <button onClick={() => setOpen(false)} className="h-7 px-2 text-[11.5px] text-slate-500 hover:text-slate-900">
-              취소
-            </button>
-            <button
-              onClick={apply}
-              className="h-7 px-3 bg-brand-600 text-white text-[11.5px] font-semibold rounded-md hover:bg-brand-700"
-            >
-              적용
-            </button>
-          </div>
         </div>
-      )}
+        {c.health.medications.length > 0 && (
+          <div className="mt-2">
+            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">복용약</div>
+            <div className="text-[12px] text-slate-700 space-y-0.5">
+              {c.health.medications.map((m) => (
+                <div key={m} className="flex items-center gap-1">
+                  <Pill className="w-3 h-3 text-violet-500" />
+                  {m}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {c.health.notes && (
+          <div className="mt-2">
+            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">메모</div>
+            <p className="text-[12px] text-slate-700 leading-relaxed">{c.health.notes}</p>
+          </div>
+        )}
+      </section>
+
+      {/* 등록 / 출석 */}
+      <section>
+        <Header4 icon={ClipboardList}>등록 / 출석</Header4>
+        <KV label="등록일" value={c.enrolledAt} />
+        <KV label="상태" value={c.status === "active" ? "재학" : c.status} />
+        {att && (
+          <>
+            <div className="mt-2">
+              <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">오늘</div>
+              <div className="text-[13px] text-slate-900 font-semibold">{att.status}</div>
+              {att.arrivedAt && (
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  등원 {att.arrivedAt}{att.leftAt && ` / 하원 ${att.leftAt}`}
+                </div>
+              )}
+              {att.reason && (
+                <div className="text-[11px] text-slate-500 mt-1">사유: {att.reason}</div>
+              )}
+              {att.guardianNotified && (
+                <div className="text-[10px] text-emerald-600 mt-1">✓ 보호자 통보됨</div>
+              )}
+              <div className="mt-2">
+                <StatusEditor
+                  childId={c.id}
+                  attendance={att}
+                  onStatusChange={onStatusChange}
+                />
+              </div>
+            </div>
+          </>
+        )}
+        <div className="mt-2 flex gap-2">
+          <Link
+            href={`/children/${c.id}`}
+            className="inline-flex items-center gap-1 text-[11px] text-brand-600 hover:underline"
+          >
+            상세 보기 →
+          </Link>
+          <Link
+            href={`/children/${c.id}/documents`}
+            className="inline-flex items-center gap-1 text-[11px] text-brand-600 hover:underline"
+          >
+            문서 →
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
 
-// ─── Sortable Header ──────────────────────────────────────────
-function Th({ children, className }: { children?: React.ReactNode; className?: string }) {
+function Header4({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
   return (
-    <th className={cn("px-3 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wide", className)}>
+    <h4 className="flex items-center gap-1.5 text-[12px] font-bold text-slate-700 mb-2 mt-1">
+      <Icon className="w-3.5 h-3.5 text-brand-500" />
       {children}
-    </th>
+    </h4>
+  );
+}
+
+function KV({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline gap-2 py-0.5 text-[12px]">
+      <span className="text-slate-400 min-w-[60px] text-[11px]">{label}</span>
+      <span className="text-slate-800 flex-1">{children ?? value ?? "—"}</span>
+    </div>
   );
 }
