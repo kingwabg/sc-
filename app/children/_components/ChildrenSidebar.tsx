@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Users, Plus, Folder, FolderOpen, ChevronRight, Pencil, Trash2, Check, X } from "lucide-react";
+import { Users, Plus, Folder, FolderOpen, ChevronRight, Pencil, Trash2, Check, X, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChildGroup } from "@/lib/features/children/types";
 
@@ -266,9 +266,6 @@ export function ChildrenSidebar({
     return (
       <div key={g.id}>
         <div
-          draggable={!isEditing && g.id !== "all"}
-          onDragStart={(e) => handleDragStart(e, g.id)}
-          onDragEnd={handleDragEnd}
           onDragOver={(e) => handleDragOver(e, g.id)}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, g.id)}
@@ -287,6 +284,19 @@ export function ChildrenSidebar({
           >
             <ChevronRight className={cn("w-3 h-3 transition", isOpen && "rotate-90")} />
           </button>
+
+          {/* Drag handle (전체 폴더 제외) */}
+          {g.id !== "all" && (
+            <span
+              draggable
+              onDragStart={(e) => handleDragStart(e, g.id)}
+              onDragEnd={handleDragEnd}
+              className="w-4 h-5 grid place-items-center text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing select-none shrink-0"
+              title="드래그해서 이동"
+            >
+              <GripVertical className="w-3 h-3" />
+            </span>
+          )}
 
           {isEditing ? (
             /* Inline edit */
