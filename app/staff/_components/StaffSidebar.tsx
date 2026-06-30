@@ -12,9 +12,11 @@
  *
  * 비책임:
  *  - 트리 렌더링/CRUD/DnD — TreeResourceShell이 처리
+ *
+ * 추가(등록) 버튼은 페이지 헤더에 있으므로 사이드바에는 노출하지 않음.
  */
 
-import { Plus, Briefcase } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import type { StaffPosition } from "@/lib/staff";
 import { POSITION_LABELS } from "@/lib/staff";
 import {
@@ -45,11 +47,9 @@ type Props = {
   selectedPosition: StaffPosition | "all";
   counts: Record<StaffPosition | "all", number>;
   onSelect: (position: StaffPosition | "all") => void;
-  /** 종사자 등록 모달 트리거 (헤더 + 버튼) */
-  onAdd: () => void;
 };
 
-export function StaffSidebar({ selectedPosition, counts, onSelect, onAdd }: Props) {
+export function StaffSidebar({ selectedPosition, counts, onSelect }: Props) {
   // 그룹 노드 카운트 = 자식 직위 카운트의 합
   const groupCounts: Record<string, number> = {};
   for (const g of STAFF_GROUPS) {
@@ -113,18 +113,6 @@ export function StaffSidebar({ selectedPosition, counts, onSelect, onAdd }: Prop
       totalLabel="총 종사자"
       onSelect={handleSelect}
       showRootAdd={false}
-      headerAction={
-        <button
-          onClick={onAdd}
-          className="w-7 h-7 rounded-lg bg-brand-600 text-white grid place-items-center hover:bg-brand-700 transition shrink-0"
-          title="종사자 등록"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      }
     />
   );
 }
-
-// 외부에서 종사자 등록 버튼 onClick이 필요할 때 쓸 수 있도록
-export { Plus };

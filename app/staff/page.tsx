@@ -193,7 +193,6 @@ function StaffBody() {
             selectedPosition={positionFilter}
             counts={positionCounts}
             onSelect={setPositionFilter}
-            onAdd={() => setShowAddModal(true)}
           />
         </div>
 
