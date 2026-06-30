@@ -23,7 +23,6 @@ import {
   Phone,
   AlertTriangle,
   Edit3,
-  ChevronRight,
   CheckCircle2,
   Clock,
   Stethoscope,
@@ -38,6 +37,11 @@ import {
   Heart,
   BookOpen,
   FileText,
+  School,
+  Cake,
+  MapPin,
+  Wallet,
+  Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CareLogFormModal } from "./_components/CareLogFormModal";
@@ -160,92 +164,96 @@ export default function ChildDetailPage() {
             <ArrowLeft className="w-4 h-4" />
             아동 목록
           </Link>
-          <ChevronRight className="w-3 h-3" />
+          <span className="text-slate-300">/</span>
           <span className="text-slate-900 font-semibold">{child.name}</span>
         </div>
 
-        {/* HERO — 큰 프로필 + 출석률 + 액션 */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-card px-6 py-5 mb-4">
-          <div className="flex items-center gap-5 flex-wrap">
-            <div className={cn("w-20 h-20 rounded-2xl grid place-items-center text-3xl font-bold shrink-0 shadow-md", childTone)}>
+        {/* HERO — 간소화: 아바타 + 이름 + 학년·나이 + 출석 + 정보수정 */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-card px-5 py-4 mb-3">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className={cn("w-14 h-14 rounded-2xl grid place-items-center text-xl font-bold shrink-0 shadow-sm", childTone)}>
               {child.name[0]}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h1 className="text-2xl font-bold text-slate-900 m-0">{child.name}</h1>
-                <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold",
-                  child.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600")}>
-                  {child.status === "active" ? "재원" : "휴원"}
+            <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+              <h1 className="text-[22px] font-bold text-slate-900 m-0 leading-none">{child.name}</h1>
+              <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold",
+                child.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600")}>
+                {child.status === "active" ? "재원" : "휴원"}
+              </span>
+              <span className="text-[13px] text-slate-500">
+                {child.grade} · 만 {ageFromBirthDate(child.birthDate)}세 · {child.gender === "M" ? "남아" : "여아"}
+              </span>
+              {todayAttendance && (
+                <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold inline-flex items-center gap-1",
+                  statusTone(todayAttendance.status).bg, statusTone(todayAttendance.status).text)}>
+                  오늘 {todayAttendance.status}
+                  {todayAttendance.arrivedAt && <span className="opacity-70 font-normal">{todayAttendance.arrivedAt}</span>}
                 </span>
-                {todayAttendance && (
-                  <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold inline-flex items-center gap-1",
-                    statusTone(todayAttendance.status).bg, statusTone(todayAttendance.status).text)}>
-                    오늘 {todayAttendance.status}
-                    {todayAttendance.arrivedAt && <span className="opacity-70 font-normal">{todayAttendance.arrivedAt}</span>}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-3 flex-wrap text-[13px] text-slate-600">
-                <span><span className="font-semibold text-slate-900">{child.grade}</span> · 만 {ageFromBirthDate(child.birthDate)}세 · {child.gender === "M" ? "남아" : "여아"}</span>
-                {child.school && (
-                  <span className="inline-flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                    {child.school}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="font-semibold text-slate-900">{child.guardian.name}</span>
-                  <span className="text-slate-500">({child.guardian.relation})</span>
-                  <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline font-medium">
-                    {child.guardian.phone}
-                  </a>
-                </span>
-              </div>
-              {child.health.allergies.length > 0 && (
-                <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                  <span className="text-[11px] text-slate-500 font-medium">알레르기:</span>
-                  {child.health.allergies.map((a) => (
-                    <span key={a} className="inline-flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">
-                      <AlertTriangle className="w-3 h-3" />
-                      {a}
-                    </span>
-                  ))}
-                </div>
               )}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button className="h-9 px-3 bg-white border border-slate-200 rounded-[10px] text-[13px] font-medium text-slate-700 hover:border-brand-600 hover:text-brand-700 transition inline-flex items-center gap-1.5">
-                <Edit3 className="w-3.5 h-3.5" />
-                정보 수정
-              </button>
-            </div>
+            <button className="h-9 px-3.5 bg-slate-900 text-white text-[13px] font-semibold rounded-[10px] hover:bg-slate-800 transition inline-flex items-center gap-1.5 shrink-0">
+              <Edit3 className="w-3.5 h-3.5" />
+              정보 수정
+            </button>
+          </div>
+
+          {/* 메타 줄: 학교 / 보호자 / 알레르기 (작게, 회색) */}
+          <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mt-3 pt-3 border-t border-slate-100 text-[12.5px] text-slate-500">
+            {child.school && (
+              <span className="inline-flex items-center gap-1">
+                <School className="w-3.5 h-3.5 text-slate-400" />
+                {child.school}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1">
+              <Phone className="w-3.5 h-3.5 text-slate-400" />
+              <span className="font-medium text-slate-700">{child.guardian.name}</span>
+              <span className="text-slate-400">({child.guardian.relation})</span>
+              <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline font-medium">
+                {child.guardian.phone}
+              </a>
+            </span>
+            {child.health.allergies.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 flex-wrap">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                {child.health.allergies.map((a) => (
+                  <span key={a} className="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">
+                    {a}
+                  </span>
+                ))}
+              </span>
+            )}
           </div>
         </div>
 
         {/* TABS (상단 가로) + CONTENT */}
         <div className="space-y-4">
-          {/* 상단 탭 바 — 가로, 한 박스 안에 */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-1.5 inline-flex gap-1 overflow-x-auto max-w-full">
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              const isActive = activeTab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 h-9 rounded-[10px] text-[13px] font-semibold transition shrink-0 whitespace-nowrap",
-                    isActive
-                      ? "bg-brand-50 text-brand-700"
-                      : "text-slate-600 hover:bg-slate-50",
-                  )}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {t.label}
-                </button>
-              );
-            })}
+          {/* 상단 탭 바 — 가로, 밑줄 indicator */}
+          <div className="border-b border-slate-200">
+            <div className="flex gap-1 overflow-x-auto">
+              {TABS.map((t) => {
+                const Icon = t.icon;
+                const isActive = activeTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={cn(
+                      "relative flex items-center gap-2 px-4 h-11 text-[14px] font-semibold transition shrink-0 whitespace-nowrap",
+                      isActive
+                        ? "text-brand-700"
+                        : "text-slate-500 hover:text-slate-700",
+                    )}
+                  >
+                    <Icon className={cn("w-4 h-4", isActive ? "text-brand-600" : "text-slate-400")} />
+                    {t.label}
+                    {isActive && (
+                      <span className="absolute -bottom-px left-2 right-2 h-0.5 bg-brand-600 rounded-t" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* 탭 컨텐츠 */}
@@ -291,63 +299,101 @@ export default function ChildDetailPage() {
 function BasicTab({ child, childTone }: { child: Child; childTone: string }) {
   return (
     <>
-      {/* 기본 정보 */}
-      <SideCard title="기본 정보">
-        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 mb-1">
-          <div className={cn("w-12 h-12 rounded-xl grid place-items-center text-lg font-bold shrink-0", childTone)}>
-            {child.name[0]}
-          </div>
-          <div>
-            <div className="font-bold text-[15px] text-slate-900">{child.name}</div>
-            <div className="text-[12px] text-slate-500">{child.grade} · 만 {ageFromBirthDate(child.birthDate)}세</div>
-          </div>
+      {/* 기본 정보 — 큰 글씨 + 위계 */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[15px] font-bold text-slate-900 m-0">기본 정보</h2>
+          <span className="text-[11px] text-slate-400">주민번호 제외</span>
         </div>
-        <SideRow label="생년월일">{child.birthDate}</SideRow>
-        <SideRow label="성별">{child.gender === "M" ? "남아" : "여아"}</SideRow>
-        <SideRow label="학년">{child.grade}</SideRow>
-        {child.school && <SideRow label="학교">{child.school}</SideRow>}
-        {child.phone && <SideRow label="휴대폰">{child.phone}</SideRow>}
-        <SideRow label="정원">{child.capacityGroup}명 그룹</SideRow>
-        <SideRow label="입소일">{child.enrolledAt}</SideRow>
-        {child.previousEnrolledAt && (
-          <SideRow label="이전 입소일" muted>{child.previousEnrolledAt}</SideRow>
-        )}
-        {child.leftAt && (
-          <SideRow label="퇴소일" muted>{child.leftAt}</SideRow>
-        )}
-      </SideCard>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+          <BigField label="이름">
+            <span className="flex items-center gap-2">
+              <div className={cn("w-7 h-7 rounded-lg grid place-items-center text-[13px] font-bold shrink-0", childTone)}>
+                {child.name[0]}
+              </div>
+              <span className="text-[18px] font-bold text-slate-900">{child.name}</span>
+              <span className="text-[12px] text-slate-500">({child.grade})</span>
+            </span>
+          </BigField>
+          <BigField label="생년월일" icon={Cake}>
+            {child.birthDate} <span className="text-slate-400 text-[14px] font-normal">· 만 {ageFromBirthDate(child.birthDate)}세</span>
+          </BigField>
+          <BigField label="성별">
+            {child.gender === "M" ? "남아" : "여아"}
+          </BigField>
+          <BigField label="학년">{child.grade}</BigField>
+          {child.school && (
+            <BigField label="학교" icon={School}>{child.school}</BigField>
+          )}
+          {child.phone && (
+            <BigField label="휴대폰" icon={Phone}>
+              <a href={`tel:${child.phone}`} className="hover:underline">{child.phone}</a>
+            </BigField>
+          )}
+          <BigField label="정원">{child.capacityGroup}명 그룹</BigField>
+          <BigField label="입소일">
+            {child.enrolledAt}
+            {child.previousEnrolledAt && (
+              <span className="text-slate-400 text-[13px] font-normal"> · 재입소 (이전: {child.previousEnrolledAt})</span>
+            )}
+          </BigField>
+          {child.leftAt && (
+            <BigField label="퇴소일" muted>{child.leftAt}</BigField>
+          )}
+        </div>
+      </div>
 
-      {/* 보호자 */}
-      <SideCard title="보호자">
-        <SideRow label="이름">{child.guardian.name}</SideRow>
-        <SideRow label="관계">{child.guardian.relation}</SideRow>
-        {child.guardian.type && <SideRow label="유형">{child.guardian.type}</SideRow>}
-        <SideRow label="연락처">
-          <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline">
-            {child.guardian.phone}
-          </a>
-        </SideRow>
-        {child.guardian.job && <SideRow label="직업">{child.guardian.job}</SideRow>}
-        {child.guardian.notes && <SideRow label="비고">{child.guardian.notes}</SideRow>}
-        {child.emergencyContact && (
-          <SideRow label="긴급연락처" muted>
-            {child.emergencyContact.name} · {child.emergencyContact.phone}
-          </SideRow>
-        )}
-      </SideCard>
+      {/* 보호자 — 연락처 강조 */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
+        <h2 className="text-[15px] font-bold text-slate-900 m-0 mb-4">보호자</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+          <BigField label="이름">{child.guardian.name}</BigField>
+          <BigField label="관계">
+            {child.guardian.relation}
+            {child.guardian.type && (
+              <span className="text-slate-400 text-[13px] font-normal"> · {child.guardian.type}</span>
+            )}
+          </BigField>
+          <BigField label="연락처" icon={Phone}>
+            <a href={`tel:${child.guardian.phone}`} className="text-brand-600 text-[18px] font-bold hover:underline">
+              {child.guardian.phone}
+            </a>
+          </BigField>
+          {child.guardian.job && <BigField label="직업">{child.guardian.job}</BigField>}
+          {child.guardian.notes && <BigField label="비고">{child.guardian.notes}</BigField>}
+          {child.emergencyContact && (
+            <BigField label="긴급연락처" muted>
+              {child.emergencyContact.name} · {child.emergencyContact.phone}
+            </BigField>
+          )}
+        </div>
+      </div>
 
-      {/* 추가 정보 */}
-      <SideCard title="추가 정보">
-        {child.address && <SideRow label="주소">{child.address}</SideRow>}
-        {child.serviceType && <SideRow label="이용유형">{child.serviceType}</SideRow>}
-        {child.medianIncomePct != null && (
-          <SideRow label="함수기준 중위소득">{child.medianIncomePct}%</SideRow>
-        )}
-        {child.kidsCallId && <SideRow label="키즈콜ID">{child.kidsCallId}</SideRow>}
-        {!child.address && !child.serviceType && child.medianIncomePct == null && !child.kidsCallId && (
-          <div className="text-center py-3 text-slate-400 text-sm">등록된 추가 정보가 없습니다.</div>
-        )}
-      </SideCard>
+      {/* 추가 정보 — 그리드 */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
+        <h2 className="text-[15px] font-bold text-slate-900 m-0 mb-4">추가 정보</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+          {child.address && (
+            <BigField label="주소" icon={MapPin} className="sm:col-span-2">
+              {child.address}
+            </BigField>
+          )}
+          {child.serviceType && <BigField label="이용유형">{child.serviceType}</BigField>}
+          {child.medianIncomePct != null && (
+            <BigField label="함수기준 중위소득" icon={Wallet}>
+              {child.medianIncomePct}%
+            </BigField>
+          )}
+          {child.kidsCallId && (
+            <BigField label="키즈콜ID" icon={Hash} className="sm:col-span-2">
+              {child.kidsCallId}
+            </BigField>
+          )}
+          {!child.address && !child.serviceType && child.medianIncomePct == null && !child.kidsCallId && (
+            <div className="col-span-2 text-center py-3 text-slate-400 text-sm">등록된 추가 정보가 없습니다.</div>
+          )}
+        </div>
+      </div>
     </>
   );
 }
@@ -355,35 +401,56 @@ function BasicTab({ child, childTone }: { child: Child; childTone: string }) {
 // ─── Tab: 건강 ────────────────────────────────────────────────
 
 function HealthTab({ child }: { child: Child }) {
+  const hasAny = child.health.allergies.length > 0 ||
+                 child.health.medications.length > 0 ||
+                 !!child.health.notes;
+  if (!hasAny) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-8 text-center text-slate-400 text-sm">
+        등록된 건강 정보가 없습니다.
+      </div>
+    );
+  }
   return (
-    <SideCard title="건강 정보">
-      <SideRow label="알레르기">
-        {child.health.allergies.length === 0 ? (
-          <span className="text-slate-400">없음</span>
-        ) : (
-          <div className="flex items-center gap-1 flex-wrap">
-            {child.health.allergies.map((a) => (
-              <span key={a} className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">
-                <AlertTriangle className="w-3 h-3" />
-                {a}
-              </span>
-            ))}
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
+      <h2 className="text-[15px] font-bold text-slate-900 m-0 mb-4">건강 정보</h2>
+      <div className="space-y-5">
+        {child.health.allergies.length > 0 && (
+          <div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">알레르기</div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {child.health.allergies.map((a) => (
+                <span key={a} className="inline-flex items-center gap-1 text-[13px] px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-semibold border border-amber-200">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {a}
+                </span>
+              ))}
+            </div>
           </div>
         )}
-      </SideRow>
-      {child.health.medications.length > 0 && (
-        <SideRow label="복용약">
-          {child.health.medications.map((m) => (
-            <div key={m} className="text-[12px]">💊 {m}</div>
-          ))}
-        </SideRow>
-      )}
-      {child.health.notes && (
-        <SideRow label="특이사항">
-          <div className="text-[12px] text-slate-700 leading-relaxed">{child.health.notes}</div>
-        </SideRow>
-      )}
-    </SideCard>
+        {child.health.medications.length > 0 && (
+          <div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">복용약</div>
+            <div className="space-y-1">
+              {child.health.medications.map((m) => (
+                <div key={m} className="flex items-center gap-2 text-[14px] text-slate-700">
+                  <span className="w-5 h-5 rounded bg-violet-50 text-violet-600 grid place-items-center text-[12px]">💊</span>
+                  {m}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {child.health.notes && (
+          <div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">특이사항</div>
+            <div className="text-[14px] text-slate-700 leading-relaxed whitespace-pre-wrap">
+              {child.health.notes}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -434,8 +501,8 @@ function AttendanceTab({
       </div>
 
       {/* Attendance stats */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
+        <div className="flex items-center gap-2 mb-4">
           <CalendarDays className="w-4 h-4 text-emerald-600" />
           <h2 className="text-sm font-semibold text-slate-900 m-0">{year}년 출석</h2>
           <span className="ml-auto inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-700">
@@ -471,7 +538,7 @@ function AttendanceTab({
       </div>
 
       {/* Category stats */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-slate-900 m-0">관찰일지 카테고리</h2>
           <span className="text-[12px] text-slate-500">총 {careLogs.length}건</span>
@@ -511,8 +578,8 @@ function DocumentsTab({
   return (
     <>
       {/* Document links */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-4">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
+        <div className="flex items-center gap-2 mb-4">
           <FileText className="w-4 h-4 text-slate-500" />
           <h2 className="text-sm font-semibold text-slate-900 m-0">아동 문서</h2>
           <span className="text-[11px] text-slate-400 ml-1">{year}년 기준</span>
@@ -553,22 +620,31 @@ function DocumentsTab({
 
 // ─── Shared sub-components ───────────────────────────────────
 
-function SideCard({ title, children }: { title: string; children: React.ReactNode }) {
+function BigField({
+  label,
+  icon: Icon,
+  children,
+  muted,
+  className,
+}: {
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  muted?: boolean;
+  className?: string;
+}) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
-      <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
-        <h3 className="text-[12px] font-bold text-slate-700 uppercase tracking-wide m-0">{title}</h3>
+    <div className={className}>
+      <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+        {label}
       </div>
-      <div className="px-4 py-3.5 space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function SideRow({ label, children, muted }: { label: string; children: React.ReactNode; muted?: boolean }) {
-  return (
-    <div className="text-[13px]">
-      <div className="text-[11px] font-semibold text-slate-400 mb-0.5">{label}</div>
-      <div className={cn("font-semibold", muted ? "text-slate-500 text-[12px]" : "text-slate-900 text-[14px]")}>
+      <div
+        className={cn(
+          "flex items-center gap-1.5 text-[15px] font-semibold",
+          muted ? "text-slate-500" : "text-slate-900",
+        )}
+      >
+        {Icon && <Icon className="w-4 h-4 text-slate-400 shrink-0" />}
         {children}
       </div>
     </div>
@@ -588,26 +664,24 @@ function AttendanceCount({
 }) {
   const tone = { emerald: "bg-emerald-50 text-emerald-700", amber: "bg-amber-50 text-amber-700", blue: "bg-blue-50 text-blue-700", red: "bg-red-50 text-red-700" }[color];
   return (
-    <div className={cn("rounded-lg px-2.5 py-2 flex items-center gap-2", tone)}>
+    <div className={cn("rounded-xl px-3 py-2.5 flex items-center gap-2", tone)}>
       <Icon className="w-4 h-4 shrink-0" />
       <div className="leading-tight">
         <div className="text-[10.5px] font-medium opacity-80">{label}</div>
-        <div className="text-base font-bold tabular-nums">{count}</div>
+        <div className="text-lg font-bold tabular-nums leading-tight">{count}</div>
       </div>
     </div>
   );
 }
 
 function YearAction({ icon, label, sub, href }: { icon: React.ReactNode; label: string; sub?: string; href?: string }) {
-  const tone = "flex items-center gap-2.5 px-3 py-2.5 bg-white border border-slate-200 rounded-[10px] hover:border-brand-500 hover:bg-brand-50/40 transition text-left";
   return (
-    <Link href={href ?? "#"} className={cn(tone, "block")}>
+    <Link href={href ?? "#"} className="flex items-center gap-2.5 px-3 py-2.5 bg-white border border-slate-200 rounded-[10px] hover:border-brand-500 hover:bg-brand-50/40 transition text-left">
       <span className="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 grid place-items-center shrink-0">{icon}</span>
       <span className="leading-tight min-w-0">
         <span className="block text-[13px] font-semibold text-slate-900 truncate">{label}</span>
         {sub && <span className="block text-[11px] text-slate-500 truncate">{sub}</span>}
       </span>
-      <ChevronRight className="w-3.5 h-3.5 text-slate-300 ml-auto shrink-0" />
     </Link>
   );
 }
