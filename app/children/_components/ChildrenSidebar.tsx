@@ -478,7 +478,7 @@ function FolderRow({
           <button
             onClick={() => onSelectGroup(g.id)}
             className={cn(
-              "flex-1 flex items-center gap-1.5 px-1.5 py-1.5 rounded-md transition text-[13px]",
+              "flex-1 flex items-center gap-1.5 px-1.5 py-1.5 rounded-md transition text-[13px] min-w-0",
               isActive ? "bg-brand-50 text-brand-700 font-semibold" : "text-slate-600 hover:bg-slate-50",
             )}
           >
@@ -496,28 +496,29 @@ function FolderRow({
             )}
           </button>
 
-          {/* Actions — 라벨 왼쪽 (드래그 핸들 옆) — 절대 위치 아님 */}
-          <div className="hidden group-hover:flex items-center gap-0.5 pl-1 pr-0.5">
-            <button onClick={() => startAdd(g.id, depth + 1)} className="w-5 h-5 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
-              <Plus className="w-3 h-3" />
+          {/* Actions — row 아래쪽 absolute (sidebar 폭 안에서) */}
+          <div className="absolute left-0 right-0 top-full hidden group-hover:flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-md shadow-md z-10"
+            style={{ marginLeft: depth * 16 }}>
+            <button onClick={() => startAdd(g.id, depth + 1)} className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
+              <Plus className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => onOpenGroupOptions(g.id)}
               className={cn(
-                "w-5 h-5 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
-                g.filter && !isFilterEmpty(g.filter) ? "text-brand-600" : "text-slate-400",
+                "w-6 h-6 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
+                g.filter && !isFilterEmpty(g.filter) ? "text-brand-600" : "text-slate-500",
               )}
               title="폴더 조건 (필터)"
             >
-              <SlidersHorizontal className="w-3 h-3" />
+              <SlidersHorizontal className="w-3.5 h-3.5" />
             </button>
             {g.id !== "all" && (
               <>
-                <button onClick={() => startEdit(g)} className="w-5 h-5 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="이름 수정">
-                  <Pencil className="w-3 h-3" />
+                <button onClick={() => startEdit(g)} className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600" title="이름 수정">
+                  <Pencil className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={() => handleDelete(g.id, g.label)} className="w-5 h-5 grid place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500" title="삭제">
-                  <Trash2 className="w-3 h-3" />
+                <button onClick={() => handleDelete(g.id, g.label)} className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-red-50 hover:text-red-500" title="삭제">
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </>
             )}
