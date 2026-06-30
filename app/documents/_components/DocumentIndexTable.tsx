@@ -16,6 +16,7 @@ import {
   NotebookPen,
   Paperclip,
   Search,
+  FileCheck2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +35,7 @@ const KIND_META: Record<DocumentKind, { label: string; icon: React.ComponentType
   "child-card":     { label: "아동카드",  icon: IdCard,      tone: "bg-blue-100 text-blue-700" },
   "care-log":       { label: "돌봄일지",  icon: NotebookPen, tone: "bg-emerald-100 text-emerald-700" },
   "child-document": { label: "아동문서",  icon: Paperclip,   tone: "bg-amber-100 text-amber-700" },
+  "approval-doc":   { label: "결재문서",  icon: FileCheck2,  tone: "bg-purple-100 text-purple-700" },
 };
 
 function formatRelative(ts: number): string {

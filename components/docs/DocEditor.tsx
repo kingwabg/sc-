@@ -3,22 +3,28 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Check, Loader2, FileCheck2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { NaverEditor, type NaverEditorHandle } from "./NaverEditor";
+import { ApprovalRequestDialog } from "./ApprovalRequestDialog";
 import { docStorage } from "@/lib/docs/storage";
+import { approvalService } from "@/lib/approvals/service";
 import type { Doc } from "@/lib/docs/types";
+import type { ApprovalFormKey, ApprovalLineInput } from "@/lib/approvals/types";
+import { useToast } from "@/components/ui/Toast";
 
 type SaveState = "idle" | "saving" | "saved";
 
 export function DocEditor({ docId }: { docId: string }) {
   const router = useRouter();
+  const toast = useToast();
   const editorRef = useRef<NaverEditorHandle | null>(null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [title, setTitle] = useState("");
   const titleRef = useRef(title);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [editorReady, setEditorReady] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialPushDone = useRef(false);
 
@@ -110,6 +116,39 @@ export function DocEditor({ docId }: { docId: string }) {
     router.push("/docs");
   }
 
+  async function handleApprovalSubmit(input: {
+    form: ApprovalFormKey;
+    line: ApprovalLineInput[];
+    urgent: boolean;
+  }) {
+    if (!doc) return;
+    // 먼저 현재 내용 저장
+    await flushSave();
+    // 그 다음 결재 요청 생성
+    const content = editorRef.current?.getHTML() ?? doc.content;
+    const snippet = content
+      .replace(/<style[\s\S]*?<\/style>/g, "")
+      .replace(/<script[\s\S]*?<\/script>/g, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 140);
+    const req = approvalService.createRequest({
+      documentId: doc.id,
+      documentUrl: `/docs/${doc.id}`,
+      documentKind: "html-doc",
+      title: titleRef.current || doc.title,
+      form: input.form,
+      line: input.line,
+      urgent: input.urgent,
+      snippet: snippet || undefined,
+    });
+    setShowApprovalDialog(false);
+    toast.success(`결재 요청 완료 (${req.docNo})`);
+    // 결재함 상세로 이동
+    router.push(`/approval/doc/${req.id}`);
+  }
+
   if (!doc) {
     return (
       <AppShell>
@@ -142,6 +181,13 @@ export function DocEditor({ docId }: { docId: string }) {
             </button>
             <SaveIndicator state={saveState} />
             <button
+              onClick={() => setShowApprovalDialog(true)}
+              className="inline-flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+            >
+              <FileCheck2 className="w-3.5 h-3.5" />
+              결재 올리기
+            </button>
+            <button
               onClick={onDelete}
               className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-red-600 transition"
             >
@@ -171,6 +217,14 @@ export function DocEditor({ docId }: { docId: string }) {
           </p>
         )}
       </div>
+
+      {showApprovalDialog && doc && (
+        <ApprovalRequestDialog
+          documentTitle={titleRef.current || doc.title}
+          onClose={() => setShowApprovalDialog(false)}
+          onSubmit={handleApprovalSubmit}
+        />
+      )}
     </AppShell>
   );
 }

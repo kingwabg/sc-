@@ -32,6 +32,7 @@ type KindFilter = DocumentKind | "all";
 const KIND_FILTERS: { value: KindFilter; label: string }[] = [
   { value: "all",            label: "전체" },
   { value: "html-doc",       label: KIND_META["html-doc"].label },
+  { value: "approval-doc",   label: KIND_META["approval-doc"].label },
   { value: "child-card",     label: KIND_META["child-card"].label },
   { value: "care-log",       label: KIND_META["care-log"].label },
   { value: "child-document", label: KIND_META["child-document"].label },

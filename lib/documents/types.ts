@@ -16,7 +16,8 @@ export type DocumentKind =
   | "hwp-doc"         // /docs/hwp 의 HWP 파일
   | "child-card"      // /children/[id] 의 아동카드 observations
   | "care-log"        // 돌봄일지 (식사/학습/놀이/관찰 등)
-  | "child-document"; // /children/[id]/documents 의 첨부 문서 (IEP, 사진 등)
+  | "child-document"  // /children/[id]/documents 의 첨부 문서 (IEP, 사진 등)
+  | "approval-doc";   // 결재 진행/완료된 문서 (/approval)
 
 export type DocumentIndexEntry = {
   /** = 원본 데이터의 ID (예: doc id, care-log id, child id) */
