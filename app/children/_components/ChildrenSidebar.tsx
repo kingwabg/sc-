@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   DndContext,
   PointerSensor,
@@ -168,7 +169,7 @@ export function ChildrenSidebar({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <aside className="bg-white border border-slate-200 rounded-2xl shadow-card flex flex-col h-full">
+      <aside className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden flex flex-col h-full">
         {/* Header */}
         <div className="px-4 py-3.5 border-b border-slate-200 flex items-center gap-2">
           <Users className="w-4 h-4 text-brand-600" />
@@ -415,6 +416,33 @@ function FolderRow({
     disabled: g.id === "all" || isEditing,
   });
 
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const [hovering, setHovering] = useState(false);
+  const [portalPos, setPortalPos] = useState<{ top: number; right: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  function updatePortalPos() {
+    const el = rowRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setPortalPos({ top: r.top + r.height / 2, right: window.innerWidth - r.right });
+  }
+
+  useEffect(() => {
+    if (hovering) {
+      updatePortalPos();
+      const onScroll = () => updatePortalPos();
+      const onResize = () => updatePortalPos();
+      window.addEventListener("scroll", onScroll, true);
+      window.addEventListener("resize", onResize);
+      return () => {
+        window.removeEventListener("scroll", onScroll, true);
+        window.removeEventListener("resize", onResize);
+      };
+    }
+  }, [hovering]);
+
   const isThisOver = isOver || overId === g.id;
   const invalid = activeDragId != null && activeDragId !== g.id &&
     (() => {
@@ -424,7 +452,9 @@ function FolderRow({
 
   return (
     <div
-      ref={setDropRef}
+      ref={(node) => { rowRef.current = node; setDropRef(node); }}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
       className={cn(
         "group relative flex items-center rounded-md transition",
         isDragging && "opacity-30",
@@ -496,8 +526,14 @@ function FolderRow({
             )}
           </button>
 
-          {/* Actions — row 우측 옆쪽 absolute (sidebar 밖으로 허용) */}
-          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-1 hidden group-hover:flex items-center gap-0.5 px-1 py-0.5 bg-white border border-slate-200 rounded-md shadow-md z-20 whitespace-nowrap">
+          {/* Actions — portal로 row 우측 바깥에 fixed 위치 (overflow/clip 영향 없음) */}
+          {mounted && hovering && portalPos && createPortal(
+            <div
+              className="fixed z-50 -translate-y-1/2 flex items-center gap-0.5 px-1 py-0.5 bg-white border border-slate-200 rounded-md shadow-xl whitespace-nowrap"
+              style={{ top: portalPos.top, right: portalPos.right }}
+              onMouseEnter={() => setHovering(true)}
+              onMouseLeave={() => setHovering(false)}
+            >
             <button onClick={() => startAdd(g.id, depth + 1)} className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
               <Plus className="w-3.5 h-3.5" />
             </button>
@@ -521,7 +557,9 @@ function FolderRow({
                 </button>
               </>
             )}
-          </div>
+            </div>,
+            document.body,
+          )}
         </>
       )}
     </div>
