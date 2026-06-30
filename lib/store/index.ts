@@ -9,6 +9,7 @@ export {
   getTenantSettings,
   saveTenantSettings,
 } from "./settings";
+export type { TenantSettings } from "./settings";
 
 // Children
 export {

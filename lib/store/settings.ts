@@ -1,8 +1,14 @@
 /**
  * Tenant 설정 (시설 정원/사업자 정보)
  */
-import type { TenantSettings } from "../tenant-store";
 import { readLS, writeLS } from "./_ls";
+
+export type TenantSettings = {
+  capacity: number;
+  businessName: string;
+  representative: string;
+  businessRegNo: string;
+};
 
 const SETTINGS_KEY = "officex:tenant-settings";
 

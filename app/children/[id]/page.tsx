@@ -17,7 +17,7 @@ import {
   getExtraChildren,
   addExtraCareLog,
   getAttendanceOverrides,
-} from "@/lib/tenant-store";
+} from "@/lib/store";
 import {
   ArrowLeft,
   Phone,

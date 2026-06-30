@@ -10,7 +10,7 @@ import {
   type Volunteer,
   type VolunteerType,
 } from "@/lib/volunteer";
-import { getExtraVolunteers, addExtraVolunteer } from "@/lib/tenant-store";
+import { getExtraVolunteers, addExtraVolunteer } from "@/lib/store";
 import { VolunteersSidebar } from "./_components/VolunteersSidebar";
 import { VolunteersTable } from "./_components/VolunteersTable";
 import { AddVolunteerModal } from "./_components/AddVolunteerModal";

@@ -7,7 +7,7 @@ import {
   getMailAccounts,
   addMailAccount,
   removeMailAccount,
-} from "@/lib/tenant-store";
+} from "@/lib/store";
 import { PROVIDER_META } from "@/lib/data/mail-detail";
 import type { MailAccount, MailProvider } from "@/lib/types/mail";
 import {

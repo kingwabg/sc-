@@ -16,7 +16,7 @@ import {
   STATUS_TONE,
 } from "@/lib/attendance";
 import type { AttendanceStatus } from "@/lib/children";
-import { getTenantSettings } from "@/lib/tenant-store";
+import { getTenantSettings } from "@/lib/store";
 import {
   ArrowLeft,
   CalendarDays,

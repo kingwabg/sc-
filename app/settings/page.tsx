@@ -10,7 +10,7 @@ import {
   type SettingItem,
   type SettingSubItem,
 } from "@/lib/settings";
-import { getTenantSettings, saveTenantSettings, type TenantSettings } from "@/lib/tenant-store";
+import { getTenantSettings, saveTenantSettings, type TenantSettings } from "@/lib/store";
 import {
   ChevronLeft,
   PanelLeftClose,

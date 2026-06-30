@@ -39,7 +39,7 @@ import {
   getTodayScheduleCount,
   getSidebarCollapsed,
   setSidebarCollapsed,
-} from "@/lib/tenant-store";
+} from "@/lib/store";
 import { SidebarUserMenu } from "./SidebarUserMenu";
 
 // ─── 타입 ───────────────────────────────────────────────────

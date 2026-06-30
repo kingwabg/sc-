@@ -32,7 +32,7 @@ import {
   updateGroupFilter,
 } from "@/lib/store/children";
 import { filterChildren, isFilterEmpty, matchesFilter } from "@/lib/features/children/utils";
-import { getTenantSettings } from "@/lib/tenant-store";
+import { getTenantSettings } from "@/lib/store";
 import { exportChildrenCSV } from "@/lib/features/children/export";
 import {
   DEFAULT_TABLE_OPTIONS,

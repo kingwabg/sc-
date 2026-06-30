@@ -18,7 +18,7 @@ import {
   getExtraVolunteers,
   getVolunteerAttendanceOverrides,
   setVolunteerAttendanceOverride,
-} from "@/lib/tenant-store";
+} from "@/lib/store";
 import type { StaffAttendance } from "@/lib/staff";
 import type { VolunteerAttendance } from "@/lib/volunteer";
 import { AttendanceMonthNav } from "./_components/AttendanceMonthNav";

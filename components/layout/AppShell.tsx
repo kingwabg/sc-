@@ -5,7 +5,7 @@ import { CustomProvider } from "rsuite";
 import koKR from "rsuite/locales/ko_KR";
 import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
-import { getSidebarCollapsed } from "@/lib/tenant-store";
+import { getSidebarCollapsed } from "@/lib/store";
 import { ToastProvider } from "@/components/ui/Toast";
 
 /**
