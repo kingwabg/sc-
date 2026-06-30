@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Child, CapacityGroup } from "@/lib/features/children/types";
@@ -14,19 +14,54 @@ type Props = {
   onSubmit: (child: Omit<Child, "id" | "tenantId" | "status" | "enrolledAt">) => void;
 };
 
+function ageFromBirthDate(birthDate: string): number {
+  if (!birthDate) return 0;
+  const b = new Date(birthDate);
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+  return age;
+}
+
 export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
-  // 성 / 이름 분리 — 한국 이름 관행 (1글자 성 + 2~3글자 이름)
+  // ── 기본 정보 ─────────────────────────────────────────────
   const [nameLast, setNameLast] = useState("");
   const [nameFirst, setNameFirst] = useState("");
   const [gender, setGender] = useState<"M" | "F">("M");
+  const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [grade, setGrade] = useState("초1");
+  const [school, setSchool] = useState("");
+
+  // ── 입소 / 퇴소 ──────────────────────────────────────────
+  const [previousEnrolledAt, setPreviousEnrolledAt] = useState("");
+  const [leftAt, setLeftAt] = useState("");
+
+  // ── 주소 / 이용 ──────────────────────────────────────────
+  const [address, setAddress] = useState("");
+  const [serviceType, setServiceType] = useState("일반");
+  const [medianIncomePct, setMedianIncomePct] = useState("");
+
+  // ── 보호자 ───────────────────────────────────────────────
   const [guardianName, setGuardianName] = useState("");
   const [relation, setRelation] = useState<"부" | "모" | "조부모" | "기타">("모");
-  const [phone, setPhone] = useState("");
-  const [job, setJob] = useState("");
+  const [guardianType, setGuardianType] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
+  const [guardianNotes, setGuardianNotes] = useState("");
+
+  // ── 담당자 ───────────────────────────────────────────────
+  const [kidsCallId, setKidsCallId] = useState("");
+
+  // ── 건강 ─────────────────────────────────────────────────
   const [allergiesText, setAllergiesText] = useState("");
   const [notes, setNotes] = useState("");
+
+  // ── 연령 자동 계산 ─────────────────────────────────────
+  const [age, setAge] = useState(0);
+  useEffect(() => {
+    setAge(ageFromBirthDate(birthDate));
+  }, [birthDate]);
 
   const fullName = `${nameLast}${nameFirst}`;
   const isValid =
@@ -34,7 +69,7 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
     nameFirst.trim().length > 0 &&
     birthDate.length > 0 &&
     guardianName.trim().length > 0 &&
-    phone.trim().length > 0;
+    guardianPhone.trim().length > 0;
 
   function handleSubmit() {
     if (!isValid) return;
@@ -43,20 +78,29 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
       nameLast: nameLast.trim(),
       nameFirst: nameFirst.trim(),
       gender,
+      phone: phone.trim() || undefined,
       birthDate,
       grade,
+      school: school.trim() || undefined,
       capacityGroup,
       guardian: {
         name: guardianName.trim(),
         relation,
-        phone: phone.trim(),
-        job: job.trim() || undefined,
+        type: guardianType.trim() || undefined,
+        phone: guardianPhone.trim(),
+        notes: guardianNotes.trim() || undefined,
       },
       health: {
         allergies: allergiesText.split(",").map((s) => s.trim()).filter(Boolean),
         medications: [],
         notes: notes.trim(),
       },
+      previousEnrolledAt: previousEnrolledAt || undefined,
+      leftAt: leftAt || undefined,
+      address: address.trim() || undefined,
+      serviceType: serviceType.trim() || undefined,
+      medianIncomePct: medianIncomePct ? Number(medianIncomePct) : undefined,
+      kidsCallId: kidsCallId.trim() || undefined,
     });
   }
 
@@ -66,7 +110,7 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -89,7 +133,7 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
 
         {/* Form */}
         <div className="p-6 space-y-4">
-          {/* 기본 정보 — 성/이름 분리 */}
+          {/* 기본 정보 */}
           <Section title="기본 정보">
             <Grid>
               <Field label="성" required>
@@ -112,13 +156,10 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
               </Field>
             </Grid>
 
-            {/* 미리보기 — 합쳐진 이름 */}
             {fullName.length > 0 && (
               <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-brand-50 border border-brand-200 rounded-[10px] text-[12px]">
                 <span className="text-slate-500">미리보기</span>
-                <span className="font-bold text-brand-700 text-[13px] tabular-nums">
-                  {fullName}
-                </span>
+                <span className="font-bold text-brand-700 text-[13px] tabular-nums">{fullName}</span>
               </div>
             )}
 
@@ -145,6 +186,14 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
             </div>
 
             <Grid>
+              <Field label="휴대폰" hint="아동 본인 (없으면 비워두세요)">
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="010-0000-0000"
+                  className={inputCls}
+                />
+              </Field>
               <Field label="생년월일" required>
                 <input
                   type="date"
@@ -153,18 +202,85 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
                   className={inputCls}
                 />
               </Field>
+            </Grid>
+
+            <Grid>
               <Field label="학년">
                 <select
                   value={grade}
                   onChange={(e) => setGrade(e.target.value)}
                   className={inputCls}
                 >
-                  {["초1", "초2", "초3", "초4", "초5", "초6"].map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
+                  {["미취학", "초1", "초2", "초3", "초4", "초5", "초6", "중1", "중2", "중3", "고1", "고2", "고3"].map((g) => (
+                    <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
+              </Field>
+              <Field label="학교">
+                <input
+                  value={school}
+                  onChange={(e) => setSchool(e.target.value)}
+                  placeholder="OO초등학교"
+                  className={inputCls}
+                />
+              </Field>
+            </Grid>
+          </Section>
+
+          {/* 입소 / 퇴소 */}
+          <Section title="입소 / 퇴소">
+            <Grid>
+              <Field label="입소일" hint="오늘 날짜가 자동 입력됩니다">
+                <input
+                  type="date"
+                  value={previousEnrolledAt}
+                  onChange={(e) => setPreviousEnrolledAt(e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="퇴소일" hint="재입소 시 이전 입소일">
+                <input
+                  type="date"
+                  value={leftAt}
+                  onChange={(e) => setLeftAt(e.target.value)}
+                  className={inputCls}
+                />
+              </Field>
+            </Grid>
+          </Section>
+
+          {/* 주소 / 이용 */}
+          <Section title="주소 / 이용">
+            <Field label="주소">
+              <input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="서울특별시 OO구 OO동 123-45"
+                className={inputCls}
+              />
+            </Field>
+            <Grid>
+              <Field label="이용유형">
+                <select
+                  value={serviceType}
+                  onChange={(e) => setServiceType(e.target.value)}
+                  className={inputCls}
+                >
+                  {["일반", "긴급", "맞춤", "기타"].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="함수기준 중위소득 (%)">
+                <input
+                  type="number"
+                  value={medianIncomePct}
+                  onChange={(e) => setMedianIncomePct(e.target.value)}
+                  placeholder="0~150"
+                  min={0}
+                  max={200}
+                  className={inputCls}
+                />
               </Field>
             </Grid>
           </Section>
@@ -172,7 +288,7 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
           {/* 보호자 */}
           <Section title="보호자">
             <Grid>
-              <Field label="보호자명" required>
+              <Field label="성명" required>
                 <input
                   value={guardianName}
                   onChange={(e) => setGuardianName(e.target.value)}
@@ -187,29 +303,49 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
                   className={inputCls}
                 >
                   {["모", "부", "조부모", "기타"].map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
+                    <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
               </Field>
-              <Field label="연락처" required>
+            </Grid>
+            <Grid>
+              <Field label="유형" hint="예: 양육, 친권, 후견">
                 <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="010-0000-0000"
+                  value={guardianType}
+                  onChange={(e) => setGuardianType(e.target.value)}
+                  placeholder="양육"
                   className={inputCls}
                 />
               </Field>
-              <Field label="직업">
+              <Field label="비고">
                 <input
-                  value={job}
-                  onChange={(e) => setJob(e.target.value)}
-                  placeholder="회사원"
+                  value={guardianNotes}
+                  onChange={(e) => setGuardianNotes(e.target.value)}
+                  placeholder=""
                   className={inputCls}
                 />
               </Field>
             </Grid>
+            <Field label="연락처" required>
+              <input
+                value={guardianPhone}
+                onChange={(e) => setGuardianPhone(e.target.value)}
+                placeholder="010-0000-0000"
+                className={inputCls}
+              />
+            </Field>
+          </Section>
+
+          {/* 담당자 */}
+          <Section title="담당자">
+            <Field label="키즈콜ID" hint="담당자키즈콜 시스템 ID">
+              <input
+                value={kidsCallId}
+                onChange={(e) => setKidsCallId(e.target.value)}
+                placeholder="staff_xxx"
+                className={inputCls}
+              />
+            </Field>
           </Section>
 
           {/* 건강 */}
@@ -260,6 +396,7 @@ export function AddChildModal({ capacityGroup, onClose, onSubmit }: Props) {
 }
 
 // ─── Form Helpers ─────────────────────────────────────────────
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>

@@ -220,24 +220,43 @@ export default function ChildDetailPage() {
               <SideRow label="생년월일">{child.birthDate}</SideRow>
               <SideRow label="성별">{child.gender === "M" ? "남아" : "여아"}</SideRow>
               <SideRow label="학년">{child.grade}</SideRow>
+              {child.school && <SideRow label="학교">{child.school}</SideRow>}
+              {child.phone && <SideRow label="휴대폰">{child.phone}</SideRow>}
               <SideRow label="정원">{child.capacityGroup}명 그룹</SideRow>
               <SideRow label="입소일">{child.enrolledAt}</SideRow>
+              {child.previousEnrolledAt && (
+                <SideRow label="이전 입소일" muted>{child.previousEnrolledAt}</SideRow>
+              )}
+              {child.leftAt && (
+                <SideRow label="퇴소일" muted>{child.leftAt}</SideRow>
+              )}
             </SideCard>
 
             <SideCard title="보호자">
               <SideRow label="이름">{child.guardian.name}</SideRow>
               <SideRow label="관계">{child.guardian.relation}</SideRow>
+              {child.guardian.type && <SideRow label="유형">{child.guardian.type}</SideRow>}
               <SideRow label="연락처">
                 <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline">
                   {child.guardian.phone}
                 </a>
               </SideRow>
               {child.guardian.job && <SideRow label="직업">{child.guardian.job}</SideRow>}
+              {child.guardian.notes && <SideRow label="비고">{child.guardian.notes}</SideRow>}
               {child.emergencyContact && (
                 <SideRow label="긴급연락처" muted>
                   {child.emergencyContact.name} · {child.emergencyContact.phone}
                 </SideRow>
               )}
+            </SideCard>
+
+            <SideCard title="추가 정보">
+              {child.address && <SideRow label="주소">{child.address}</SideRow>}
+              {child.serviceType && <SideRow label="이용유형">{child.serviceType}</SideRow>}
+              {child.medianIncomePct != null && (
+                <SideRow label="함수기준 중위소득">{child.medianIncomePct}%</SideRow>
+              )}
+              {child.kidsCallId && <SideRow label="키즈콜ID">{child.kidsCallId}</SideRow>}
             </SideCard>
 
             <SideCard title="건강 정보">

@@ -44,14 +44,22 @@ export type Child = {
   nameFirst: string;
   birthDate: string; // YYYY-MM-DD
   gender: "M" | "F";
+  /** 아동 본인 휴대폰 (없을 수 있음) */
+  phone?: string;
   photoUrl?: string;
   capacityGroup: CapacityGroup;
   grade?: string;
+  /** 학교명 */
+  school?: string;
   guardian: {
     name: string;
     relation: "부" | "모" | "조부모" | "기타";
+    /** 보호자 유형 (예: "양육", "친권", "후견" 등) */
+    type?: string;
     phone: string;
     job?: string;
+    /** 비고 */
+    notes?: string;
   };
   emergencyContact?: {
     name: string;
@@ -62,7 +70,20 @@ export type Child = {
     medications: string[];
     notes: string;
   };
+  /** 입소일 */
   enrolledAt: string;
+  /** 이전 입소일 (재입소 시) */
+  previousEnrolledAt?: string;
+  /** 퇴소일 */
+  leftAt?: string;
+  /** 주소 */
+  address?: string;
+  /** 이용유형 (예: "일반", "긴급", "맞춤" 등) */
+  serviceType?: string;
+  /** 함수기준 중위소득 (%) */
+  medianIncomePct?: number;
+  /** 담당자키즈콜ID */
+  kidsCallId?: string;
   status: "active" | "leave" | "left";
 };
 
