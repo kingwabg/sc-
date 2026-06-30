@@ -131,10 +131,7 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
             </div>
             <div className="text-left min-w-0">
               <div className="font-semibold text-slate-900 text-[13px] truncate">
-                {row.name}
-              </div>
-              <div className="text-[10.5px] text-slate-400">
-                {row.age}세 · {row.grade}
+                {row.name} <span className="text-[10.5px] text-slate-400 font-normal">· {row.age}세 · {row.grade}</span>
               </div>
             </div>
           </Link>
@@ -163,11 +160,9 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
       flexGrow: 2,
       minWidth: 50,
       cell: (row) => (
-        <div className="leading-tight">
-          <div className="text-[13px] text-slate-900">{row.guardianName}</div>
-          <div className="text-[11px] text-slate-500">
-            {row.guardianRelation} · {row.guardianPhone}
-          </div>
+        <div className="text-[13px] text-slate-900 truncate">
+          {row.guardianName}
+          <span className="text-[11px] text-slate-500"> · {row.guardianRelation} · {row.guardianPhone}</span>
         </div>
       ),
     },
