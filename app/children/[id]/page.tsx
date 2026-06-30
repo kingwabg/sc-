@@ -223,34 +223,32 @@ export default function ChildDetailPage() {
           </div>
         </div>
 
-        {/* TABS + CONTENT */}
-        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
-          {/* 좌측 탭 네비 */}
-          <aside className="lg:sticky lg:top-[80px] lg:self-start">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-1.5 flex lg:flex-col gap-1 overflow-x-auto">
-              {TABS.map((t) => {
-                const Icon = t.icon;
-                const isActive = activeTab === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    onClick={() => setActiveTab(t.key)}
-                    className={cn(
-                      "flex items-center gap-2 px-3 h-9 rounded-[10px] text-[13px] font-semibold transition shrink-0 lg:shrink lg:w-full text-left whitespace-nowrap",
-                      isActive
-                        ? "bg-brand-50 text-brand-700"
-                        : "text-slate-600 hover:bg-slate-50",
-                    )}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
+        {/* TABS (상단 가로) + CONTENT */}
+        <div className="space-y-4">
+          {/* 상단 탭 바 — 가로, 한 박스 안에 */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-1.5 inline-flex gap-1 overflow-x-auto max-w-full">
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              const isActive = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 h-9 rounded-[10px] text-[13px] font-semibold transition shrink-0 whitespace-nowrap",
+                    isActive
+                      ? "bg-brand-50 text-brand-700"
+                      : "text-slate-600 hover:bg-slate-50",
+                  )}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
 
-          {/* 우측 탭 컨텐츠 */}
+          {/* 탭 컨텐츠 */}
           <div className="min-w-0 space-y-4">
             {activeTab === "basic" && <BasicTab child={child} childTone={childTone} />}
             {activeTab === "health" && <HealthTab child={child} />}
