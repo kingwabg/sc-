@@ -17,6 +17,7 @@ import {
   getExtraChildren,
   addExtraCareLog,
   getAttendanceOverrides,
+  updateExtraChild,
 } from "@/lib/store";
 import {
   ArrowLeft,
@@ -84,12 +85,79 @@ export default function ChildDetailPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
-  const child = useMemo<Child | undefined>(() => {
+  const [child, setChild] = useState<Child | undefined>(() => {
     const fromMock = getChildById(id);
     if (fromMock) return fromMock;
     if (typeof window === "undefined") return undefined;
     return getExtraChildren().find((c) => c.id === id);
+  });
+  // Re-load on id change
+  useEffect(() => {
+    const fromMock = getChildById(id);
+    if (fromMock) setChild(fromMock);
+    else if (typeof window !== "undefined") {
+      setChild(getExtraChildren().find((c) => c.id === id));
+    }
   }, [id, mounted]);
+
+  // 인라인 편집
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    grade: "",
+    school: "",
+    phone: "",
+    guardianName: "",
+    guardianPhone: "",
+    guardianJob: "",
+    address: "",
+  });
+
+  function startEdit() {
+    if (!child) return;
+    setEditForm({
+      name: child.name,
+      grade: child.grade ?? "",
+      school: child.school ?? "",
+      phone: child.phone ?? "",
+      guardianName: child.guardian.name,
+      guardianPhone: child.guardian.phone,
+      guardianJob: child.guardian.job ?? "",
+      address: child.address ?? "",
+    });
+    setEditMode(true);
+  }
+
+  function cancelEdit() {
+    setEditMode(false);
+  }
+
+  function saveEdit() {
+    if (!child) return;
+    const isExtra = typeof window !== "undefined" && getExtraChildren().some((c) => c.id === child.id);
+    if (!isExtra) {
+      window.alert("데모 데이터는 수정할 수 없어요 (등록한 아동만 수정 가능)");
+      return;
+    }
+    const updates: Partial<Child> = {
+      name: editForm.name || child.name,
+      grade: editForm.grade || child.grade,
+      school: editForm.school || undefined,
+      phone: editForm.phone || undefined,
+      guardian: {
+        ...child.guardian,
+        name: editForm.guardianName || child.guardian.name,
+        phone: editForm.guardianPhone || child.guardian.phone,
+        job: editForm.guardianJob || undefined,
+      },
+      address: editForm.address || undefined,
+    };
+    const updated = updateExtraChild(child.id, updates);
+    if (updated) {
+      setChild(updated);
+      setEditMode(false);
+    }
+  }
 
   const [activeTab, setActiveTab] = useState<TabKey>("basic");
   const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -188,60 +256,166 @@ export default function ChildDetailPage() {
 
         {/* HERO — 간소화: 아바타 + 이름 + 학년·나이 + 출석 + 정보수정 */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-card px-5 py-4 mb-3">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className={cn("w-14 h-14 rounded-2xl grid place-items-center text-xl font-bold shrink-0 shadow-sm", childTone)}>
-              {child.name[0]}
-            </div>
-            <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
-              <h1 className="text-[22px] font-bold text-slate-900 m-0 leading-none">{child.name}</h1>
-              <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold",
-                child.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600")}>
-                {child.status === "active" ? "재원" : "휴원"}
-              </span>
-              <span className="text-[13px] text-slate-500">
-                {child.grade} · 만 {ageFromBirthDate(child.birthDate)}세 · {child.gender === "M" ? "남아" : "여아"}
-              </span>
-              {todayAttendance && (
-                <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold inline-flex items-center gap-1",
-                  statusTone(todayAttendance.status).bg, statusTone(todayAttendance.status).text)}>
-                  오늘 {todayAttendance.status}
-                  {todayAttendance.arrivedAt && <span className="opacity-70 font-normal">{todayAttendance.arrivedAt}</span>}
-                </span>
-              )}
-            </div>
-            <button className="h-9 px-3.5 bg-slate-900 text-white text-[13px] font-semibold rounded-[10px] hover:bg-slate-800 transition inline-flex items-center gap-1.5 shrink-0">
-              <Edit3 className="w-3.5 h-3.5" />
-              정보 수정
-            </button>
-          </div>
-
-          {/* 메타 줄: 학교 / 보호자 / 알레르기 (작게, 회색) */}
-          <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mt-3 pt-3 border-t border-slate-100 text-[12.5px] text-slate-500">
-            {child.school && (
-              <span className="inline-flex items-center gap-1">
-                <School className="w-3.5 h-3.5 text-slate-400" />
-                {child.school}
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1">
-              <Phone className="w-3.5 h-3.5 text-slate-400" />
-              <span className="font-medium text-slate-700">{child.guardian.name}</span>
-              <span className="text-slate-400">({child.guardian.relation})</span>
-              <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline font-medium">
-                {child.guardian.phone}
-              </a>
-            </span>
-            {child.health.allergies.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 flex-wrap">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                {child.health.allergies.map((a) => (
-                  <span key={a} className="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">
-                    {a}
+          {editMode ? (
+            /* === EDIT MODE === */
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={cn("w-12 h-12 rounded-2xl grid place-items-center text-lg font-bold shrink-0", childTone)}>
+                    {editForm.name?.[0] || child.name[0]}
+                  </div>
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                      placeholder="이름"
+                      className="h-9 px-3 bg-white border border-slate-200 rounded-md text-[15px] font-semibold focus:outline-none focus:border-blue-500"
+                    />
+                    <select
+                      value={editForm.grade}
+                      onChange={(e) => setEditForm((f) => ({ ...f, grade: e.target.value }))}
+                      className="h-9 px-3 bg-white border border-slate-200 rounded-md text-[13px] focus:outline-none focus:border-blue-500"
+                    >
+                      {GRADE_ORDER.map((g) => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                  <button
+                    onClick={cancelEdit}
+                    className="h-9 px-3 bg-white border border-slate-200 text-slate-700 text-[13px] font-medium rounded-[10px] hover:bg-slate-50 transition"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    className="h-9 px-3.5 bg-blue-600 text-white text-[13px] font-semibold rounded-[10px] hover:bg-blue-700 transition inline-flex items-center gap-1.5"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[12.5px]">
+                <div className="flex items-center gap-2">
+                  <School className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    value={editForm.school}
+                    onChange={(e) => setEditForm((f) => ({ ...f, school: e.target.value }))}
+                    placeholder="학교"
+                    className="flex-1 h-8 px-2.5 bg-white border border-slate-200 rounded-md text-[13px] focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                    placeholder="아동 휴대폰"
+                    className="flex-1 h-8 px-2.5 bg-white border border-slate-200 rounded-md text-[13px] focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    value={editForm.guardianName}
+                    onChange={(e) => setEditForm((f) => ({ ...f, guardianName: e.target.value }))}
+                    placeholder="보호자명"
+                    className="flex-1 h-8 px-2.5 bg-white border border-slate-200 rounded-md text-[13px] focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    value={editForm.guardianPhone}
+                    onChange={(e) => setEditForm((f) => ({ ...f, guardianPhone: e.target.value }))}
+                    placeholder="보호자 연락처"
+                    className="flex-1 h-8 px-2.5 bg-white border border-slate-200 rounded-md text-[13px] focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    value={editForm.guardianJob}
+                    onChange={(e) => setEditForm((f) => ({ ...f, guardianJob: e.target.value }))}
+                    placeholder="보호자 직업"
+                    className="flex-1 h-8 px-2.5 bg-white border border-slate-200 rounded-md text-[13px] focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <input
+                    value={editForm.address}
+                    onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
+                    placeholder="주소"
+                    className="flex-1 h-8 px-2.5 bg-white border border-slate-200 rounded-md text-[13px] focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            /* === VIEW MODE === */
+            <>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className={cn("w-14 h-14 rounded-2xl grid place-items-center text-xl font-bold shrink-0 shadow-sm", childTone)}>
+                  {child.name[0]}
+                </div>
+                <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+                  <h1 className="text-[22px] font-bold text-slate-900 m-0 leading-none">{child.name}</h1>
+                  <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold",
+                    child.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600")}>
+                    {child.status === "active" ? "재원" : "휴원"}
                   </span>
-                ))}
-              </span>
-            )}
-          </div>
+                  <span className="text-[13px] text-slate-500">
+                    {child.grade} · 만 {ageFromBirthDate(child.birthDate)}세 · {child.gender === "M" ? "남아" : "여아"}
+                  </span>
+                  {todayAttendance && (
+                    <span className={cn("text-[11px] px-2 py-0.5 rounded font-semibold inline-flex items-center gap-1",
+                      statusTone(todayAttendance.status).bg, statusTone(todayAttendance.status).text)}>
+                      오늘 {todayAttendance.status}
+                      {todayAttendance.arrivedAt && <span className="opacity-70 font-normal">{todayAttendance.arrivedAt}</span>}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={startEdit}
+                  className="h-9 px-3.5 bg-blue-600 text-white text-[13px] font-semibold rounded-[10px] hover:bg-blue-700 transition inline-flex items-center gap-1.5 shrink-0"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  정보 수정
+                </button>
+              </div>
+
+              {/* 메타 줄: 학교 / 보호자 / 알레르기 (작게, 회색) */}
+              <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mt-3 pt-3 border-t border-slate-100 text-[12.5px] text-slate-500">
+                {child.school && (
+                  <span className="inline-flex items-center gap-1">
+                    <School className="w-3.5 h-3.5 text-slate-400" />
+                    {child.school}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="font-medium text-slate-700">{child.guardian.name}</span>
+                  <span className="text-slate-400">({child.guardian.relation})</span>
+                  <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline font-medium">
+                    {child.guardian.phone}
+                  </a>
+                </span>
+                {child.health.allergies.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                    {child.health.allergies.map((a) => (
+                      <span key={a} className="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">
+                        {a}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* TABS (상단 가로) + CONTENT */}

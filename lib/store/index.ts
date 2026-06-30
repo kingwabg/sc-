@@ -15,6 +15,7 @@ export type { TenantSettings } from "./settings";
 export {
   getExtraChildren,
   addExtraChild,
+  updateExtraChild,
   removeExtraChild,
   getAttendanceOverrides,
   setAttendanceOverride,

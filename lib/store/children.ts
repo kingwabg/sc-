@@ -118,6 +118,16 @@ export function addExtraChild(child: Child): Child[] {
   return next;
 }
 
+export function updateExtraChild(id: string, updates: Partial<Omit<Child, "id" | "tenantId">>): Child | null {
+  const list = getExtraChildren();
+  const idx = list.findIndex((c) => c.id === id);
+  if (idx === -1) return null;
+  const next = [...list];
+  next[idx] = { ...next[idx], ...updates };
+  writeLS(CHILDREN_KEY, next);
+  return next[idx];
+}
+
 export function removeExtraChild(id: string): Child[] {
   const next = getExtraChildren().filter((c) => c.id !== id);
   writeLS(CHILDREN_KEY, next);
