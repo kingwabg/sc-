@@ -1,21 +1,20 @@
 "use client";
 
 /**
- * StaffTable — RSuite Table (옵션 + 행 펼침 적용 버전)
+ * StaffTable — ResourceTable을 사용하는 종사자 도메인 어댑터
+ *
+ * 책임:
+ *  - Staff[] → StaffRow[] 매핑
+ *  - 9개 컬럼 정의 (+ 옵션 액션 컬럼)
+ *  - 펼침 패널(StaffExpandedPanel) 렌더링
  */
-import { useMemo, useState } from "react";
-import {
-  Table,
-  Pagination,
-  IconButton,
-  Dropdown,
-  Whisper,
-} from "rsuite";
+
+import { useMemo } from "react";
+import { IconButton, Dropdown, Whisper } from "rsuite";
 import {
   Phone,
   ChevronRight,
   Mail,
-  CalendarDays,
   Clock,
   UserCircle2,
   Briefcase,
@@ -24,8 +23,17 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { POSITION_LABELS, workHours, type Staff, type StaffAttendance } from "@/lib/staff";
-import type { TableOptions, TableDensity } from "@/components/ui/TableOptionsDrawer";
+import {
+  POSITION_LABELS,
+  workHours,
+  type Staff,
+  type StaffAttendance,
+} from "@/lib/staff";
+import type { TableOptions } from "@/components/ui/TableOptionsDrawer";
+import {
+  ResourceTable,
+  type ColumnDef,
+} from "@/components/ui/ResourceTable";
 
 type StaffRow = {
   id: string;
@@ -51,21 +59,7 @@ type Props = {
   onDelete?: (s: Staff) => void;
 };
 
-const ROW_HEIGHT: Record<TableDensity, number> = {
-  compact: 36,
-  normal: 46,
-  comfortable: 56,
-};
-const HEADER_HEIGHT: Record<TableDensity, number> = {
-  compact: 36,
-  normal: 40,
-  comfortable: 44,
-};
-
 export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: Props) {
-  const [page, setPage] = useState(1);
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
-
   const rows: StaffRow[] = useMemo(
     () =>
       staff.map((s) => {
@@ -89,338 +83,284 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
     [staff, attendanceMap],
   );
 
-  const pageRows = useMemo(
-    () => rows.slice((page - 1) * options.pageSize, page * options.pageSize),
-    [rows, page, options.pageSize],
-  );
-
-  function toggleExpand(id: string) {
-    setExpandedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  }
+  const columns: ColumnDef<StaffRow>[] = [
+    /* 이름 (펼침 토글 + 직원 정보) */
+    {
+      key: "name",
+      header: "이름",
+      flexGrow: 3,
+      minWidth: 140,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      fullText: options.fullText,
+      cell: (row, { isExpanded, toggleExpand }) => (
+        <div className="flex items-center gap-2 min-w-0">
+          <IconButton
+            size="xs"
+            appearance="subtle"
+            icon={
+              <ChevronRight
+                className={cn(
+                  "w-4 h-4 transition-transform text-slate-500",
+                  isExpanded && "rotate-90 text-brand-600",
+                )}
+              />
+            }
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              toggleExpand();
+            }}
+            aria-label={isExpanded ? "접기" : "펼치기"}
+            title={isExpanded ? "상세 접기" : "상세 펼치기"}
+          />
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={cn(
+                "w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold shrink-0",
+                row.gender === "M"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-pink-100 text-pink-700",
+              )}
+            >
+              {row.name[0]}
+            </div>
+            <div className="text-left min-w-0">
+              <div className="font-semibold text-slate-900 text-[13px] truncate">
+                {row.name}
+              </div>
+              <div className="text-[11px] text-slate-400 truncate">{row.id}</div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    /* 직위 */
+    {
+      key: "position",
+      header: "직위",
+      width: 100,
+      align: "center",
+      minWidth: 50,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      fullText: options.fullText,
+      cell: (row) => (
+        <span className="inline-block text-[12px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">
+          {POSITION_LABELS[row.position] ?? row.position}
+        </span>
+      ),
+    },
+    /* 연락처 */
+    {
+      key: "phone",
+      header: "연락처",
+      width: 160,
+      minWidth: 50,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      fullText: options.fullText,
+      cell: (row) =>
+        row.phone ? (
+          <a
+            href={`tel:${row.phone}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-[13px] text-brand-600 hover:underline inline-flex items-center gap-1"
+          >
+            <Phone className="w-3 h-3" />
+            {row.phone}
+          </a>
+        ) : (
+          <span className="text-slate-300 text-[12px]">—</span>
+        ),
+    },
+    /* 이메일 */
+    {
+      key: "email",
+      header: "이메일",
+      flexGrow: 2,
+      minWidth: 140,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      fullText: options.fullText,
+      cell: (row) =>
+        row.email ? (
+          <span className="text-[12px] text-slate-600 truncate inline-flex items-center gap-1">
+            <Mail className="w-3 h-3 text-slate-400" />
+            {row.email}
+          </span>
+        ) : (
+          <span className="text-slate-300 text-[12px]">—</span>
+        ),
+    },
+    /* 입사일 */
+    {
+      key: "joinDate",
+      header: "입사일",
+      width: 120,
+      align: "center",
+      minWidth: 50,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      fullText: options.fullText,
+      cell: (row) => row.joinDate,
+    },
+    /* 출근 */
+    {
+      key: "clockIn",
+      header: "출근",
+      width: 90,
+      align: "center",
+      minWidth: 50,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      cell: (row) =>
+        row.clockIn ? (
+          <span className="text-[13px] font-semibold text-emerald-600 tabular-nums">
+            {row.clockIn}
+          </span>
+        ) : (
+          <span className="text-slate-300 text-[12px]">—</span>
+        ),
+    },
+    /* 퇴근 */
+    {
+      key: "clockOut",
+      header: "퇴근",
+      width: 90,
+      align: "center",
+      minWidth: 50,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      cell: (row) =>
+        row.clockOut ? (
+          <span className="text-[13px] font-semibold text-amber-600 tabular-nums">
+            {row.clockOut}
+          </span>
+        ) : (
+          <span className="text-slate-300 text-[12px]">—</span>
+        ),
+    },
+    /* 근무시간 */
+    {
+      key: "workHours",
+      header: "근무시간",
+      width: 110,
+      align: "center",
+      minWidth: 50,
+      fullText: options.fullText,
+      cell: (row) => (
+        <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
+          {workHours(row.clockIn, row.clockOut)}
+        </span>
+      ),
+    },
+    /* 상태 */
+    {
+      key: "status",
+      header: "상태",
+      width: 90,
+      align: "center",
+      minWidth: 50,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      cell: (row) => {
+        const tone =
+          row.status === "active"
+            ? "bg-emerald-100 text-emerald-700"
+            : row.status === "leave"
+              ? "bg-amber-100 text-amber-700"
+              : "bg-slate-100 text-slate-600";
+        const label =
+          row.status === "active"
+            ? "재직"
+            : row.status === "leave"
+              ? "휴직"
+              : "퇴직";
+        return (
+          <span
+            className={`inline-block text-[11px] px-2 py-0.5 rounded font-semibold ${tone}`}
+          >
+            {label}
+          </span>
+        );
+      },
+    },
+    /* 액션 메뉴 — onEdit/onDelete 둘 다 없으면 컬럼 자체를 생략 */
+    ...(onEdit || onDelete
+      ? [
+          {
+            key: "actions",
+            header: " ",
+            width: 70,
+            align: "center" as const,
+            minWidth: 50,
+            sortable: false,
+            resizable: false,
+            cell: (row: StaffRow) => {
+              const original = staff.find((x) => x.id === row.id);
+              if (!original) return null;
+              return (
+                <Whisper
+                  placement="bottomEnd"
+                  speaker={
+                    <Dropdown.Menu>
+                      {onEdit && (
+                        <Dropdown.Item
+                          icon={<Pencil className="w-3.5 h-3.5" />}
+                          onClick={(e) => {
+                            e?.stopPropagation?.();
+                            onEdit(original);
+                          }}
+                        >
+                          수정
+                        </Dropdown.Item>
+                      )}
+                      <Dropdown.Item
+                        icon={<UserCircle2 className="w-3.5 h-3.5" />}
+                        onClick={() => (window.location.href = `/staff/${original.id}`)}
+                      >
+                        상세
+                      </Dropdown.Item>
+                      {onDelete && (
+                        <>
+                          <Dropdown.Item divider />
+                          <Dropdown.Item
+                            icon={<Trash2 className="w-3.5 h-3.5" />}
+                            onClick={(e) => {
+                              e?.stopPropagation?.();
+                              onDelete(original);
+                            }}
+                          >
+                            삭제
+                          </Dropdown.Item>
+                        </>
+                      )}
+                    </Dropdown.Menu>
+                  }
+                >
+                  <IconButton
+                    size="sm"
+                    appearance="subtle"
+                    icon={<MoreVertical className="w-4 h-4" />}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  />
+                </Whisper>
+              );
+            },
+          },
+        ]
+      : []),
+  ];
 
   return (
-    <>
-      <Table
-        data={pageRows}
-        rowKey="id"
-        height={options.autoHeight ? undefined : options.height || 520}
-        autoHeight={options.autoHeight}
-        minHeight={options.minHeight > 0 ? options.minHeight : undefined}
-        maxHeight={options.maxHeight > 0 ? options.maxHeight : undefined}
-        hover={options.hover}
-        bordered={options.bordered}
-        cellBordered={options.cellBordered}
-        loading={options.loading}
-        headerHeight={HEADER_HEIGHT[options.density]}
-        rowHeight={ROW_HEIGHT[options.density]}
-        wordWrap={options.wordWrap}
-        expandedRowKeys={expandedIds}
-        onExpandChange={(expanded, rowData: StaffRow) =>
-          setExpandedIds((prev) =>
-            expanded
-              ? Array.from(new Set([...prev, rowData.id]))
-              : prev.filter((id) => id !== rowData.id),
-          )
-        }
-        renderRowExpanded={(rowData?: StaffRow) =>
-          rowData ? <StaffExpandedPanel row={rowData} /> : null
-        }
-        rowExpandedHeight={160}
-        locale={{ emptyMessage: "검색 결과가 없습니다", loading: "불러오는 중…" }}
-      >
-        {/* 이름 (펼침 토글 + 직원 정보) — flexGrow로 자동 폭, minWidth=140으로 이름 최소 보장 */}
-        <Table.Column flexGrow={3}
-          minWidth={140}
-          sortable={options.sortable}
-          resizable={options.resizable}
-          fullText={options.fullText}
-        >
-          <Table.HeaderCell>이름</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) => {
-              const open = expandedIds.includes(row.id);
-              return (
-                <div className="flex items-center gap-2 min-w-0">
-                  <IconButton
-                    size="xs"
-                    appearance="subtle"
-                    icon={
-                      <ChevronRight
-                        className={cn(
-                          "w-4 h-4 transition-transform text-slate-500",
-                          open && "rotate-90 text-brand-600",
-                        )}
-                      />
-                    }
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      toggleExpand(row.id);
-                    }}
-                    aria-label={open ? "접기" : "펼치기"}
-                    title={open ? "상세 접기" : "상세 펼치기"}
-                  />
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className={cn(
-                        "w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold shrink-0",
-                        row.gender === "M" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700",
-                      )}
-                    >
-                      {row.name[0]}
-                    </div>
-                    <div className="text-left min-w-0">
-                      <div className="font-semibold text-slate-900 text-[13px] truncate">{row.name}</div>
-                      <div className="text-[11px] text-slate-400 truncate">{row.id}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            }}
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 직위 */}
-        <Table.Column
-          width={100}
-          align="center"
-          sortable={options.sortable}
-          resizable={options.resizable}
-          fullText={options.fullText}
-          minWidth={50}
-        >
-          <Table.HeaderCell>직위</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) => (
-              <span className="inline-block text-[12px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">
-                {POSITION_LABELS[row.position] ?? row.position}
-              </span>
-            )}
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 연락처 */}
-        <Table.Column
-          width={160}
-          sortable={options.sortable}
-          resizable={options.resizable}
-          fullText={options.fullText}
-          minWidth={50}
-        >
-          <Table.HeaderCell>연락처</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) =>
-              row.phone ? (
-                <a
-                  href={`tel:${row.phone}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-[13px] text-brand-600 hover:underline inline-flex items-center gap-1"
-                >
-                  <Phone className="w-3 h-3" />
-                  {row.phone}
-                </a>
-              ) : (
-                <span className="text-slate-300 text-[12px]">—</span>
-              )
-            }
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 이메일 — flexGrow로 자동 폭 */}
-        <Table.Column flexGrow={2}
-          minWidth={140}
-          sortable={options.sortable}
-          resizable={options.resizable}
-          fullText={options.fullText}
-        >
-          <Table.HeaderCell>이메일</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) =>
-              row.email ? (
-                <span className="text-[12px] text-slate-600 truncate inline-flex items-center gap-1">
-                  <Mail className="w-3 h-3 text-slate-400" />
-                  {row.email}
-                </span>
-              ) : (
-                <span className="text-slate-300 text-[12px]">—</span>
-              )
-            }
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 입사일 */}
-        <Table.Column
-          width={120}
-          align="center"
-          sortable={options.sortable}
-          resizable={options.resizable}
-          fullText={options.fullText}
-          minWidth={50}
-        >
-          <Table.HeaderCell>입사일</Table.HeaderCell>
-          <Table.Cell dataKey="joinDate" />
-        </Table.Column>
-
-        {/* 출근 */}
-        <Table.Column width={90} align="center" sortable={options.sortable}
-          resizable={options.resizable}
-          minWidth={50}>
-          <Table.HeaderCell>출근</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) =>
-              row.clockIn ? (
-                <span className="text-[13px] font-semibold text-emerald-600 tabular-nums">
-                  {row.clockIn}
-                </span>
-              ) : (
-                <span className="text-slate-300 text-[12px]">—</span>
-              )
-            }
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 퇴근 */}
-        <Table.Column width={90} align="center" sortable={options.sortable}
-          resizable={options.resizable}
-          minWidth={50}>
-          <Table.HeaderCell>퇴근</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) =>
-              row.clockOut ? (
-                <span className="text-[13px] font-semibold text-amber-600 tabular-nums">
-                  {row.clockOut}
-                </span>
-              ) : (
-                <span className="text-slate-300 text-[12px]">—</span>
-              )
-            }
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 근무시간 */}
-        <Table.Column
-          width={110} align="center" fullText={options.fullText}
-          minWidth={50}
-        >
-          <Table.HeaderCell>근무시간</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) => (
-              <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
-                {workHours(row.clockIn, row.clockOut)}
-              </span>
-            )}
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 상태 */}
-        <Table.Column
-          width={90}
-          align="center"
-          sortable={options.sortable}
-          resizable={options.resizable}
-          minWidth={50}
-        >
-          <Table.HeaderCell>상태</Table.HeaderCell>
-          <Table.Cell>
-            {(row: StaffRow) => {
-              const tone =
-                row.status === "active"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : row.status === "leave"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-slate-100 text-slate-600";
-              const label = row.status === "active" ? "재직" : row.status === "leave" ? "휴직" : "퇴직";
-              return (
-                <span className={`inline-block text-[11px] px-2 py-0.5 rounded font-semibold ${tone}`}>
-                  {label}
-                </span>
-              );
-            }}
-          </Table.Cell>
-        </Table.Column>
-
-        {/* 액션 메뉴 */}
-        {(onEdit || onDelete) && (
-          <Table.Column
-          width={70} align="center" verticalAlign="middle" fixed="right"
-          minWidth={50}
-        >
-            <Table.HeaderCell> </Table.HeaderCell>
-            <Table.Cell>
-              {(row: StaffRow) => {
-                const original: Staff | undefined = staff.find((x) => x.id === row.id);
-                if (!original) return null;
-                return (
-                  <Whisper
-                    placement="bottomEnd"
-                    speaker={
-                      <Dropdown.Menu>
-                        {onEdit && (
-                          <Dropdown.Item
-                            icon={<Pencil className="w-3.5 h-3.5" />}
-                            onClick={(e) => { e?.stopPropagation?.(); onEdit(original); }}
-                          >
-                            수정
-                          </Dropdown.Item>
-                        )}
-                        <Dropdown.Item
-                          icon={<UserCircle2 className="w-3.5 h-3.5" />}
-                          onClick={() => (window.location.href = `/staff/${original.id}`)}
-                        >
-                          상세
-                        </Dropdown.Item>
-                        {onDelete && (
-                          <>
-                            <Dropdown.Item divider />
-                            <Dropdown.Item
-                              icon={<Trash2 className="w-3.5 h-3.5" />}
-                              onClick={(e) => { e?.stopPropagation?.(); onDelete(original); }}
-                            >
-                              삭제
-                            </Dropdown.Item>
-                          </>
-                        )}
-                      </Dropdown.Menu>
-                    }
-                  >
-                    <IconButton
-                      size="sm"
-                      appearance="subtle"
-                      icon={<MoreVertical className="w-4 h-4" />}
-                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    />
-                  </Whisper>
-                );
-              }}
-            </Table.Cell>
-          </Table.Column>
-        )}
-      </Table>
-
-      <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-3 border-t border-slate-100 bg-slate-50/60 text-[12px] text-slate-600">
-        <span>
-          총 <strong className="text-slate-900">{rows.length}</strong>명
-          {options.paginated && (
-            <> · {(page - 1) * options.pageSize + 1}–{Math.min(page * options.pageSize, rows.length)} 표시</>
-          )}
-        </span>
-        {options.paginated && rows.length > options.pageSize && (
-          <Pagination
-            prev
-            next
-            first
-            last
-            total={rows.length}
-            limit={options.pageSize}
-            activePage={page}
-            onChangePage={setPage}
-            maxButtons={5}
-            size="sm"
-          />
-        )}
-      </div>
-    </>
+    <ResourceTable
+      data={rows}
+      rowKey={(r) => r.id}
+      options={options}
+      columns={columns}
+      expandedRowHeight={160}
+      renderExpanded={(row) => <StaffExpandedPanel row={row} />}
+    />
   );
 }
 
@@ -440,7 +380,9 @@ function StaffExpandedPanel({ row }: { row: StaffRow }) {
           연락처
         </h4>
         <KV label="전화">
-          <a href={`tel:${s.phone}`} className="text-brand-600 hover:underline">{s.phone}</a>
+          <a href={`tel:${s.phone}`} className="text-brand-600 hover:underline">
+            {s.phone}
+          </a>
         </KV>
         {s.email && (
           <KV label="이메일">
@@ -465,8 +407,11 @@ function StaffExpandedPanel({ row }: { row: StaffRow }) {
         <KV
           label="상태"
           value={
-            s.status === "active" ? "재직" :
-            s.status === "leave" ? "휴직" : "퇴직"
+            s.status === "active"
+              ? "재직"
+              : s.status === "leave"
+                ? "휴직"
+                : "퇴직"
           }
         />
       </section>
@@ -481,14 +426,18 @@ function StaffExpandedPanel({ row }: { row: StaffRow }) {
           <>
             <KV label="출근">
               {att.clockIn ? (
-                <span className="font-semibold text-emerald-600 tabular-nums">{att.clockIn}</span>
+                <span className="font-semibold text-emerald-600 tabular-nums">
+                  {att.clockIn}
+                </span>
               ) : (
                 <span className="text-slate-300">—</span>
               )}
             </KV>
             <KV label="퇴근">
               {att.clockOut ? (
-                <span className="font-semibold text-amber-600 tabular-nums">{att.clockOut}</span>
+                <span className="font-semibold text-amber-600 tabular-nums">
+                  {att.clockOut}
+                </span>
               ) : (
                 <span className="text-slate-300">—</span>
               )}
@@ -504,7 +453,15 @@ function StaffExpandedPanel({ row }: { row: StaffRow }) {
   );
 }
 
-function KV({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+function KV({
+  label,
+  value,
+  children,
+}: {
+  label: string;
+  value?: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="flex items-baseline gap-2 py-0.5 text-[12px]">
       <span className="text-slate-400 min-w-[60px] text-[11px]">{label}</span>

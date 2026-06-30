@@ -1,28 +1,119 @@
 "use client";
 
-import { Users, Plus, Folder, FolderOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { POSITION_LABELS } from "@/lib/staff";
+/**
+ * StaffSidebar — TreeResourceShell을 사용하는 종사자 도메인 어댑터
+ *
+ * 책임:
+ *  - StaffPosition (flat) → 계층형 그룹 트리로 변환
+ *    구조: 전체 → [관리, 교육, 운영, 기타] → 직위
+ *  - 그룹 노드 카운트 = 자식 직위 카운트의 합
+ *  - TreeResourceShell의 onSelect 시그니처 → StaffPosition | "all"로 어댑팅
+ *    (그룹 노드 선택은 페이지 상태에 영향 없음 — 카테고리 표기용)
+ *
+ * 비책임:
+ *  - 트리 렌더링/CRUD/DnD — TreeResourceShell이 처리
+ */
+
+import { Plus, Briefcase } from "lucide-react";
 import type { StaffPosition } from "@/lib/staff";
+import { POSITION_LABELS } from "@/lib/staff";
+import {
+  TreeResourceShell,
+  type TreeShellGroup,
+} from "@/components/templates/tree-resource-shell/TreeResourceShell";
+
+// ─── 그룹 트리 정의 ─────────────────────────────────────────────
+// 부모 그룹 → 직위 매핑. 정적 정의 (추후 동적으로 바뀔 수 있음).
+const STAFF_GROUPS: ReadonlyArray<{ id: string; label: string; order: number }> = [
+  { id: "g_관리", label: "관리", order: 1 },
+  { id: "g_교육", label: "교육", order: 2 },
+  { id: "g_운영", label: "운영", order: 3 },
+  { id: "g_기타", label: "기타", order: 4 },
+];
+
+const POSITION_TO_GROUP: Record<StaffPosition, string> = {
+  "所长": "g_관리",
+  "支援교사": "g_교육",
+  "조리사": "g_운영",
+  "행정": "g_운영",
+  "기타": "g_기타",
+};
+
+const ALL_POSITIONS = Object.keys(POSITION_LABELS) as StaffPosition[];
 
 type Props = {
   selectedPosition: StaffPosition | "all";
   counts: Record<StaffPosition | "all", number>;
   onSelect: (position: StaffPosition | "all") => void;
+  /** 종사자 등록 모달 트리거 (헤더 + 버튼) */
   onAdd: () => void;
 };
 
-const ALL_POSITIONS: StaffPosition[] = Object.keys(POSITION_LABELS) as StaffPosition[];
-
 export function StaffSidebar({ selectedPosition, counts, onSelect, onAdd }: Props) {
+  // 그룹 노드 카운트 = 자식 직위 카운트의 합
+  const groupCounts: Record<string, number> = {};
+  for (const g of STAFF_GROUPS) {
+    groupCounts[g.id] = ALL_POSITIONS
+      .filter((p) => POSITION_TO_GROUP[p] === g.id)
+      .reduce((sum, p) => sum + (counts[p] ?? 0), 0);
+  }
+
+  const groups: TreeShellGroup[] = [
+    // 최상위 "전체" (system)
+    {
+      id: "all",
+      label: "전체",
+      parentId: null,
+      order: 0,
+      meta: { isSystem: true },
+    },
+    // 그룹 노드들
+    ...STAFF_GROUPS.map<TreeShellGroup>((g) => ({
+      id: g.id,
+      label: g.label,
+      parentId: null,
+      order: g.order,
+    })),
+    // 직위 노드들 (각각 부모 그룹 아래)
+    ...ALL_POSITIONS.map<TreeShellGroup>((p, i) => ({
+      id: p,
+      label: POSITION_LABELS[p] ?? p,
+      parentId: POSITION_TO_GROUP[p],
+      order: i,
+    })),
+  ];
+
+  // 카운트 합치기
+  const allCounts: Record<string, number> = {
+    ...groupCounts,
+    ...(counts as Record<string, number>),
+  };
+
+  // 그룹 노드 클릭은 페이지 상태에 영향 없음 (카테고리 표기용)
+  // → onSelect는 직위/전체만 전달
+  const handleSelect = (id: string) => {
+    if (id === "all") {
+      onSelect("all");
+      return;
+    }
+    if ((ALL_POSITIONS as readonly string[]).includes(id)) {
+      onSelect(id as StaffPosition);
+      return;
+    }
+    // 그룹 ID → 무시 (페이지 상태 변경 안 함)
+  };
+
   return (
-    <aside className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden flex flex-col h-full">
-      {/* Header */}
-      <div className="px-4 py-3.5 border-b border-slate-200 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-indigo-600" />
-          <h2 className="text-[13px] font-bold text-slate-900 m-0">종사자 관리</h2>
-        </div>
+    <TreeResourceShell
+      groups={groups}
+      selectedId={selectedPosition}
+      counts={allCounts}
+      title="종사자 관리"
+      headerIcon={<Briefcase className="w-4 h-4 text-brand-600" />}
+      totalLabel="총 종사자"
+      onSelect={handleSelect}
+      showRootAdd={false}
+      headerAction={
         <button
           onClick={onAdd}
           className="w-7 h-7 rounded-lg bg-brand-600 text-white grid place-items-center hover:bg-brand-700 transition shrink-0"
@@ -30,62 +121,10 @@ export function StaffSidebar({ selectedPosition, counts, onSelect, onAdd }: Prop
         >
           <Plus className="w-4 h-4" />
         </button>
-      </div>
-
-      {/* Position list */}
-      <div className="px-2 py-2 flex-1 overflow-y-auto">
-        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-1 mb-1">
-          직위 분류
-        </div>
-        {/* All */}
-        <button
-          onClick={() => onSelect("all")}
-          className={cn(
-            "w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-lg mb-0.5 transition",
-            selectedPosition === "all" ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50",
-          )}
-        >
-          {selectedPosition === "all"
-            ? <FolderOpen className="w-4 h-4 shrink-0 text-indigo-500" />
-            : <Folder className="w-4 h-4 shrink-0 text-slate-400" />}
-          <span className="text-[13px] font-medium flex-1">전체</span>
-          <span className={cn("text-[11px] font-bold px-1.5 py-0.5 rounded-md",
-            selectedPosition === "all" ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500")}>
-            {counts.all}
-          </span>
-        </button>
-
-        {ALL_POSITIONS.map((pos) => {
-          const isActive = pos === selectedPosition;
-          return (
-            <button
-              key={pos}
-              onClick={() => onSelect(pos)}
-              className={cn(
-                "w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-lg mb-0.5 transition",
-                isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50",
-              )}
-            >
-              {isActive
-                ? <FolderOpen className="w-4 h-4 shrink-0 text-indigo-500" />
-                : <Folder className="w-4 h-4 shrink-0 text-slate-400" />}
-              <span className="text-[13px] font-medium flex-1">{POSITION_LABELS[pos]}</span>
-              <span className={cn("text-[11px] font-bold px-1.5 py-0.5 rounded-md",
-                isActive ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500")}>
-                {counts[pos]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Total */}
-      <div className="px-4 py-3 border-t border-slate-100 bg-slate-50">
-        <div className="flex items-center justify-between text-[12px]">
-          <span className="text-slate-500 font-medium">총 종사자</span>
-          <span className="font-bold text-slate-900">{counts.all}명</span>
-        </div>
-      </div>
-    </aside>
+      }
+    />
   );
 }
+
+// 외부에서 종사자 등록 버튼 onClick이 필요할 때 쓸 수 있도록
+export { Plus };

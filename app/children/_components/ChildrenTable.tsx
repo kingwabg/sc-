@@ -1,19 +1,22 @@
 "use client";
 
 /**
- * ChildrenTable — RSuite Table (옵션 + 행 펼침 적용 버전)
+ * ChildrenTable — ResourceTable을 사용하는 아동 도메인 어댑터
+ *
+ * 책임:
+ *  - Child[] → ChildRow[] 매핑 (페이지네이션은 ResourceTable이 처리)
+ *  - 6개 컬럼 정의
+ *  - 펼침 패널(ChildExpandedPanel) 렌더링
  */
-import { useMemo, useState } from "react";
+
+import { useMemo } from "react";
 import Link from "next/link";
-import { Table, Pagination, IconButton } from "rsuite";
+import { IconButton } from "rsuite";
 import {
   AlertTriangle,
   ChevronRight,
   Stethoscope,
-  Cake,
   UserCircle2,
-  Phone,
-  CalendarPlus,
   Pill,
   ClipboardList,
 } from "lucide-react";
@@ -25,7 +28,11 @@ import type {
   AttendanceStatus,
 } from "@/lib/features/children/types";
 import { StatusEditor } from "./StatusEditor";
-import type { TableOptions, TableDensity } from "@/components/ui/TableOptionsDrawer";
+import type { TableOptions } from "@/components/ui/TableOptionsDrawer";
+import {
+  ResourceTable,
+  type ColumnDef,
+} from "@/components/ui/ResourceTable";
 
 type ChildRow = {
   id: string;
@@ -40,31 +47,22 @@ type ChildRow = {
   guardianPhone: string;
   allergies: string[];
   attendance: Attendance | undefined;
-  original: Child; // 펼친 영역에서 전체 데이터 접근
+  original: Child;
 };
 
 type Props = {
   children: Child[];
   attendanceMap: Record<string, Attendance>;
   options: TableOptions;
-  onStatusChange: (childId: string, status: AttendanceStatus, time?: string, reason?: string) => void;
-};
-
-const ROW_HEIGHT: Record<TableDensity, number> = {
-  compact: 36,
-  normal: 46,
-  comfortable: 56,
-};
-const HEADER_HEIGHT: Record<TableDensity, number> = {
-  compact: 36,
-  normal: 40,
-  comfortable: 44,
+  onStatusChange: (
+    childId: string,
+    status: AttendanceStatus,
+    time?: string,
+    reason?: string,
+  ) => void;
 };
 
 export function ChildrenTable({ children: list, attendanceMap, options, onStatusChange }: Props) {
-  const [page, setPage] = useState(1);
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
-
   const rows: ChildRow[] = useMemo(
     () =>
       list.map((c) => ({
@@ -85,208 +83,154 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
     [list, attendanceMap],
   );
 
-  const pageRows = useMemo(
-    () => rows.slice((page - 1) * options.pageSize, page * options.pageSize),
-    [rows, page, options.pageSize],
-  );
-
-  function toggleExpand(id: string) {
-    setExpandedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  }
+  const columns: ColumnDef<ChildRow>[] = [
+    /* 이름 (펼침 토글 + 아바타 + 성/이름 합친 풀네임 + 학년) */
+    {
+      key: "name",
+      header: "이름",
+      flexGrow: 2,
+      minWidth: 50,
+      sortable: options.sortable,
+      resizable: options.resizable,
+      fullText: options.fullText,
+      cell: (row, { isExpanded, toggleExpand }) => (
+        <div className="flex items-center gap-2 min-w-0">
+          <IconButton
+            size="xs"
+            appearance="subtle"
+            icon={
+              <ChevronRight
+                className={cn(
+                  "w-3.5 h-3.5 transition-transform text-slate-500",
+                  isExpanded && "rotate-90 text-brand-600",
+                )}
+              />
+            }
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              toggleExpand();
+            }}
+            aria-label={isExpanded ? "접기" : "펼치기"}
+            title={isExpanded ? "상세 접기" : "상세 펼치기"}
+          />
+          <Link
+            href={`/children/${row.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2.5 min-w-0"
+            prefetch={false}
+          >
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold shrink-0",
+                row.gender === "M"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-pink-100 text-pink-700",
+              )}
+            >
+              {row.name?.[0] ?? "?"}
+            </div>
+            <div className="text-left min-w-0">
+              <div className="font-semibold text-slate-900 text-[13px] truncate">
+                {row.name}
+              </div>
+              <div className="text-[10.5px] text-slate-400">
+                {row.age}세 · {row.grade}
+              </div>
+            </div>
+          </Link>
+        </div>
+      ),
+    },
+    {
+      key: "grade",
+      header: "학년",
+      width: 70,
+      align: "center",
+      minWidth: 50,
+      cell: (row) => row.grade,
+    },
+    {
+      key: "age",
+      header: "나이",
+      width: 70,
+      align: "center",
+      minWidth: 50,
+      cell: (row) => `${row.age}세`,
+    },
+    {
+      key: "guardian",
+      header: "보호자",
+      flexGrow: 2,
+      minWidth: 50,
+      cell: (row) => (
+        <div className="leading-tight">
+          <div className="text-[13px] text-slate-900">{row.guardianName}</div>
+          <div className="text-[11px] text-slate-500">
+            {row.guardianRelation} · {row.guardianPhone}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "allergies",
+      header: "알레르기",
+      flexGrow: 2,
+      minWidth: 50,
+      sortable: false,
+      fullText: options.fullText,
+      cell: (row) => {
+        if (row.allergies.length === 0) {
+          return <span className="text-slate-300 text-[12px]">없음</span>;
+        }
+        return (
+          <div className="flex items-center gap-1 flex-wrap py-1">
+            {row.allergies.map((a) => (
+              <span
+                key={a}
+                className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium"
+              >
+                <AlertTriangle className="w-3 h-3" />
+                {a}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      key: "attendance",
+      header: "오늘 출석",
+      flexGrow: 2,
+      minWidth: 50,
+      sortable: false,
+      fullText: options.fullText,
+      cell: (row) => {
+        if (!row.attendance) {
+          return <span className="text-slate-300 text-[12px]">미기록</span>;
+        }
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <StatusEditor
+              childId={row.id}
+              attendance={row.attendance}
+              onStatusChange={onStatusChange}
+            />
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
-    <>
-      <Table
-        data={pageRows}
-        rowKey="id"
-        height={options.autoHeight ? undefined : options.height || 520}
-        autoHeight={options.autoHeight}
-        minHeight={options.minHeight > 0 ? options.minHeight : undefined}
-        maxHeight={options.maxHeight > 0 ? options.maxHeight : undefined}
-        hover={options.hover}
-        bordered={options.bordered}
-        cellBordered={options.cellBordered}
-        loading={options.loading}
-        headerHeight={HEADER_HEIGHT[options.density]}
-        rowHeight={ROW_HEIGHT[options.density]}
-        wordWrap={options.wordWrap}
-        expandedRowKeys={expandedIds}
-        onExpandChange={(expanded, rowData: ChildRow) =>
-          setExpandedIds((prev) =>
-            expanded
-              ? Array.from(new Set([...prev, rowData.id]))
-              : prev.filter((id) => id !== rowData.id),
-          )
-        }
-        renderRowExpanded={(rowData?: ChildRow) =>
-          rowData ? <ChildExpandedPanel row={rowData} onStatusChange={onStatusChange} /> : null
-        }
-        rowExpandedHeight={180}
-        locale={{ emptyMessage: "검색 결과가 없습니다", loading: "불러오는 중…" }}
-      >
-        {/* 이름 (펼침 토글 + 아바타 + 성/이름 합친 풀네임 + 학년) */}
-        <Table.Column flexGrow={2}
-          minWidth={50}
-          sortable={options.sortable}
-          resizable={options.resizable}
-          fullText={options.fullText}
-        >
-          <Table.HeaderCell>이름</Table.HeaderCell>
-          <Table.Cell>
-            {(row: ChildRow) => {
-              const open = expandedIds.includes(row.id);
-              return (
-                <div className="flex items-center gap-2 min-w-0">
-                  <IconButton
-                    size="xs"
-                    appearance="subtle"
-                    icon={
-                      <ChevronRight
-                        className={cn(
-                          "w-3.5 h-3.5 transition-transform text-slate-500",
-                          open && "rotate-90 text-brand-600",
-                        )}
-                      />
-                    }
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      toggleExpand(row.id);
-                    }}
-                    aria-label={open ? "접기" : "펼치기"}
-                    title={open ? "상세 접기" : "상세 펼치기"}
-                  />
-                  <Link
-                    href={`/children/${row.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-2.5 min-w-0"
-                    prefetch={false}
-                  >
-                    <div
-                      className={cn(
-                        "w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold shrink-0",
-                        row.gender === "M" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700",
-                      )}
-                    >
-                      {row.name?.[0] ?? "?"}
-                    </div>
-                    <div className="text-left min-w-0">
-                      <div className="font-semibold text-slate-900 text-[13px] truncate">
-                        {row.name}
-                      </div>
-                      <div className="text-[10.5px] text-slate-400">{row.age}세 · {row.grade}</div>
-                    </div>
-                  </Link>
-                </div>
-              );
-            }}
-          </Table.Cell>
-        </Table.Column>
-
-        <Table.Column width={70} align="center" sortable={options.sortable}
-          resizable={options.resizable}
-          minWidth={50}>
-          <Table.HeaderCell>학년</Table.HeaderCell>
-          <Table.Cell dataKey="grade" />
-        </Table.Column>
-
-        <Table.Column width={70} align="center" sortable={options.sortable}
-          resizable={options.resizable}
-          minWidth={50}>
-          <Table.HeaderCell>나이</Table.HeaderCell>
-          <Table.Cell>{(row: ChildRow) => `${row.age}세`}</Table.Cell>
-        </Table.Column>
-
-        <Table.Column flexGrow={2}
-          minWidth={50}
-          sortable={options.sortable}
-          resizable={options.resizable}
-          fullText={options.fullText}
-        >
-          <Table.HeaderCell>보호자</Table.HeaderCell>
-          <Table.Cell>
-            {(row: ChildRow) => (
-              <div className="leading-tight">
-                <div className="text-[13px] text-slate-900">{row.guardianName}</div>
-                <div className="text-[11px] text-slate-500">
-                  {row.guardianRelation} · {row.guardianPhone}
-                </div>
-              </div>
-            )}
-          </Table.Cell>
-        </Table.Column>
-
-        <Table.Column flexGrow={2}
-          minWidth={50} sortable={false} fullText={options.fullText}>
-          <Table.HeaderCell>알레르기</Table.HeaderCell>
-          <Table.Cell>
-            {(row: ChildRow) => {
-              if (row.allergies.length === 0) {
-                return <span className="text-slate-300 text-[12px]">없음</span>;
-              }
-              return (
-                <div className="flex items-center gap-1 flex-wrap py-1">
-                  {row.allergies.map((a) => (
-                    <span
-                      key={a}
-                      className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium"
-                    >
-                      <AlertTriangle className="w-3 h-3" />
-                      {a}
-                    </span>
-                  ))}
-                </div>
-              );
-            }}
-          </Table.Cell>
-        </Table.Column>
-
-        <Table.Column flexGrow={2}
-          minWidth={50} sortable={false} fullText={options.fullText}>
-          <Table.HeaderCell>오늘 출석</Table.HeaderCell>
-          <Table.Cell>
-            {(row: ChildRow) => {
-              if (!row.attendance) {
-                return <span className="text-slate-300 text-[12px]">미기록</span>;
-              }
-              return (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <StatusEditor
-                    childId={row.id}
-                    attendance={row.attendance}
-                    onStatusChange={onStatusChange}
-                  />
-                </div>
-              );
-            }}
-          </Table.Cell>
-        </Table.Column>
-      </Table>
-
-      <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-3 border-t border-slate-100 bg-slate-50/60 text-[12px] text-slate-600">
-        <span>
-          총 <strong className="text-slate-900">{rows.length}</strong>명
-          {options.paginated && (
-            <> · {(page - 1) * options.pageSize + 1}–{Math.min(page * options.pageSize, rows.length)} 표시</>
-          )}
-        </span>
-        {options.paginated && rows.length > options.pageSize && (
-          <Pagination
-            prev
-            next
-            first
-            last
-            total={rows.length}
-            limit={options.pageSize}
-            activePage={page}
-            onChangePage={setPage}
-            maxButtons={5}
-            size="sm"
-          />
-        )}
-      </div>
-    </>
+    <ResourceTable
+      data={rows}
+      rowKey={(r) => r.id}
+      options={options}
+      columns={columns}
+      renderExpanded={(row) => (
+        <ChildExpandedPanel row={row} onStatusChange={onStatusChange} />
+      )}
+    />
   );
 }
 
@@ -317,10 +261,15 @@ function ChildExpandedPanel({
         {c.guardian.job && <KV label="직업" value={c.guardian.job} />}
         {c.emergencyContact && (
           <>
-            <div className="text-[10px] font-bold text-slate-400 uppercase mt-2 mb-1 tracking-wider">비상 연락처</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase mt-2 mb-1 tracking-wider">
+              비상 연락처
+            </div>
             <KV label="이름" value={c.emergencyContact.name} />
             <KV label="연락처">
-              <a href={`tel:${c.emergencyContact.phone}`} className="text-brand-600 hover:underline">
+              <a
+                href={`tel:${c.emergencyContact.phone}`}
+                className="text-brand-600 hover:underline"
+              >
                 {c.emergencyContact.phone}
               </a>
             </KV>
@@ -335,13 +284,18 @@ function ChildExpandedPanel({
         <KV label="성별" value={c.gender === "M" ? "남" : "여"} />
         <KV label="정원 그룹" value={`${c.capacityGroup}명`} />
         <div className="mt-2">
-          <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">알레르기</div>
+          <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+            알레르기
+          </div>
           {c.health.allergies.length === 0 ? (
             <span className="text-[12px] text-slate-400">없음</span>
           ) : (
             <div className="flex flex-wrap gap-1">
               {c.health.allergies.map((a) => (
-                <span key={a} className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">
+                <span
+                  key={a}
+                  className="inline-flex items-center gap-0.5 text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium"
+                >
                   <AlertTriangle className="w-3 h-3" />
                   {a}
                 </span>
@@ -351,7 +305,9 @@ function ChildExpandedPanel({
         </div>
         {c.health.medications.length > 0 && (
           <div className="mt-2">
-            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">복용약</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+              복용약
+            </div>
             <div className="text-[12px] text-slate-700 space-y-0.5">
               {c.health.medications.map((m) => (
                 <div key={m} className="flex items-center gap-1">
@@ -364,7 +320,9 @@ function ChildExpandedPanel({
         )}
         {c.health.notes && (
           <div className="mt-2">
-            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">메모</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+              메모
+            </div>
             <p className="text-[12px] text-slate-700 leading-relaxed">{c.health.notes}</p>
           </div>
         )}
@@ -378,11 +336,14 @@ function ChildExpandedPanel({
         {att && (
           <>
             <div className="mt-2">
-              <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">오늘</div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-wider">
+                오늘
+              </div>
               <div className="text-[13px] text-slate-900 font-semibold">{att.status}</div>
               {att.arrivedAt && (
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  등원 {att.arrivedAt}{att.leftAt && ` / 하원 ${att.leftAt}`}
+                  등원 {att.arrivedAt}
+                  {att.leftAt && ` / 하원 ${att.leftAt}`}
                 </div>
               )}
               {att.reason && (
@@ -420,7 +381,13 @@ function ChildExpandedPanel({
   );
 }
 
-function Header4({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
+function Header4({
+  icon: Icon,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
   return (
     <h4 className="flex items-center gap-1.5 text-[12px] font-bold text-slate-700 mb-2 mt-1">
       <Icon className="w-3.5 h-3.5 text-brand-500" />
@@ -429,7 +396,15 @@ function Header4({ icon: Icon, children }: { icon: React.ComponentType<{ classNa
   );
 }
 
-function KV({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+function KV({
+  label,
+  value,
+  children,
+}: {
+  label: string;
+  value?: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="flex items-baseline gap-2 py-0.5 text-[12px]">
       <span className="text-slate-400 min-w-[60px] text-[11px]">{label}</span>
