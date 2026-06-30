@@ -36,8 +36,8 @@ import {
   TrendingUp,
   User,
   Heart,
-  Cake,
   BookOpen,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CareLogFormModal } from "./_components/CareLogFormModal";
@@ -46,14 +46,13 @@ import { CareLogRow } from "./_components/CareLogRow";
 const AVAILABLE_YEARS = [2026, 2025, 2024];
 const CATEGORIES: CareLogCategory[] = ["식사", "학습", "놀이", "투약", "관찰", "특별활동", "기타"];
 
-type TabKey = "basic" | "guardian" | "extra" | "care" | "health";
+type TabKey = "basic" | "health" | "attendance" | "documents";
 
 const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: "basic", label: "기본 정보", icon: User },
-  { key: "guardian", label: "보호자", icon: Heart },
-  { key: "extra", label: "추가 정보", icon: BookOpen },
-  { key: "care", label: "돌봄 일지", icon: CalendarDays },
-  { key: "health", label: "건강", icon: Stethoscope },
+  { key: "basic", label: "기본정보", icon: User },
+  { key: "health", label: "건강", icon: Heart },
+  { key: "attendance", label: "출석", icon: CalendarDays },
+  { key: "documents", label: "문서", icon: FileText },
 ];
 
 export default function ChildDetailPage() {
@@ -254,21 +253,26 @@ export default function ChildDetailPage() {
           {/* 우측 탭 컨텐츠 */}
           <div className="min-w-0 space-y-4">
             {activeTab === "basic" && <BasicTab child={child} childTone={childTone} />}
-            {activeTab === "guardian" && <GuardianTab child={child} />}
-            {activeTab === "extra" && <ExtraTab child={child} />}
-            {activeTab === "care" && (
-              <CareTab
+            {activeTab === "health" && <HealthTab child={child} />}
+            {activeTab === "attendance" && (
+              <AttendanceTab
                 year={year}
                 setYear={setYear}
                 careLogs={careLogs}
                 monthlyStats={monthlyStats}
                 yearTotals={yearTotals}
                 categoryStats={categoryStats}
+                onWriteLog={() => setShowLogForm(true)}
+              />
+            )}
+            {activeTab === "documents" && (
+              <DocumentsTab
+                year={year}
+                careLogs={careLogs}
                 childId={child.id}
                 onWriteLog={() => setShowLogForm(true)}
               />
             )}
-            {activeTab === "health" && <HealthTab child={child} />}
           </div>
         </div>
       </div>
@@ -284,11 +288,12 @@ export default function ChildDetailPage() {
   );
 }
 
-// ─── Tab Contents ─────────────────────────────────────────────
+// ─── Tab: 기본 정보 (기본 + 보호자 + 추가 정보 통합) ─────────
 
 function BasicTab({ child, childTone }: { child: Child; childTone: string }) {
   return (
     <>
+      {/* 기본 정보 */}
       <SideCard title="기본 정보">
         <div className="flex items-center gap-3 pb-3 border-b border-slate-100 mb-1">
           <div className={cn("w-12 h-12 rounded-xl grid place-items-center text-lg font-bold shrink-0", childTone)}>
@@ -313,52 +318,43 @@ function BasicTab({ child, childTone }: { child: Child; childTone: string }) {
           <SideRow label="퇴소일" muted>{child.leftAt}</SideRow>
         )}
       </SideCard>
+
+      {/* 보호자 */}
+      <SideCard title="보호자">
+        <SideRow label="이름">{child.guardian.name}</SideRow>
+        <SideRow label="관계">{child.guardian.relation}</SideRow>
+        {child.guardian.type && <SideRow label="유형">{child.guardian.type}</SideRow>}
+        <SideRow label="연락처">
+          <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline">
+            {child.guardian.phone}
+          </a>
+        </SideRow>
+        {child.guardian.job && <SideRow label="직업">{child.guardian.job}</SideRow>}
+        {child.guardian.notes && <SideRow label="비고">{child.guardian.notes}</SideRow>}
+        {child.emergencyContact && (
+          <SideRow label="긴급연락처" muted>
+            {child.emergencyContact.name} · {child.emergencyContact.phone}
+          </SideRow>
+        )}
+      </SideCard>
+
+      {/* 추가 정보 */}
+      <SideCard title="추가 정보">
+        {child.address && <SideRow label="주소">{child.address}</SideRow>}
+        {child.serviceType && <SideRow label="이용유형">{child.serviceType}</SideRow>}
+        {child.medianIncomePct != null && (
+          <SideRow label="함수기준 중위소득">{child.medianIncomePct}%</SideRow>
+        )}
+        {child.kidsCallId && <SideRow label="키즈콜ID">{child.kidsCallId}</SideRow>}
+        {!child.address && !child.serviceType && child.medianIncomePct == null && !child.kidsCallId && (
+          <div className="text-center py-3 text-slate-400 text-sm">등록된 추가 정보가 없습니다.</div>
+        )}
+      </SideCard>
     </>
   );
 }
 
-function GuardianTab({ child }: { child: Child }) {
-  return (
-    <SideCard title="보호자">
-      <SideRow label="이름">{child.guardian.name}</SideRow>
-      <SideRow label="관계">{child.guardian.relation}</SideRow>
-      {child.guardian.type && <SideRow label="유형">{child.guardian.type}</SideRow>}
-      <SideRow label="연락처">
-        <a href={`tel:${child.guardian.phone}`} className="text-brand-600 hover:underline">
-          {child.guardian.phone}
-        </a>
-      </SideRow>
-      {child.guardian.job && <SideRow label="직업">{child.guardian.job}</SideRow>}
-      {child.guardian.notes && <SideRow label="비고">{child.guardian.notes}</SideRow>}
-      {child.emergencyContact && (
-        <SideRow label="긴급연락처" muted>
-          {child.emergencyContact.name} · {child.emergencyContact.phone}
-        </SideRow>
-      )}
-    </SideCard>
-  );
-}
-
-function ExtraTab({ child }: { child: Child }) {
-  const hasAny = child.address || child.serviceType || child.medianIncomePct != null || child.kidsCallId;
-  if (!hasAny) {
-    return (
-      <SideCard title="추가 정보">
-        <div className="text-center py-6 text-slate-400 text-sm">등록된 추가 정보가 없습니다.</div>
-      </SideCard>
-    );
-  }
-  return (
-    <SideCard title="추가 정보">
-      {child.address && <SideRow label="주소">{child.address}</SideRow>}
-      {child.serviceType && <SideRow label="이용유형">{child.serviceType}</SideRow>}
-      {child.medianIncomePct != null && (
-        <SideRow label="함수기준 중위소득">{child.medianIncomePct}%</SideRow>
-      )}
-      {child.kidsCallId && <SideRow label="키즈콜ID">{child.kidsCallId}</SideRow>}
-    </SideCard>
-  );
-}
+// ─── Tab: 건강 ────────────────────────────────────────────────
 
 function HealthTab({ child }: { child: Child }) {
   return (
@@ -393,14 +389,15 @@ function HealthTab({ child }: { child: Child }) {
   );
 }
 
-function CareTab({
+// ─── Tab: 출석 (연도 + 출석 통계 + 카테고리 통계) ─────────────
+
+function AttendanceTab({
   year,
   setYear,
   careLogs,
   monthlyStats,
   yearTotals,
   categoryStats,
-  childId,
   onWriteLog,
 }: {
   year: number;
@@ -409,7 +406,6 @@ function CareTab({
   monthlyStats: Record<string, { present: number; absent: number; leave: number; sick: number }>;
   yearTotals: { present: number; absent: number; leave: number; sick: number; rate: number };
   categoryStats: Partial<Record<CareLogCategory, number>>;
-  childId: string;
   onWriteLog: () => void;
 }) {
   return (
@@ -497,11 +493,29 @@ function CareTab({
           })}
         </div>
       </div>
+    </>
+  );
+}
 
+// ─── Tab: 문서 (문서 카드 + 관찰일지 타임라인) ────────────────
+
+function DocumentsTab({
+  year,
+  careLogs,
+  childId,
+  onWriteLog,
+}: {
+  year: number;
+  careLogs: CareLog[];
+  childId: string;
+  onWriteLog: () => void;
+}) {
+  return (
+    <>
       {/* Document links */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-4">
         <div className="flex items-center gap-2 mb-3">
-          <IdCard className="w-4 h-4 text-slate-500" />
+          <FileText className="w-4 h-4 text-slate-500" />
           <h2 className="text-sm font-semibold text-slate-900 m-0">아동 문서</h2>
           <span className="text-[11px] text-slate-400 ml-1">{year}년 기준</span>
         </div>
