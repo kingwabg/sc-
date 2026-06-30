@@ -427,11 +427,10 @@ function ChildCardTab({
           </div>
         </div>
 
-        {/* 보호자 */}
+        {/* 보호자 + 추가 정보 (단일 카드) */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
-          <h3 className="text-[15px] font-bold text-slate-900 m-0 mb-4">보호자</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-            <BigField label="이름">{child.guardian.name}</BigField>
+            <BigField label="보호자명">{child.guardian.name}</BigField>
             <BigField label="관계">
               {child.guardian.relation}
               {child.guardian.type && (
@@ -450,33 +449,24 @@ function ChildCardTab({
                 {child.emergencyContact.name} · {child.emergencyContact.phone}
               </BigField>
             )}
+            {child.address && (
+              <BigField label="주소" icon={MapPin} className="sm:col-span-2">
+                {child.address}
+              </BigField>
+            )}
+            {child.serviceType && <BigField label="이용유형">{child.serviceType}</BigField>}
+            {child.medianIncomePct != null && (
+              <BigField label="함수기준 중위소득" icon={Wallet}>
+                {child.medianIncomePct}%
+              </BigField>
+            )}
+            {child.kidsCallId && (
+              <BigField label="키즈콜ID" icon={Hash} className="sm:col-span-2">
+                {child.kidsCallId}
+              </BigField>
+            )}
           </div>
         </div>
-
-        {/* 추가 정보 */}
-        {(child.address || child.serviceType || child.medianIncomePct != null || child.kidsCallId) && (
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
-            <h3 className="text-[15px] font-bold text-slate-900 m-0 mb-4">추가 정보</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-              {child.address && (
-                <BigField label="주소" icon={MapPin} className="sm:col-span-2">
-                  {child.address}
-                </BigField>
-              )}
-              {child.serviceType && <BigField label="이용유형">{child.serviceType}</BigField>}
-              {child.medianIncomePct != null && (
-                <BigField label="함수기준 중위소득" icon={Wallet}>
-                  {child.medianIncomePct}%
-                </BigField>
-              )}
-              {child.kidsCallId && (
-                <BigField label="키즈콜ID" icon={Hash} className="sm:col-span-2">
-                  {child.kidsCallId}
-                </BigField>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* {year}년 출석 요약 */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
