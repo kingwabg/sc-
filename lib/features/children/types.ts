@@ -3,6 +3,26 @@
  */
 export type CapacityGroup = 30 | 40 | 50;
 
+export type Guardian = {
+  name: string;
+  relation: "부" | "모" | "조부모" | "기타";
+  type?: string;
+  phone: string;
+  job?: string;
+  notes?: string;
+};
+
+export type Health = {
+  allergies: string[];
+  medications: string[];
+  notes: string;
+};
+
+export type EmergencyContact = {
+  name: string;
+  phone: string;
+};
+
 export type GroupFilter = {
   /** 학년 매칭 (예: ["초3"]) */
   grades?: string[];
@@ -51,25 +71,9 @@ export type Child = {
   grade?: string;
   /** 학교명 */
   school?: string;
-  guardian: {
-    name: string;
-    relation: "부" | "모" | "조부모" | "기타";
-    /** 보호자 유형 (예: "양육", "친권", "후견" 등) */
-    type?: string;
-    phone: string;
-    job?: string;
-    /** 비고 */
-    notes?: string;
-  };
-  emergencyContact?: {
-    name: string;
-    phone: string;
-  };
-  health: {
-    allergies: string[];
-    medications: string[];
-    notes: string;
-  };
+  guardian: Guardian;
+  emergencyContact?: EmergencyContact;
+  health: Health;
   /** 입소일 */
   enrolledAt: string;
   /** 이전 입소일 (재입소 시) */
