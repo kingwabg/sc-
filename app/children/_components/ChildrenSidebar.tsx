@@ -168,7 +168,7 @@ export function ChildrenSidebar({
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <aside className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden flex flex-col h-full">
+      <aside className="bg-white border border-slate-200 rounded-2xl shadow-card flex flex-col h-full">
         {/* Header */}
         <div className="px-4 py-3.5 border-b border-slate-200 flex items-center gap-2">
           <Users className="w-4 h-4 text-brand-600" />
@@ -496,8 +496,8 @@ function FolderRow({
             )}
           </button>
 
-          {/* Actions — row 자체 padding에 들어가서 hover 연속성 유지 (자식이 부모 :hover 받음) */}
-          <div className="hidden group-hover:flex items-center justify-center gap-1 mx-1 mb-1 px-2 py-1 bg-slate-50 border border-slate-200 rounded-md">
+          {/* Actions — row 우측 옆쪽 absolute (sidebar 밖으로 허용) */}
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-1 hidden group-hover:flex items-center gap-0.5 px-1 py-0.5 bg-white border border-slate-200 rounded-md shadow-md z-20 whitespace-nowrap">
             <button onClick={() => startAdd(g.id, depth + 1)} className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
               <Plus className="w-3.5 h-3.5" />
             </button>
