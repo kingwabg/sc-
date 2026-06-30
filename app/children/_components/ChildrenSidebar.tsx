@@ -496,9 +496,8 @@ function FolderRow({
             )}
           </button>
 
-          {/* Actions — row 아래쪽 absolute (sidebar 폭 안에서) */}
-          <div className="absolute left-0 right-0 top-full hidden group-hover:flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-md shadow-md z-10"
-            style={{ marginLeft: depth * 16 }}>
+          {/* Actions — row 자체 padding에 들어가서 hover 연속성 유지 (자식이 부모 :hover 받음) */}
+          <div className="hidden group-hover:flex items-center justify-center gap-1 mx-1 mb-1 px-2 py-1 bg-slate-50 border border-slate-200 rounded-md">
             <button onClick={() => startAdd(g.id, depth + 1)} className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
               <Plus className="w-3.5 h-3.5" />
             </button>
