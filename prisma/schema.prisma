@@ -1,0 +1,597 @@
+// schema.prisma — Office portal Supabase / Postgres schema
+//
+// 참고: schema는 Postgres-native (Supabase Postgres 호환).
+// String[] / Json 등 Postgres 전용 기능 사용. SQLite 미지원.
+//
+// 다음 단계:
+//   1) `cp .env.local.example .env.local` → DATABASE_URL 채우기
+//   2) `npx prisma migrate dev --name init` (Supabase Postgres로 마이그레이션)
+//   3) `npx prisma db seed` (mock 데이터를 DB로 이관)
+//   4) `npx prisma generate` (Prisma Client 코드 생성)
+//   5) `npx prisma studio` (DB GUI로 확인)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────
+
+enum UserRole {
+  owner
+  admin
+  member
+}
+
+enum Gender {
+  M
+  F
+}
+
+enum ChildStatus {
+  active
+  leave
+  left
+}
+
+enum Relation {
+  부
+  모
+  조부모
+  기타
+}
+
+enum AttendanceStatusChild {
+  등원
+  결석
+  조퇴
+  보건휴식
+  미등원
+}
+
+enum AttendanceStatusStaff {
+  출근
+  결근
+  휴가
+  외출
+  미체크
+}
+
+enum CareLogCategory {
+  식사
+  학습
+  놀이
+  관찰
+  기타
+}
+
+enum ChildDocumentKind {
+  iep
+  photo
+  report
+  other
+}
+
+enum StaffStatus {
+  active
+  leave
+  retired
+}
+
+enum VolunteerType {
+  공익근무자
+  자원봉사자
+  실습생
+  기타
+}
+
+enum MemberStatus {
+  active
+  leave
+}
+
+enum DocKind {
+  html
+  hwp
+}
+
+enum DocumentKind {
+  html_doc       // /docs HTML 문서
+  hwp_doc        // /docs/hwp
+  child_card     // /children/[id] observations
+  care_log       // 돌봄일지
+  child_document // 아동 첨부 (IEP 등)
+  approval_doc   // 결재함 진행 문서
+}
+
+enum ApprovalRequestStatus {
+  결재중
+  완료
+  반려
+  회수
+}
+
+enum ApprovalStepStatus {
+  pending
+  current
+  approved
+  rejected
+}
+
+enum ApprovalFormKey {
+  education
+  leave
+  expense
+  purchase
+  report
+  memo
+}
+
+enum AnnualPlanStatus {
+  draft
+  active
+  done
+}
+
+enum MonthlyPlanStatus {
+  draft
+  active
+  done
+}
+
+enum DailyLogStatus {
+  draft
+  pending
+  approved
+}
+
+// ─── Tenant & Users ────────────────────────────────────
+
+/// 멀티테넌트 루트 (양산애사희적합동조합 내 여러 아동센터)
+model Tenant {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  emoji       String?
+  /// 그라데이션 (예: "from-orange-500-to-rose-500")
+  gradient    String?
+  accentBg    String?
+  accentText  String?
+  memberCount Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  users        User[]
+  children     Child[]
+  staff        Staff[]
+  volunteers   Volunteer[]
+  members      Member[]
+  docs         Doc[]
+  approvals    ApprovalRequest[]
+  annualPlans  AnnualPlan[]
+  dailyLogs    DailyLog[]
+}
+
+/// 종사자 · 조합원 · 자원봉사자 통합 유저
+/// (현재는 mock — 실 인증은 Supabase Auth와 나중에 연결)
+model User {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email       String   @unique
+  name        String
+  role        UserRole @default(member)
+  loginId     String?
+  position    String?
+  department  String?
+  avatarColor String   @default("slate")
+  staff       Staff?   @relation("UserStaff")
+  member      Member?  @relation("UserMember")
+  createdAt   DateTime @default(now())
+}
+
+// ─── Children ──────────────────────────────────────────
+
+/// 아동 메인 엔트리 (PDF 아동카드 + 자유 기술 등 8개 섹션 매핑)
+model Child {
+  id                 String       @id @default(cuid())
+  tenantId           String
+  tenant             Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// 전체 이름 — `${nameLast}${nameFirst}` 와 동일
+  name               String
+  nameLast           String
+  nameFirst          String
+  birthDate          String       // YYYY-MM-DD
+  gender             Gender
+  phone              String?
+  photoUrl           String?
+  capacityGroup      Int          // 30 / 40 / 50
+  grade              String?
+  school             String?
+  /// 보호자 (1:1 embed)
+  guardianName       String
+  guardianRelation   Relation
+  guardianType       String?
+  guardianPhone      String
+  guardianJob        String?
+  guardianNotes      String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  /// 건강
+  allergies          String[]
+  medications        String[]
+  healthNotes        String       @default("")
+  enrolledAt         String       // 입소일
+  previousEnrolledAt String?      // 재입소 시 이전 기간
+  leftAt             String?      // 퇴소일
+  address            String?
+  serviceType        String?
+  medianIncomePct    Int?
+  kidsCallId         String?
+  status             ChildStatus  @default(active)
+  /// 작성자 (child card writtenBy)
+  authorId           String?
+  authorName         String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  cardMeta       ChildCardMeta?
+  physical       ChildPhysical?
+  observations   ChildObservations?
+  attendances    Attendance[]
+  careLogs       CareLog[]
+  documents      ChildDocument[]
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+/// 아동 카드 메타 (1:1)
+model ChildCardMeta {
+  childId           String  @id
+  child             Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
+  number            String? // 예: AC-2026-001
+  identityType      String?
+  identityVerified  String?
+  referredBy        String?
+}
+
+/// 신체 정보 (1:1)
+model ChildPhysical {
+  childId       String  @id
+  child         Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
+  height        Float?
+  weight        Float?
+  buildType     String?
+  faceShape     String?
+  hairColor     String?
+  hairStyle     String?
+}
+
+/// 자유 기술 7개 섹션 (1:1)
+model ChildObservations {
+  childId      String  @id
+  child        Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
+  personality  String?
+  family       String?
+  healthObs    String?
+  social       String?
+  interests    String?
+  learning     String?
+  behavior     String?
+}
+
+/// 일별 출석 (Child)
+model Attendance {
+  id        String               @id @default(cuid())
+  childId   String
+  child     Child                @relation(fields: [childId], references: [id], onDelete: Cascade)
+  date      String               // YYYY-MM-DD
+  status    AttendanceStatusChild
+  note      String?
+  authorId  String
+  createdAt DateTime             @default(now())
+
+  @@unique([childId, date])
+  @@index([date])
+}
+
+/// 돌봄일지
+model CareLog {
+  id         String          @id @default(cuid())
+  childId    String
+  child      Child           @relation(fields: [childId], references: [id], onDelete: Cascade)
+  date       String
+  category   CareLogCategory
+  content    String
+  authorId   String
+  authorName String
+  createdAt  DateTime        @default(now())
+
+  @@index([childId, date])
+}
+
+/// 아동 첨부 문서 (IEP, 사진 등)
+model ChildDocument {
+  id        String            @id @default(cuid())
+  childId   String
+  child     Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
+  filename  String
+  /// 텍스트 or 파일 경로 (현재는 텍스트만)
+  content   String
+  kind      ChildDocumentKind
+  authorId  String
+  createdAt DateTime          @default(now())
+}
+
+// ─── Staff ─────────────────────────────────────────────
+
+model Staff {
+  id        String       @id @default(cuid())
+  tenantId  String
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?      @unique
+  user      User?        @relation("UserStaff", fields: [userId], references: [id])
+  name      String
+  loginId   String
+  gender    Gender
+  phone     String
+  position  String
+  joinDate  String
+  email     String?
+  status    StaffStatus  @default(active)
+
+  attendances StaffAttendance[]
+
+  @@index([tenantId])
+}
+
+/// 직원 근태 (출퇴근 + 휴가/외출/미체크)
+model StaffAttendance {
+  id          String                @id @default(cuid())
+  staffId     String
+  staff       Staff                 @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date        String
+  clockIn     String?               // HH:mm
+  clockOut    String?               // HH:mm
+  workMinutes Int?
+  status      AttendanceStatusStaff
+  note        String?
+  authorId    String
+
+  @@unique([staffId, date])
+  @@index([date])
+}
+
+// ─── Volunteers ────────────────────────────────────────
+
+model Volunteer {
+  id           String        @id @default(cuid())
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name         String
+  gender       Gender
+  phone        String
+  type         VolunteerType
+  startDate    String
+  endDate      String?
+  organization String?
+  note         String?
+  status       String        @default("active")
+
+  attendances VolunteerAttendance[]
+
+  @@index([tenantId])
+}
+
+/// 봉사자 등원/결석
+model VolunteerAttendance {
+  id          String    @id @default(cuid())
+  volunteerId String
+  volunteer   Volunteer @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  date        String
+  present     Boolean
+  reason      String?
+  authorId    String
+
+  @@unique([volunteerId, date])
+  @@index([date])
+}
+
+// ─── Members (조합원) ───────────────────────────────────
+
+model Member {
+  id        String       @id @default(cuid())
+  tenantId  String
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String?      @unique
+  user      User?        @relation("UserMember", fields: [userId], references: [id])
+  name      String
+  /// 개인 / 법인
+  type      String       @default("개인")
+  /// 출자금 (원)
+  contribution Int       @default(0)
+  joinDate  String
+  status    MemberStatus @default(active)
+
+  @@index([tenantId])
+}
+
+// ─── Documents (HTML/HWP) ──────────────────────────────
+
+model Doc {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title      String
+  content    String   // HTML 또는 HWP 직렬화
+  kind       DocKind
+  authorId   String
+  authorName String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([kind])
+}
+
+// ─── Document Index (통합 인덱스) ───────────────────────
+//
+// Write-through 방식으로 모든 문서성 데이터의 단일 인덱스.
+// 목록/검색 페이지에서 이 테이블만 조회.
+
+model DocumentIndex {
+  id         String       @id
+  tenantId   String
+  kind       DocumentKind
+  title      String
+  snippet    String?
+  sourceUrl  String
+  childId    String?
+  authorId   String
+  authorName String
+  meta       Json?        // { form, docNo, status, category, fileType, ... }
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([tenantId, kind])
+  @@index([childId])
+  @@index([authorId])
+}
+
+// ─── Approval ──────────────────────────────────────────
+
+model ApprovalRequest {
+  id           String                @id @default(cuid())
+  tenantId     String
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  documentId   String                // 원본 문서 id
+  documentUrl  String
+  documentKind String                // DocumentKind 와 동일 문자열 union
+  title        String
+  form         ApprovalFormKey
+  requesterId  String
+  requesterName String
+  status       ApprovalRequestStatus @default(결재중)
+  urgent       Boolean               @default(false)
+  hasFile      Boolean               @default(false)
+  docNo        String?               @unique
+  snippet      String?
+  createdAt    DateTime              @default(now())
+  completedAt  DateTime?
+
+  steps ApprovalStep[]
+
+  @@index([tenantId, status])
+  @@index([requesterId])
+}
+
+/// 결재선 단계
+model ApprovalStep {
+  id        String              @id @default(cuid())
+  requestId String
+  request   ApprovalRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  step      Int                 // 1..N
+  name      String
+  position  String
+  status    ApprovalStepStatus  @default(pending)
+  actedAt   DateTime?
+  comment   String?
+
+  @@unique([requestId, step])
+}
+
+// ─── 운영 계획 (Annual → Monthly → Daily) ──────────────
+
+model AnnualPlan {
+  id                     String           @id @default(cuid())
+  tenantId               String
+  tenant                 Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  year                   Int
+  title                  String
+  status                 AnnualPlanStatus @default(draft)
+  goals                  String[]
+  evaluationScore        Int?
+  evaluationSummary      String?
+  evaluationHighlights   String[]
+  evaluationImprovements String[]
+  evaluatedBy            String?
+  evaluatedAt            DateTime?
+  createdBy              String
+  createdAt              DateTime         @default(now())
+  approvedBy             String?
+  approvedAt             DateTime?
+
+  programs     Program[]
+  monthlyPlans MonthlyPlan[]
+
+  @@unique([tenantId, year])
+}
+
+/// 연간 프로그램 (심리안정, 학습멘토링, 방과후교실 등)
+model Program {
+  id              String       @id @default(cuid())
+  annualPlanId    String
+  annualPlan      AnnualPlan   @relation(fields: [annualPlanId], references: [id], onDelete: Cascade)
+  name            String
+  targetGroup     String
+  weeklyFrequency Int
+  method          String
+  monthlyTargets  String[]
+  materials       String[]
+}
+
+model MonthlyPlan {
+  id            String            @id @default(cuid())
+  annualPlanId  String
+  annualPlan    AnnualPlan        @relation(fields: [annualPlanId], references: [id], onDelete: Cascade)
+  year          Int
+  /// 1..12
+  month         Int
+  status        MonthlyPlanStatus @default(draft)
+  progressPct   Int?
+  kpiAchieved   String[]
+  notes         String?
+  evaluatedBy   String?
+  evaluatedAt   DateTime?
+
+  weeklyGoals WeeklyGoal[]
+  dailyLogs   DailyLog[]
+
+  @@unique([annualPlanId, month])
+}
+
+model WeeklyGoal {
+  id            String      @id @default(cuid())
+  monthlyPlanId String
+  monthlyPlan   MonthlyPlan @relation(fields: [monthlyPlanId], references: [id], onDelete: Cascade)
+  /// 1..5
+  weekNumber    Int
+  goal          String
+  activities    String[]
+
+  @@unique([monthlyPlanId, weekNumber])
+}
+
+/// 운영일지 — raw HTML content
+model DailyLog {
+  id            String         @id @default(cuid())
+  tenantId      String
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  monthlyPlanId String?
+  monthlyPlan   MonthlyPlan?   @relation(fields: [monthlyPlanId], references: [id])
+  date          String
+  title         String
+  authorName    String
+  authorRole    String
+  status        DailyLogStatus @default(draft)
+  /// Raw HTML — dangerouslySetInnerHTML 로 렌더
+  content       String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([tenantId, date])
+  @@index([monthlyPlanId])
+}
