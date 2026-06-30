@@ -95,7 +95,7 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
       resizable: options.resizable,
       fullText: options.fullText,
       cell: (row, { isExpanded, toggleExpand }) => (
-        <div className="flex items-center justify-center gap-2 min-w-0">
+        <div className="flex items-center justify-center gap-2 min-w-0 h-full">
           <IconButton
             size="xs"
             appearance="subtle"
@@ -130,10 +130,9 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
             >
               {row.name?.[0] ?? "?"}
             </div>
-            <div className="min-w-0">
-              <div className="font-semibold text-slate-900 text-[13px] truncate">
-                {row.name} <span className="text-[10.5px] text-slate-400 font-normal">· {row.age}세 · {row.grade}</span>
-              </div>
+            <div className="min-w-0 leading-none">
+              <span className="font-semibold text-slate-900 text-[13px]">{row.name}</span>
+              <span className="text-[10.5px] text-slate-400 font-normal"> · {row.age}세 · {row.grade}</span>
             </div>
           </Link>
         </div>
