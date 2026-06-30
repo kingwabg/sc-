@@ -9,14 +9,14 @@ import {
   type Staff,
   type StaffPosition,
   type StaffAttendance,
-} from "@/lib/staff";
+} from "@/lib/features/staff";
 import { getExtraStaff, getStaffAttendanceOverrides, addExtraStaff } from "@/lib/store";
 import { StaffSidebar } from "./_components/StaffSidebar";
 import { StaffTable } from "./_components/StaffTable";
 import { StaffFormModal } from "./_components/AddStaffModal";
 import { StaffFilterDrawer, type StaffFilter } from "./_components/StaffFilterDrawer";
 import { StaffPageHeader } from "./_components/StaffPageHeader";
-import { StaffListToolbar } from "./_components/StaffListToolbar";
+import { StaffListToolbar, type StaffAttendanceChip } from "./_components/StaffListToolbar";
 import { TableOptionsDrawer, DEFAULT_TABLE_OPTIONS, type TableOptions } from "@/components/ui/TableOptionsDrawer";
 import { exportStaffCSV } from "@/lib/features/staff/export";
 import { useToast } from "@/components/ui/Toast";
@@ -38,6 +38,7 @@ function StaffBody() {
   // ── State ─────────────────────────────────────────────────
   const [query, setQuery] = useState("");
   const [positionFilter, setPositionFilter] = useState<StaffPosition | "all">("all");
+  const [attendanceChip, setAttendanceChip] = useState<StaffAttendanceChip>("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filter, setFilter] = useState<StaffFilter>({
     joinRange: null,
@@ -69,11 +70,46 @@ function StaffBody() {
     return counts;
   }, [allStaff, allPositions]);
 
+  const attendanceMap = useMemo<Record<string, StaffAttendance>>(() => {
+    const m: Record<string, StaffAttendance> = {};
+    for (const s of allStaff) {
+      const att = attOverrides[s.id] ?? getStaffAttendanceByDate(s.id, today);
+      if (att) m[s.id] = att;
+    }
+    return m;
+  }, [allStaff, attOverrides, today]);
+
+  // 오늘 출근/외출/미출근 통계
+  const todayStats = useMemo(() => {
+    let present = 0, clockedOut = 0, outside = 0;
+    for (const s of allStaff) {
+      const att = attendanceMap[s.id];
+      if (att?.clockIn) {
+        present++;
+        if (att.clockOut) clockedOut++;
+        if (att.note?.includes("외출")) outside++;
+      }
+    }
+    return { present, clockedOut, outside, absent: allStaff.length - present };
+  }, [allStaff, attendanceMap]);
+
+  const fillPct = allStaff.length > 0
+    ? Math.round((todayStats.present / allStaff.length) * 100)
+    : 0;
+
   const filtered = useMemo(() => {
     let list =
       positionFilter === "all"
         ? allStaff
         : allStaff.filter((s) => s.position === positionFilter);
+    if (attendanceChip !== "all") {
+      list = list.filter((s) => {
+        const att = attendanceMap[s.id];
+        if (attendanceChip === "present") return !!att?.clockIn;
+        if (attendanceChip === "absent") return !att?.clockIn;
+        return true;
+      });
+    }
     if (query) {
       const q = query.toLowerCase();
       list = list.filter(
@@ -93,16 +129,7 @@ function StaffBody() {
       list = list.filter((s) => filter.statuses.includes(s.status));
     }
     return list;
-  }, [allStaff, positionFilter, query, filter]);
-
-  const attendanceMap = useMemo<Record<string, StaffAttendance>>(() => {
-    const m: Record<string, StaffAttendance> = {};
-    for (const s of allStaff) {
-      const att = attOverrides[s.id] ?? getStaffAttendanceByDate(s.id, today);
-      if (att) m[s.id] = att;
-    }
-    return m;
-  }, [allStaff, attOverrides, today]);
+  }, [allStaff, positionFilter, attendanceChip, attendanceMap, query, filter]);
 
   // ── Handlers ─────────────────────────────────────────────
   function handleAdd(staff: Staff) {
@@ -174,12 +201,17 @@ function StaffBody() {
           <StaffPageHeader
             positionFilter={positionFilter}
             filteredCount={filtered.length}
+            totalCount={allStaff.length}
+            fillPct={fillPct}
+            stats={todayStats}
             onAdd={() => setShowAddModal(true)}
             onExport={handleExport}
           />
           <StaffListToolbar
             query={query}
             onQueryChange={setQuery}
+            attendanceChip={attendanceChip}
+            onAttendanceChipChange={setAttendanceChip}
             filterActive={filterActive}
             onOpenFilter={() => setFilterOpen(true)}
             tableOptions={tableOptions}
