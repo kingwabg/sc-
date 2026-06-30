@@ -89,7 +89,7 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
       key: "name",
       header: "이름",
       flexGrow: 3,
-      minWidth: 140,
+      minWidth: 170,
       align: "center",
       sortable: options.sortable,
       resizable: options.resizable,
