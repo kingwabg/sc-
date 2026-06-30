@@ -222,6 +222,7 @@ export function Sidebar() {
                 <div key={href} className="group relative flex items-center">
                   <Link
                     href={href}
+                    prefetch={false}
                     className={cn(
                       "flex items-center gap-2.5 h-8 px-3 rounded-lg text-[13px] font-medium flex-1 transition",
                       isActive
@@ -349,6 +350,7 @@ function CollapsedSidebar({
             <Link
               key={href}
               href={href}
+              prefetch={false}
               title={item.label}
               className={cn(
                 "relative w-10 h-10 grid place-items-center rounded-lg transition mx-auto",
@@ -441,6 +443,7 @@ function NavGroup({
             <div key={item.label} className="group relative">
               <Link
                 href={item.href}
+                prefetch={false}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
@@ -478,6 +481,7 @@ function NavGroup({
                       <Link
                         key={child.href}
                         href={child.href}
+                        prefetch={false}
                         className={cn(
                           "flex items-center gap-2 h-7 px-2.5 rounded-md text-[12.5px] transition",
                           isChildActive

@@ -68,6 +68,7 @@ export function TopHeader() {
         </IconBtn>
         <Link
           href="/settings"
+          prefetch={false}
           aria-label="관리자 설정"
           title="관리자 설정"
           className="w-[38px] h-[38px] rounded-lg grid place-items-center text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition"
@@ -85,6 +86,7 @@ export function TopHeader() {
           {/* 사업장 이름/아이콘 — 클릭하면 사업자 선택 페이지로 */}
           <Link
             href="/"
+            prefetch={false}
             className={`flex items-center gap-2 py-1 pl-1 pr-2 rounded-full transition ${
               tenant ? `${tenant.accent.bg} hover:brightness-95` : "hover:bg-slate-50"
             }`}
