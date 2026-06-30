@@ -19,6 +19,7 @@ import {
   getAttendanceOverrides,
   updateExtraChild,
 } from "@/lib/store";
+import { documentService } from "@/lib/documents/service";
 import {
   ArrowLeft,
   Phone,
@@ -137,6 +138,18 @@ export default function ChildDetailPage() {
     if (updated) {
       setChild(updated);
       setEditMode(false);
+      // write-through: 아동카드 인덱스 갱신
+      documentService.upsert({
+        id: `child-card-${child.id}`,
+        kind: "child-card",
+        title: `${updated.name} 아동카드`,
+        snippet: `이름 ${updated.name} · 학년 ${updated.grade ?? "-"} · 학교 ${updated.school ?? "-"}`,
+        sourceUrl: `/children/${updated.id}?tab=basic`,
+        childId: updated.id,
+        authorId: "u_current",
+        authorName: "나",
+        meta: { lastEditedField: "기본정보" },
+      });
     }
   }
 

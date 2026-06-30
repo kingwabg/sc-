@@ -1,6 +1,8 @@
 // Child Documents — 아동 개인 문서 (1:1)
 // 신분증, 예방접종, 보호자 동의서, IEP, 사고 보고 등
 
+import { documentService } from "@/lib/documents/service";
+
 export type ChildDocumentCategory =
   | "신분증"
   | "예방접종"
@@ -161,6 +163,19 @@ export function saveTextDoc(doc: ChildDocument): void {
   const filtered = list.filter((d) => d.id !== doc.id);
   filtered.unshift(doc);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered.slice(0, 50)));
+  // write-through: 문서 인덱스에도 등록
+  documentService.upsert({
+    id: doc.id,
+    kind: "child-document",
+    title: doc.title,
+    snippet: doc.excerpt ?? doc.content?.slice(0, 140),
+    sourceUrl: `/children/${doc.childId}/documents`,
+    childId: doc.childId,
+    authorId: doc.uploadedBy,
+    authorName: doc.uploadedBy,
+    createdAt: doc.createdAt,
+    meta: { category: doc.category, kind: doc.kind, fileType: doc.fileType },
+  });
 }
 
 export function getStoredTextDocs(childId: string): ChildDocument[] {

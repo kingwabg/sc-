@@ -3,6 +3,7 @@
  */
 import type { Child, Attendance, CareLog, ChildGroup, GroupFilter } from "../features/children/types";
 import { readLS, writeLS } from "./_ls";
+import { documentService } from "@/lib/documents/service";
 
 const CHILDREN_KEY = "officex:extra-children";
 const ATTENDANCE_KEY = "officex:attendance-overrides";
@@ -159,5 +160,18 @@ export function getExtraCareLogs(): CareLog[] {
 export function addExtraCareLog(log: CareLog): CareLog[] {
   const next = [...getExtraCareLogs(), log];
   writeLS(CARELOG_KEY, next);
+  // write-through: 문서 인덱스에도 등록
+  documentService.upsert({
+    id: log.id,
+    kind: "care-log",
+    title: log.title,
+    snippet: log.content.slice(0, 140),
+    sourceUrl: `/children/${log.childId}?tab=attendance`,
+    childId: log.childId,
+    authorId: log.authorName, // mock: 작성자명 → authorId
+    authorName: log.authorName,
+    createdAt: log.createdAt,
+    meta: { category: log.category, mood: log.mood },
+  });
   return next;
 }

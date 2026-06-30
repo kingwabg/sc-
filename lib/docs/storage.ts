@@ -1,6 +1,8 @@
 import type { Doc, DocStorage, DocSummary } from "./types";
+import { documentService } from "@/lib/documents/service";
 
 const KEY = "office-portal:docs:v1";
+const CURRENT_AUTHOR = { id: "u_current", name: "나" };
 
 /** HTML → plain text 변환 (목록 snippet / 글자수용) */
 function stripHtml(html: string): string {
@@ -70,6 +72,17 @@ export class LocalDocStorage implements DocStorage {
       updatedAt: now,
     };
     writeAll([doc, ...readAll()]);
+    // write-through: 문서 인덱스에도 등록
+    documentService.upsert({
+      id: doc.id,
+      kind: "html-doc",
+      title: doc.title,
+      snippet: "",
+      sourceUrl: `/docs/${doc.id}`,
+      authorId: CURRENT_AUTHOR.id,
+      authorName: CURRENT_AUTHOR.name,
+      createdAt: doc.createdAt,
+    });
     return doc;
   }
 
@@ -77,6 +90,7 @@ export class LocalDocStorage implements DocStorage {
     const all = readAll();
     const idx = all.findIndex((d) => d.id === input.id);
     const now = Date.now();
+    let saved: Doc;
     if (idx >= 0) {
       all[idx] = {
         ...all[idx],
@@ -84,21 +98,37 @@ export class LocalDocStorage implements DocStorage {
         content: input.content,
         updatedAt: now,
       };
+      saved = all[idx];
     } else {
-      all.unshift({
+      const doc: Doc = {
         id: input.id,
         title: input.title,
         content: input.content,
         createdAt: now,
         updatedAt: now,
-      });
+      };
+      all.unshift(doc);
+      saved = doc;
     }
     writeAll(all);
-    return all.find((d) => d.id === input.id)!;
+    // write-through: 인덱스 메타 업데이트
+    documentService.upsert({
+      id: saved.id,
+      kind: "html-doc",
+      title: saved.title,
+      snippet: stripHtml(saved.content).slice(0, 140),
+      sourceUrl: `/docs/${saved.id}`,
+      authorId: CURRENT_AUTHOR.id,
+      authorName: CURRENT_AUTHOR.name,
+      createdAt: saved.createdAt,
+    });
+    return saved;
   }
 
   async remove(id: string): Promise<void> {
     writeAll(readAll().filter((d) => d.id !== id));
+    // write-through: 인덱스에서도 제거
+    documentService.removeBySource(`/docs/${id}`);
   }
 }
 
