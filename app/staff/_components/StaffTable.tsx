@@ -90,11 +90,12 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
       header: "이름",
       flexGrow: 3,
       minWidth: 140,
+      align: "center",
       sortable: options.sortable,
       resizable: options.resizable,
       fullText: options.fullText,
       cell: (row, { isExpanded, toggleExpand }) => (
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center justify-center gap-2 min-w-0 h-full">
           <IconButton
             size="xs"
             appearance="subtle"
@@ -124,11 +125,9 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
             >
               {row.name[0]}
             </div>
-            <div className="text-left min-w-0">
-              <div className="font-semibold text-slate-900 text-[13px] truncate">
-                {row.name}
-              </div>
-              <div className="text-[11px] text-slate-400 truncate">{row.id}</div>
+            <div className="min-w-0 leading-none">
+              <span className="font-semibold text-slate-900 text-[13px]">{row.name}</span>
+              <span className="text-[10.5px] text-slate-400 font-normal"> · {row.id}</span>
             </div>
           </div>
         </div>
