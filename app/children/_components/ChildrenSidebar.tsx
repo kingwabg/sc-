@@ -473,7 +473,7 @@ function FolderRow({
             <X className="w-3 h-3" />
           </button>
         </div>
-      ) : (
+) : (
         <>
           <button
             onClick={() => onSelectGroup(g.id)}
@@ -482,29 +482,29 @@ function FolderRow({
               isActive ? "bg-brand-50 text-brand-700 font-semibold" : "text-slate-600 hover:bg-slate-50",
             )}
           >
-{isActive ? <FolderOpen className="w-4 h-4 shrink-0 text-brand-500" /> : <Folder className="w-4 h-4 shrink-0 text-slate-400" />}
-                <span className="truncate flex-1">{g.label}</span>
-                {!isFilterEmpty(g.filter) && (
-                  <span title="스마트 폴더 (필터 조건 적용됨)" className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />
-                )}
-                {g.id !== "all" && (
-                  <span className={cn("text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0",
-                    isActive ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500"
-                  )}>
-                    {counts[g.id] ?? 0}
-                  </span>
-                )}
+            {isActive ? <FolderOpen className="w-4 h-4 shrink-0 text-brand-500" /> : <Folder className="w-4 h-4 shrink-0 text-slate-400" />}
+            <span className="truncate flex-1">{g.label}</span>
+            {!isFilterEmpty(g.filter) && (
+              <span title="스마트 폴더 (필터 조건 적용됨)" className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />
+            )}
+            {g.id !== "all" && (
+              <span className={cn("text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0",
+                isActive ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500"
+              )}>
+                {counts[g.id] ?? 0}
+              </span>
+            )}
           </button>
 
-          {/* Actions */}
-          <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 bg-white border border-slate-200 rounded-md shadow-sm px-0.5">
-            <button onClick={() => startAdd(g.id, depth + 1)} className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
+          {/* Actions — 라벨 왼쪽 (드래그 핸들 옆) — 절대 위치 아님 */}
+          <div className="hidden group-hover:flex items-center gap-0.5 pl-1 pr-0.5">
+            <button onClick={() => startAdd(g.id, depth + 1)} className="w-5 h-5 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="하위 폴더 추가">
               <Plus className="w-3 h-3" />
             </button>
             <button
               onClick={() => onOpenGroupOptions(g.id)}
               className={cn(
-                "w-6 h-6 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
+                "w-5 h-5 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
                 g.filter && !isFilterEmpty(g.filter) ? "text-brand-600" : "text-slate-400",
               )}
               title="폴더 조건 (필터)"
@@ -513,10 +513,10 @@ function FolderRow({
             </button>
             {g.id !== "all" && (
               <>
-                <button onClick={() => startEdit(g)} className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="이름 수정">
+                <button onClick={() => startEdit(g)} className="w-5 h-5 grid place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-brand-600" title="이름 수정">
                   <Pencil className="w-3 h-3" />
                 </button>
-                <button onClick={() => handleDelete(g.id, g.label)} className="w-6 h-6 grid place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500" title="삭제">
+                <button onClick={() => handleDelete(g.id, g.label)} className="w-5 h-5 grid place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500" title="삭제">
                   <Trash2 className="w-3 h-3" />
                 </button>
               </>
