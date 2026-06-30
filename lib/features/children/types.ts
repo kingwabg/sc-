@@ -85,6 +85,72 @@ export type Child = {
   /** 담당자키즈콜ID */
   kidsCallId?: string;
   status: "active" | "leave" | "left";
+  /**
+   * 아동 카드 양식 필드 (서창지역아동센터 표준 양식 기준).
+   * PDF 출력/공식 기록 카드에 사용. 모두 optional — 미입력 시 빈 칸.
+   */
+  card?: ChildCardMeta;
+  physical?: ChildPhysical;
+  observations?: ChildObservations;
+  writtenBy?: ChildWrittenBy;
+};
+
+export type ChildCardMeta = {
+  /** 아동카드번호 (예: "AC-2026-001") */
+  number?: string;
+  /** 신원구분 (예: "아동", "주민", "기타") */
+  identityType?: string;
+  /** 신원확인 (예: "주민등록등본", "护照") */
+  identityVerified?: string;
+  /** 입소의뢰기관 (예: "양산시청 아동청소년과") */
+  referredBy?: string;
+};
+
+export type ChildPhysical = {
+  /** 신장 (cm) */
+  height?: number;
+  /** 몸무게 (kg) */
+  weight?: number;
+  /** 체격 (예: "왜소" | "보통" | "건장") */
+  buildType?: string;
+  /** 얼굴형 (예: "계란형", "둥근형", "각진형") */
+  faceShape?: string;
+  /** 두발색상 (예: "흑색", "갈색", "금발") */
+  hairColor?: string;
+  /** 두발형태 (예: "긴머리", "단발", "숏컷") */
+  hairStyle?: string;
+  /** 182 신고 이력 (예: "무", "유") */
+  reported182?: string;
+  /** 기타 신체 특징 */
+  otherFeatures?: string;
+};
+
+export type ChildObservations = {
+  /** 조치사항 */
+  actionsTaken?: string;
+  /** 아동 비고사항 */
+  notes?: string;
+  /** 아동 안전환경 */
+  safetyEnv?: string;
+  /** 아동 학교생활 */
+  schoolLife?: string;
+  /** 상담자 관찰 의견 */
+  counselorObs?: string;
+  /** 지도·판정 */
+  guidanceJudgement?: string;
+  /** 급품 지급 사항 */
+  goodsProvision?: string;
+};
+
+export type ChildWrittenBy = {
+  /** 작성자명 */
+  name?: string;
+  /** 소속 (예: "서창지역아동센터") */
+  org?: string;
+  /** 직위 (예: "생활복지사") */
+  position?: string;
+  /** 작성년월일 (YYYY-MM-DD) */
+  writtenAt?: string;
 };
 
 export type Attendance = {

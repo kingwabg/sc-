@@ -39,14 +39,13 @@ import {
   BookOpen,
   FileText,
   School,
-  Cake,
   MapPin,
-  Wallet,
-  Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CareLogFormModal } from "./_components/CareLogFormModal";
 import { CareLogRow } from "./_components/CareLogRow";
+import { ChildCardTab } from "./_components/ChildCardTab";
+import { GRADE_ORDER } from "./_components/gradeForYear";
 
 const AVAILABLE_YEARS = [2026, 2025, 2024];
 const CATEGORIES: CareLogCategory[] = ["식사", "학습", "놀이", "투약", "관찰", "특별활동", "기타"];
@@ -59,24 +58,6 @@ const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?
   { key: "attendance", label: "출석", icon: CalendarDays },
   { key: "documents", label: "문서", icon: FileText },
 ];
-
-// 학년 진행 (한국 학제 — 1년에 1학년씩)
-const GRADE_ORDER = ["미취학", "초1", "초2", "초3", "초4", "초5", "초6", "중1", "중2", "중3", "고1", "고2", "고3"];
-
-function gradeForYear(child: Child, year: number): string {
-  const enrolledYear = parseInt((child.enrolledAt || "").slice(0, 4));
-  if (!enrolledYear) return child.grade ?? "-";
-  const diff = year - enrolledYear;
-  const idx = GRADE_ORDER.indexOf(child.grade ?? "");
-  if (idx === -1) return child.grade ?? "-";
-  return GRADE_ORDER[Math.min(GRADE_ORDER.length - 1, Math.max(0, idx + diff))];
-}
-
-function ageForYear(birthDate: string, year: number): number {
-  if (!birthDate) return 0;
-  const birth = new Date(birthDate);
-  return year - birth.getFullYear();
-}
 
 export default function ChildDetailPage() {
   const params = useParams<{ id: string }>();
@@ -492,192 +473,6 @@ export default function ChildDetailPage() {
         />
       )}
     </AppShell>
-  );
-}
-
-// ─── Tab: 아동 카드 (연도별 인쇄용) ─────────────────────────
-
-function ChildCardTab({
-  child,
-  childTone,
-  year,
-  setYear,
-  yearTotals,
-  careLogs,
-}: {
-  child: Child;
-  childTone: string;
-  year: number;
-  setYear: (y: number) => void;
-  yearTotals: { present: number; absent: number; leave: number; sick: number; rate: number };
-  careLogs: CareLog[];
-}) {
-  const enrolledYear = parseInt((child.enrolledAt || "").slice(0, 4));
-  const currentYear = new Date().getFullYear();
-  const startYear = child.previousEnrolledAt
-    ? parseInt(child.previousEnrolledAt.slice(0, 4))
-    : enrolledYear;
-  const years: number[] = [];
-  for (let y = startYear; y <= currentYear + 1; y++) years.push(y);
-
-  // 선택 연도의 학년·나이
-  const gradeAtYear = gradeForYear(child, year);
-  const ageAtYear = ageForYear(child.birthDate, year);
-
-  // 선택 연도 돌봄일지 메모
-  const yearLogs = careLogs.filter((l) => l.date.startsWith(`${year}-`));
-  const yearNotes = yearLogs.filter((l) => l.category === "관찰" || l.category === "특별활동");
-
-  return (
-    <>
-      {/* 연도 셀렉터 + 인쇄 버튼 */}
-      <div className="no-print flex items-center justify-between flex-wrap gap-2">
-        <div className="inline-flex bg-white border border-slate-200 rounded-[10px] p-0.5 shadow-sm text-xs">
-          {years.map((y) => (
-            <button
-              key={y}
-              onClick={() => setYear(y)}
-              className={cn(
-                "px-3 h-8 rounded-md font-medium transition",
-                year === y ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-50",
-              )}
-            >
-              {y}년
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => window.print()}
-          className="h-9 px-3 bg-slate-900 text-white text-[13px] font-semibold rounded-[10px] hover:bg-slate-800 transition inline-flex items-center gap-1.5"
-        >
-          <FileText className="w-3.5 h-3.5" />
-          인쇄
-        </button>
-      </div>
-
-      {/* 인쇄 영역 */}
-      <div className="print-area space-y-4">
-        {/* 헤더 — 인쇄용 타이틀 */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[18px] font-bold text-slate-900 m-0">
-              {year}년 아동 카드
-            </h2>
-            <span className="text-[11px] text-slate-400">인쇄용 · 주민번호 제외</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-            <BigField label="이름">
-              <span className="flex items-center gap-2">
-                <div className={cn("w-7 h-7 rounded-lg grid place-items-center text-[13px] font-bold shrink-0", childTone)}>
-                  {child.name[0]}
-                </div>
-                <span className="text-[18px] font-bold text-slate-900">{child.name}</span>
-              </span>
-            </BigField>
-            <BigField label="학년">{gradeAtYear} <span className="text-slate-400 text-[13px] font-normal">· 만 {ageAtYear}세</span></BigField>
-            <BigField label="생년월일" icon={Cake}>
-              {child.birthDate}
-            </BigField>
-            <BigField label="성별">
-              {child.gender === "M" ? "남아" : "여아"}
-            </BigField>
-            {child.school && (
-              <BigField label="학교" icon={School}>{child.school}</BigField>
-            )}
-            {child.phone && (
-              <BigField label="휴대폰" icon={Phone}>{child.phone}</BigField>
-            )}
-            <BigField label="정원">{child.capacityGroup}명 그룹</BigField>
-            <BigField label="입소일">
-              {child.enrolledAt}
-              {child.previousEnrolledAt && (
-                <span className="text-slate-400 text-[13px] font-normal"> · 재입소 (이전: {child.previousEnrolledAt})</span>
-              )}
-            </BigField>
-            {child.leftAt && year >= parseInt(child.leftAt.slice(0, 4)) && (
-              <BigField label="퇴소일" muted>{child.leftAt}</BigField>
-            )}
-          </div>
-        </div>
-
-        {/* 보호자 + 추가 정보 (단일 카드) */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-            <BigField label="보호자명">{child.guardian.name}</BigField>
-            <BigField label="관계">
-              {child.guardian.relation}
-              {child.guardian.type && (
-                <span className="text-slate-400 text-[13px] font-normal"> · {child.guardian.type}</span>
-              )}
-            </BigField>
-            <BigField label="연락처" icon={Phone}>
-              <a href={`tel:${child.guardian.phone}`} className="text-brand-600 text-[18px] font-bold hover:underline">
-                {child.guardian.phone}
-              </a>
-            </BigField>
-            {child.guardian.job && <BigField label="직업">{child.guardian.job}</BigField>}
-            {child.guardian.notes && <BigField label="비고">{child.guardian.notes}</BigField>}
-            {child.emergencyContact && (
-              <BigField label="긴급연락처" muted>
-                {child.emergencyContact.name} · {child.emergencyContact.phone}
-              </BigField>
-            )}
-            {child.address && (
-              <BigField label="주소" icon={MapPin} className="sm:col-span-2">
-                {child.address}
-              </BigField>
-            )}
-            {child.serviceType && <BigField label="이용유형">{child.serviceType}</BigField>}
-            {child.medianIncomePct != null && (
-              <BigField label="함수기준 중위소득" icon={Wallet}>
-                {child.medianIncomePct}%
-              </BigField>
-            )}
-            {child.kidsCallId && (
-              <BigField label="키즈콜ID" icon={Hash} className="sm:col-span-2">
-                {child.kidsCallId}
-              </BigField>
-            )}
-          </div>
-        </div>
-
-        {/* {year}년 출석 요약 */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
-          <h3 className="text-[15px] font-bold text-slate-900 m-0 mb-4">
-            {year}년 출석 요약
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-            <AttendanceCount icon={CheckCircle2} color="emerald" label="등원" count={yearTotals.present} />
-            <AttendanceCount icon={Clock} color="amber" label="조퇴" count={yearTotals.leave} />
-            <AttendanceCount icon={Stethoscope} color="blue" label="보건" count={yearTotals.sick} />
-            <AttendanceCount icon={Clock} color="red" label="결석/미등원" count={yearTotals.absent} />
-          </div>
-          <div className="flex items-center justify-between text-[12px] text-slate-500">
-            <span>출석률</span>
-            <span className="text-[18px] font-bold text-emerald-600 tabular-nums">{yearTotals.rate}%</span>
-          </div>
-        </div>
-
-        {/* {year}년 특이사항 */}
-        {yearNotes.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
-            <h3 className="text-[15px] font-bold text-slate-900 m-0 mb-4">
-              {year}년 특이사항 / 특별활동
-            </h3>
-            <div className="space-y-2">
-              {yearNotes.map((log) => (
-                <div key={log.id} className="text-[13px] text-slate-700 leading-relaxed border-l-2 border-brand-300 pl-3">
-                  <div className="text-[11px] text-slate-400 mb-0.5">{log.date} · {log.category}</div>
-                  <div className="font-semibold text-slate-900">{log.title}</div>
-                  <div className="text-slate-600">{log.content}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </>
   );
 }
 
