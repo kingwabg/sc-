@@ -6,9 +6,11 @@ import "dotenv/config";
 
 export default defineConfig({
   schema: "./prisma/schema.prisma",
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
   migrations: {
     seed: "tsx prisma/seed.ts",
   },
-  // PostgreSQL 직접 연결: DATABASE_URL 사용 (Prisma migrate + generate 에서 사용)
-  // adapter는 PrismaClient 런타임에 별도로 주입 (lib/db/prisma.ts 에서).
 });
+

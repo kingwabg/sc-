@@ -11,8 +11,18 @@
  *   - 외부 시스템 부작용 없음 (mock 데이터 그대로)
  */
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prisma = new PrismaClient();
+const url = process.env.DATABASE_URL;
+if (!url) {
+  console.error("DATABASE_URL 환경변수가 비어있음. .env.local 또는 DATABASE_URL export 후 다시 시도하세요.");
+  process.exit(1);
+}
+
+// Prisma 7 — adapter 패턴으로 connection 명시
+// transaction pooler (pgbouncer=true) + connection_limit=1 → prepared statements 안전
+const adapter = new PrismaPg({ connectionString: url });
+const prisma = new PrismaClient({ adapter });
 
 const TENANT_ID = "t_acme";
 const TODAY = new Date().toISOString().slice(0, 10);
