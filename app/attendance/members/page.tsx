@@ -59,7 +59,7 @@ function AttendanceBody() {
       MOCK_STAFF.concat(getExtraStaff()).map((s) => {
         const override = staffAttOverrides[s.id];
         const fromMock = getStaffAttendanceByDate(s.id, dateStr);
-        return { staff: s, att: override ?? fromMock };
+        return { id: s.id, staff: s, att: override ?? fromMock };
       }),
     [staffAttOverrides, dateStr],
   );
@@ -69,7 +69,7 @@ function AttendanceBody() {
       MOCK_VOLUNTEERS.concat(getExtraVolunteers()).map((v) => {
         const override = volAttOverrides[v.id];
         const fromMock = getVolunteerAttendanceByDate(v.id, dateStr);
-        return { vol: v, att: override ?? fromMock };
+        return { id: v.id, vol: v, att: override ?? fromMock };
       }),
     [volAttOverrides, dateStr],
   );

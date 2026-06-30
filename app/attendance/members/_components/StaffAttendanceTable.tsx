@@ -1,17 +1,24 @@
 "use client";
 
 /**
- * StaffAttendanceTable — 종사자 출결 인라인 편집 테이블
+ * StaffAttendanceTable — ResourceTable 어댑터 (인라인 출근/퇴근 편집)
  *
- * 출근/퇴근 시간을 클릭하면 input으로 바뀌고, blur 시 저장.
+ * cell 안에서 useState로 editing 모드 관리.
+ * 출근/퇴근 셀 클릭 시 input으로 전환, blur 시 onUpdate 콜백 호출.
  */
 
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { POSITION_LABELS, workHours, type Staff, type StaffAttendance } from "@/lib/staff";
+import {
+  ResourceTable,
+  type ColumnDef,
+  type ColumnCellHelpers,
+} from "@/components/ui/ResourceTable";
+import { POSITION_LABELS, workHours, type Staff, type StaffAttendance } from "@/lib/features/staff";
 
 type StaffRow = {
+  id: string;
   staff: Staff;
   att: StaffAttendance | undefined;
 };
@@ -22,134 +29,170 @@ type Props = {
 };
 
 export function StaffAttendanceTable({ rows, onUpdate }: Props) {
+  // 각 row의 editing state를 한 곳에서 관리 (ResourceTable cell 안에서 쓸 수 없으므로)
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <Th>이름</Th>
-              <Th>직위</Th>
-              <Th className="text-center">출근 시간</Th>
-              <Th className="text-center">퇴근 시간</Th>
-              <Th className="text-center">근무시간</Th>
-              <Th className="text-center">수정</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ staff, att }) => {
-              const isEditing = editingId === staff.id;
-              return (
-                <tr
-                  key={staff.id}
-                  className="border-t border-slate-100 hover:bg-brand-50/20 transition"
-                >
-                  <td className="py-3 pl-4">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={cn(
-                          "w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold",
-                          staff.gender === "M"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-pink-100 text-pink-700",
-                        )}
-                      >
-                        {staff.name[0]}
-                      </div>
-                      <div className="font-semibold text-slate-900 text-[13px]">
-                        {staff.name}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="text-[12px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">
-                      {POSITION_LABELS[staff.position]}
-                    </span>
-                  </td>
-                  <td className="text-center">
-                    {isEditing ? (
-                      <input
-                        type="time"
-                        defaultValue={att?.clockIn ?? "09:00"}
-                        className="h-8 px-2 border border-slate-200 rounded-md text-sm"
-                        onBlur={(e) => onUpdate(staff.id, "clockIn", e.target.value)}
-                        autoFocus
-                      />
-                    ) : (
-                      <span
-                        className={cn(
-                          "text-[13px] font-semibold",
-                          att?.clockIn ? "text-emerald-600" : "text-slate-300",
-                        )}
-                      >
-                        {att?.clockIn ?? "—"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="text-center">
-                    {isEditing ? (
-                      <input
-                        type="time"
-                        defaultValue={att?.clockOut ?? "18:00"}
-                        className="h-8 px-2 border border-slate-200 rounded-md text-sm"
-                        onBlur={(e) => onUpdate(staff.id, "clockOut", e.target.value)}
-                      />
-                    ) : (
-                      <span
-                        className={cn(
-                          "text-[13px] font-semibold",
-                          att?.clockOut ? "text-amber-600" : "text-slate-300",
-                        )}
-                      >
-                        {att?.clockOut ?? "—"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="text-center text-[13px] font-bold text-slate-700">
-                    {workHours(att?.clockIn, att?.clockOut)}
-                  </td>
-                  <td className="text-center">
-                    <button
-                      onClick={() => setEditingId(isEditing ? null : staff.id)}
-                      className="inline-flex items-center gap-1 h-8 px-3 rounded-md text-[12px] font-semibold transition bg-slate-50 text-slate-600 hover:bg-brand-50 hover:text-brand-700"
-                    >
-                      <Pencil className="w-3 h-3" />
-                      {isEditing ? "완료" : "수정"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+  function NameCell({ row }: { row: StaffRow }) {
+    return (
+      <div className="flex items-center gap-2.5">
+        <div
+          className={cn(
+            "w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold",
+            row.staff.gender === "M" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700",
+          )}
+        >
+          {row.staff.name[0]}
+        </div>
+        <div className="font-semibold text-slate-900 text-[13px]">{row.staff.name}</div>
       </div>
-      <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 text-[11px] text-slate-500">
-        총 {rows.length}명 · 출근/퇴근 시간을 클릭하여 수정
-      </div>
-    </div>
-  );
-}
+    );
+  }
 
-function Th({
-  children,
-  className,
-  colSpan,
-}: {
-  children?: React.ReactNode;
-  className?: string;
-  colSpan?: number;
-}) {
+  function TimeCell({
+    row,
+    field,
+    fallback,
+    isActive,
+    helpers,
+  }: {
+    row: StaffRow;
+    field: "clockIn" | "clockOut";
+    fallback: string;
+    isActive: boolean;
+    helpers: ColumnCellHelpers<StaffRow>;
+  }) {
+    const isEditing = editingId === row.id && isActive;
+    const value = row.att?.[field];
+
+    if (isEditing) {
+      return (
+        <input
+          type="time"
+          defaultValue={value ?? fallback}
+          className="h-8 px-2 border border-slate-200 rounded-md text-sm"
+          onBlur={(e) => onUpdate(row.id, field, e.target.value)}
+          autoFocus={field === "clockIn"}
+        />
+      );
+    }
+    return (
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          setEditingId(row.id);
+        }}
+        className={cn(
+          "text-[13px] font-semibold cursor-pointer",
+          value
+            ? field === "clockIn"
+              ? "text-emerald-600"
+              : "text-amber-600"
+            : "text-slate-300",
+        )}
+      >
+        {value ?? "—"}
+      </span>
+    );
+  }
+
+  const columns: ColumnDef<StaffRow>[] = [
+    {
+      key: "name",
+      header: "이름",
+      flexGrow: 2,
+      minWidth: 50,
+      cell: (row) => <NameCell row={row} />,
+    },
+    {
+      key: "position",
+      header: "직위",
+      width: 110,
+      align: "center",
+      minWidth: 80,
+      cell: (row) => (
+        <span className="text-[12px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">
+          {POSITION_LABELS[row.staff.position]}
+        </span>
+      ),
+    },
+    {
+      key: "clockIn",
+      header: "출근 시간",
+      width: 130,
+      align: "center",
+      minWidth: 50,
+      cell: (row) => <TimeCell row={row} field="clockIn" fallback="09:00" isActive={true} helpers={undefined as never} />,
+    },
+    {
+      key: "clockOut",
+      header: "퇴근 시간",
+      width: 130,
+      align: "center",
+      minWidth: 50,
+      cell: (row) => <TimeCell row={row} field="clockOut" fallback="18:00" isActive={true} helpers={undefined as never} />,
+    },
+    {
+      key: "workHours",
+      header: "근무시간",
+      width: 110,
+      align: "center",
+      minWidth: 50,
+      cell: (row) => (
+        <span className="text-[13px] font-bold text-slate-700 tabular-nums">
+          {workHours(row.att?.clockIn, row.att?.clockOut)}
+        </span>
+      ),
+    },
+    {
+      key: "edit",
+      header: "수정",
+      width: 90,
+      align: "center",
+      minWidth: 50,
+      sortable: false,
+      resizable: false,
+      cell: (row) => {
+        const isEditing = editingId === row.id;
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingId(isEditing ? null : row.id);
+            }}
+            className="inline-flex items-center gap-1 h-8 px-3 rounded-md text-[12px] font-semibold transition bg-slate-50 text-slate-600 hover:bg-brand-50 hover:text-brand-700"
+          >
+            <Pencil className="w-3 h-3" />
+            {isEditing ? "완료" : "수정"}
+          </button>
+        );
+      },
+    },
+  ];
+
   return (
-    <th
-      colSpan={colSpan}
-      className={cn(
-        "px-4 py-2.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wide text-left",
-        className,
-      )}
-    >
-      {children}
-    </th>
+    <ResourceTable
+      data={rows}
+      rowKey={(r) => r.id}
+      columns={columns}
+      options={{
+        bordered: true,
+        cellBordered: true,
+        hover: true,
+        resizable: true,
+        sortable: true,
+        paginated: false,
+        pageSize: 50,
+        wordWrap: false,
+        fullText: false,
+        expandable: false,
+        density: "normal",
+        loading: false,
+        autoHeight: true,
+        height: 520,
+        minHeight: 0,
+        maxHeight: 0,
+        pageSizeRows: 50,
+      }}
+    />
   );
 }
