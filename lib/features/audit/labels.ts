@@ -40,4 +40,5 @@ export const CARD_DESCRIPTIONS: Record<string, string> = {
   document:      "필수 결재 서류 보관율",
   consistency:   "출석부-돌봄일지 간 모순 건수",
   sponsorship:   "후원금 입금-영수증 매칭율",
+  docExpiry:     "30일 내 만료 임박 + 이미 만료된 문서",
 };

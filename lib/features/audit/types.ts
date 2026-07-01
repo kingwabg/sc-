@@ -39,6 +39,12 @@ export interface AuditSummary {
   document: { rate: number; light: SignalLight };
   consistency: { conflictCount: number; light: SignalLight };
   sponsorship: { rate: number; light: SignalLight };
+  /// P6 — 문서 만료 알림 (Doc.expiryDate 기반)
+  docExpiry?: {
+    expiringSoonCount: number;
+    expiredCount: number;
+    light: SignalLight;
+  };
 }
 
 // ─── 전체 크로스체크 결과 ────────────────────────────────────

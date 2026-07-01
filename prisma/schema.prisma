@@ -98,6 +98,16 @@ enum DocKind {
   hwp
 }
 
+/// 문서 분류 (P6 만료 추적용 — 결재/아동/직원/재정 등 평가단 점검 영역)
+enum DocCategory {
+  STAFF     // 직원 — 4대 폭력/범죄경력/이수증
+  CHILD     // 아동 — IEP/사진/기타 첨부
+  FINANCE   // 재정 — 후원금/영수증/회계
+  MEETING   // 회의 — 운영위원회/총회
+  PROGRAM   // 프로그램 — 연간/월간 계획
+  FACILITY  // 시설 — 안전점검표/소화기 점검
+}
+
 enum DocumentKind {
   html_doc       // /docs HTML 문서
   hwp_doc        // /docs/hwp
@@ -430,11 +440,21 @@ model Doc {
   kind       DocKind
   authorId   String
   authorName String
+  /// P6 — 만료일 (예: 4대 폭력 갱신일, 범죄경력 재발급, 이수증 유효기간)
+  expiryDate DateTime?
+  /// P6 — 문서 분류 (평가단 점검 영역별 분류)
+  category   DocCategory?
+  /// P6 — 원본 시스템 식별자 타입 (예: "child", "staff", "approval" — 향후 확장)
+  sourceType String?
+  /// P6 — 원본 시스템 ID (sourceType과 짝)
+  sourceId   String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   @@index([tenantId])
   @@index([kind])
+  @@index([expiryDate])
+  @@index([category])
 }
 
 // ─── Document Index (통합 인덱스) ───────────────────────
