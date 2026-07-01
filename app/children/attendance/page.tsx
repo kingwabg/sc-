@@ -17,6 +17,7 @@ import {
 } from "@/lib/attendance";
 import type { AttendanceStatus } from "@/lib/children";
 import { getTenantSettings } from "@/lib/store";
+import AbsenceReasonModal from "@/app/attendance/_components/AbsenceReasonModal";
 import {
   ArrowLeft,
   CalendarDays,
@@ -38,10 +39,21 @@ export default function AttendanceLedgerPage() {
   const [year, setYear] = useState<number>(2026);
   const [month, setMonth] = useState<number>(today.getMonth() + 1);
 
+  // 결석 사유서 모달 상태
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalChildId, setModalChildId] = useState("");
+  const [modalDate, setModalDate] = useState("");
+
   // 시설 정원 (통합설정 > 사업사 설정에서 저장한 값)
   const facilityCapacity = (typeof window !== "undefined"
     ? getTenantSettings().capacity
     : 50) as 30 | 40 | 50;
+
+  function openAbsenceModal(childId: string, date: string) {
+    setModalChildId(childId);
+    setModalDate(date);
+    setModalOpen(true);
+  }
 
   const monthRows = useMemo(() => getAttendanceForMonth(year, month), [year, month]);
   const map = useMemo(() => attendanceMap(monthRows), [monthRows]);
@@ -224,6 +236,7 @@ export default function AttendanceLedgerPage() {
                     month={month}
                     daysInMonth={daysInMonth}
                     map={map}
+                    onAbsenceClick={openAbsenceModal}
                   />
                 )}
               </tbody>
@@ -260,6 +273,21 @@ export default function AttendanceLedgerPage() {
             출석 데이터는 자동으로 생성된 mock입니다. 실제 데이터로 교체 필요.
           </div>
         </div>
+
+        {/* 결석 사유서 모달 */}
+        {modalOpen && (
+          <AbsenceReasonModal
+            childId={modalChildId}
+            childName={MOCK_CHILDREN.find((c) => c.id === modalChildId)?.name ?? modalChildId}
+            date={modalDate}
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onSuccess={() => {
+              // Force re-render to pick up new reason data
+              setYear((y) => y);
+            }}
+          />
+        )}
       </div>
     </AppShell>
   );
@@ -272,6 +300,7 @@ function CapacityGroup({
   month,
   daysInMonth,
   map,
+  onAbsenceClick,
 }: {
   cap: number;
   list: typeof MOCK_CHILDREN;
@@ -279,6 +308,7 @@ function CapacityGroup({
   month: number;
   daysInMonth: number;
   map: Record<string, Record<string, ReturnType<typeof getAttendanceForMonth>[number]>>;
+  onAbsenceClick: (childId: string, date: string) => void;
 }) {
   return (
     <>
@@ -298,6 +328,7 @@ function CapacityGroup({
           month={month}
           daysInMonth={daysInMonth}
           map={map}
+          onAbsenceClick={onAbsenceClick}
         />
       ))}
     </>
@@ -313,6 +344,7 @@ function ChildRow({
   month,
   daysInMonth,
   map,
+  onAbsenceClick,
 }: {
   childId: string;
   childName: string;
@@ -322,6 +354,7 @@ function ChildRow({
   month: number;
   daysInMonth: number;
   map: Record<string, Record<string, ReturnType<typeof getAttendanceForMonth>[number]>>;
+  onAbsenceClick: (childId: string, date: string) => void;
 }) {
   let present = 0;
   let valid = 0;
@@ -352,14 +385,20 @@ function ChildRow({
       );
     }
     const tone = STATUS_TONE[row.status as AttendanceStatus];
+    const isAbsence = row.status === "결석";
     return (
       <td key={d} className="h-7 text-center p-0">
         <div
+          onClick={isAbsence ? () => onAbsenceClick(childId, date) : undefined}
+          role={isAbsence ? "button" : undefined}
+          tabIndex={isAbsence ? 0 : undefined}
+          onKeyDown={isAbsence ? (e) => { if (e.key === "Enter" || e.key === " ") { onAbsenceClick(childId, date); } } : undefined}
           className={cn(
             "h-6 mx-0.5 rounded-sm grid place-items-center text-[10px] font-bold",
             tone.cell,
+            isAbsence ? "cursor-pointer hover:ring-2 hover:ring-brand-400 hover:ring-offset-0.5 transition-shadow" : "",
           )}
-          title={`${date} ${row.status}${row.arrivedAt ? ` ${row.arrivedAt}` : ""}${row.reason ? ` (${row.reason})` : ""}`}
+          title={`${date} ${row.status}${row.arrivedAt ? ` ${row.arrivedAt}` : ""}${row.reason ? ` (${row.reason})` : ""}${isAbsence ? " — 클릭하여 사유서 작성" : ""}`}
         >
           {STATUS_LABEL[row.status as AttendanceStatus][0]}
         </div>

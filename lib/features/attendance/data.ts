@@ -1,7 +1,19 @@
 /**
  * Attendance Feature — Data Generation & Cache
  */
-import type { AttendanceStatus, AttendanceRow } from "./types";
+import type { AbsenceReason, AttendanceStatus, AttendanceRow } from "./types";
+import { addExtraCareLog } from "@/lib/store/children";
+
+const ABSENCE_STORAGE_KEY = "ox:attendance-absence-reasons";
+
+export type AbsenceReasonEntry = {
+  childId: string;
+  date: string;
+  reason: AbsenceReason;
+  note?: string;
+  fileUrl?: string;
+  submittedAt: number;
+};
 
 /** 출석대장에 표시할 16명 (children.ts의 ID 순서) */
 export const CHILD_IDS = [
@@ -69,3 +81,77 @@ function genMonth(year: number, month1to12: number): AttendanceRow[] {
 export const cache = new Map<number, AttendanceRow[]>();
 
 export { genMonth };
+
+// ─── Absence reason storage (localStorage) ────────────────────────────────────
+
+const ABSENCE_REASON_LABEL: Record<AbsenceReason, string> = {
+  DISEASE: "질병",
+  FAMILY: "가정사정",
+  SCHOOL: "학교행사",
+  OTHER: "기타",
+};
+
+function readAbsenceReasons(): AbsenceReasonEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(ABSENCE_STORAGE_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function writeAbsenceReasons(entries: AbsenceReasonEntry[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(ABSENCE_STORAGE_KEY, JSON.stringify(entries));
+}
+
+/**
+ * 결석 사유를 기록하고 CareLog를 자동 spawn합니다.
+ * CareLog는 localStorage의 children store를 통해 관리됩니다.
+ */
+export function markAbsenceWithReason(
+  childId: string,
+  date: string,
+  reason: AbsenceReason,
+  note?: string,
+  fileUrl?: string,
+): AbsenceReasonEntry {
+  const entry: AbsenceReasonEntry = {
+    childId,
+    date,
+    reason,
+    note,
+    fileUrl,
+    submittedAt: Date.now(),
+  };
+
+  // Merge into existing entries (upsert by childId+date)
+  const existing = readAbsenceReasons().filter(
+    (e) => !(e.childId === childId && e.date === date),
+  );
+  writeAbsenceReasons([...existing, entry]);
+
+  // Auto-spawn CareLog entry
+  const reasonLabel = ABSENCE_REASON_LABEL[reason];
+  const careLogContent = note
+    ? `[결석 사유: ${reasonLabel}] ${note}`
+    : `[결석 사유: ${reasonLabel}]`;
+
+  addExtraCareLog({
+    id: `log_${childId}_${date}_${Date.now()}`,
+    childId,
+    date,
+    category: "관찰",
+    title: `결석 사유: ${reasonLabel}`,
+    content: careLogContent,
+    authorName: "시스템",
+    createdAt: Date.now(),
+  });
+
+  return entry;
+}
+
+/** 특정 child+date의 결석 사유 조회 */
+export function getAbsenceReason(childId: string, date: string): AbsenceReasonEntry | undefined {
+  return readAbsenceReasons().find((e) => e.childId === childId && e.date === date);
+}

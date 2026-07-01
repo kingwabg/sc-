@@ -1,8 +1,15 @@
 /**
  * Attendance Feature — Public API (barrel)
  */
-export type { AttendanceRow, AttendanceStatus } from "./types";
-export { CHILD_IDS, cache, genMonth } from "./data";
+export type { AttendanceRow, AttendanceStatus, AbsenceReason } from "./types";
+export {
+  CHILD_IDS,
+  cache,
+  genMonth,
+  markAbsenceWithReason,
+  getAbsenceReason,
+  type AbsenceReasonEntry,
+} from "./data";
 export {
   getAttendanceForYear,
   getAttendanceForMonth,
@@ -10,4 +17,4 @@ export {
   attendanceMap,
   businessDaysInMonth,
 } from "./utils";
-export { STATUS_LABEL, STATUS_TONE } from "./labels";
+export { STATUS_LABEL, STATUS_TONE, ABSENCE_REASON_LABEL } from "./labels";
