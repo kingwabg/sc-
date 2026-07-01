@@ -50,7 +50,6 @@ import {
   setSidebarCollapsed,
 } from "@/lib/store";
 import { SidebarUserMenu } from "./SidebarUserMenu";
-import { SidebarTodo } from "./SidebarTodo";
 import { useSession, type UserRole } from "@/lib/session";
 
 // ─── 타입 ───────────────────────────────────────────────────
@@ -103,6 +102,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/admin":   { label: "관리자",         href: "/admin",   icon: ShieldAlert, minRole: "admin" },
   "/exec":    { label: "임원 대시보드",  href: "/exec",    icon: Crown,       minRole: "owner" },
   "/role-test": { label: "역할 테스트",  href: "/role-test", icon: Bug },
+  "/todo":    { label: "할 일",        href: "/todo",     icon: ClipboardList },
   "/facility/inspection": { label: "시설 안전점검", href: "/facility/inspection", icon: ClipboardCheck },
   "/meetings": { label: "회의록", href: "/meetings", icon: MessagesSquare },
   "/donations": { label: "후원금 대장", href: "/donations", icon: Gift },
@@ -138,7 +138,7 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "지원",
-    items: ["/board", "/org", "/role-test", "/settings"],
+    items: ["/board", "/org", "/todo", "/role-test", "/settings"],
   },
 ];
 
@@ -353,9 +353,6 @@ export function Sidebar() {
           </div>
         )}
       </div>
-
-      {/* 사이드바 Todo */}
-      <SidebarTodo />
 
       {/* 사용자 메뉴 (로그아웃) — 스크롤 영역 밖, 항상 보임 */}
       <div className="mt-2 pt-2 border-t border-slate-100 px-2">
