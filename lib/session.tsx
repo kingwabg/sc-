@@ -8,9 +8,10 @@ import {
   type ReactNode,
 } from "react";
 import type { Tenant } from "./tenants";
-import { MOCK_TENANT } from "./tenants";
 
 /* ===== Types ===== */
+
+export type UserRole = "owner" | "admin" | "member";
 
 export type SessionUser = {
   id: string;
@@ -19,6 +20,8 @@ export type SessionUser = {
   avatarColor?: string;
   jobTitle?: string;
   team?: string;
+  /** Supabase Auth 연동 후 DB에서 가져옴. 없으면 "member"로 간주. */
+  role?: UserRole;
 };
 
 type Widget = {
@@ -32,9 +35,10 @@ type SessionContextValue = {
   isAuthenticated: boolean;
   user: SessionUser | null;
   tenant: Tenant | null;
-  signIn: (email: string, name?: string) => void;
+  signIn: (email: string, name?: string, role?: UserRole) => void;
   signOut: () => void;
   switchTenant: (tenant: Tenant) => void;
+  setMockRole: (role: UserRole) => void;
   widgets: Widget[];
   setWidgets: React.Dispatch<React.SetStateAction<Widget[]>>;
   toggleWidget: (id: string) => void;
@@ -47,20 +51,48 @@ const defaultSessionValue: SessionContextValue = {
   signIn: () => {},
   signOut: () => {},
   switchTenant: () => {},
+  setMockRole: () => {},
   widgets: [],
   setWidgets: () => {},
   toggleWidget: () => {},
 };
 
-/* ===== Dev fallback — Supabase 미설정 시 사용 ===== */
+/* ===== Dev mock users — owner / admin / member ===== */
+
+export const MOCK_USERS: Record<UserRole, SessionUser> = {
+  owner: {
+    id: "u_1",
+    email: "center@example.com",
+    name: "왕준하",
+    avatarColor: "#7c3aed",
+    jobTitle: "센터장",
+    team: "경영관리",
+    role: "owner",
+  },
+  admin: {
+    id: "u_2",
+    email: "park@example.com",
+    name: "박은수",
+    avatarColor: "#ea580c",
+    jobTitle: "생활복지사",
+    team: "돌봄운영",
+    role: "admin",
+  },
+  member: {
+    id: "u_4",
+    email: "lee@example.com",
+    name: "이정훈",
+    avatarColor: "#d97706",
+    jobTitle: "조리사",
+    team: "지원",
+    role: "member",
+  },
+};
+
+/* ===== Dev fallback — Supabase 미설정 시 사용 (member 기본) ===== */
 
 export const MOCK_USER: SessionUser = {
-  id: "u_mock",
-  email: "demo@office.com",
-  name: "김민수",
-  avatarColor: "#4f46e5",
-  jobTitle: "과장",
-  team: "프로덕트팀",
+  ...MOCK_USERS.member,
 };
 
 /* ===== Context ===== */
@@ -69,6 +101,7 @@ const SessionContext = createContext<SessionContextValue>(defaultSessionValue);
 
 const STORAGE_KEY = "officex.session.v1";
 const SESSION_COOKIE = "officex-session";
+const ROLE_COOKIE = "officex-role";
 const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24; // 24h
 
 function setSessionCookie(value = "1") {
@@ -76,9 +109,23 @@ function setSessionCookie(value = "1") {
   document.cookie = `${SESSION_COOKIE}=${value}; path=/; max-age=${SESSION_COOKIE_MAX_AGE}; SameSite=Lax`;
 }
 
+function setRoleCookie(role: UserRole) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${ROLE_COOKIE}=${role}; path=/; max-age=${SESSION_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+function getRoleFromCookie(): UserRole {
+  if (typeof document === "undefined") return "member";
+  const match = document.cookie.match(new RegExp(`${ROLE_COOKIE}=([^;]+)`));
+  if (!match) return "member";
+  const role = match[1] as UserRole;
+  return role === "owner" || role === "admin" || role === "member" ? role : "member";
+}
+
 function clearSessionCookie() {
   if (typeof document === "undefined") return;
   document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  document.cookie = `${ROLE_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 /* ===== Provider Props ===== */
@@ -115,10 +162,11 @@ export function SessionProvider({ children, initialUser }: SessionProviderProps)
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        setUser(parsed.user ?? null);
+        const role = getRoleFromCookie();
+        setUser(parsed.user ? { ...parsed.user, role } : null);
         setTenant(parsed.tenant ?? null);
         if (parsed.widgets) setWidgetsState(parsed.widgets);
-        if (parsed.user) setSessionCookie();
+        if (parsed.user) { setSessionCookie(); setRoleCookie(role); }
       } else {
         localStorage.removeItem("office-portal:tenant");
         clearSessionCookie();
@@ -138,15 +186,22 @@ export function SessionProvider({ children, initialUser }: SessionProviderProps)
     );
   }, [hydrated, user, tenant, widgets]);
 
-  const signIn = (email: string, name?: string) => {
+  const signIn = (email: string, name?: string, role: UserRole = "member") => {
+    const mockUser = MOCK_USERS[role];
     const u: SessionUser = {
-      ...MOCK_USER,
-      id: "u_mock",
+      ...mockUser,
+      id: mockUser.id,
       email,
-      name: name ?? email.split("@")[0],
+      name: name ?? mockUser.name,
     };
     setUser(u);
     setSessionCookie();
+    setRoleCookie(role);
+  };
+
+  const setMockRole = (role: UserRole) => {
+    setUser(MOCK_USERS[role]);
+    setRoleCookie(role);
   };
 
   const signOut = () => {
@@ -156,7 +211,7 @@ export function SessionProvider({ children, initialUser }: SessionProviderProps)
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem("office-portal:tenant");
     }
-    clearSessionCookie();
+    clearSessionCookie(); // clears both session and role cookies
   };
 
   const switchTenant = (t: Tenant) => setTenant(t);
@@ -178,6 +233,7 @@ export function SessionProvider({ children, initialUser }: SessionProviderProps)
         signIn,
         signOut,
         switchTenant,
+        setMockRole,
         widgets,
         setWidgets,
         toggleWidget,
