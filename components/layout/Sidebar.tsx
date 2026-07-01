@@ -28,6 +28,7 @@ import {
   BookOpen,
   CalendarRange,
   NotebookPen,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -79,6 +80,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/org": { label: "조직도", href: "/org", icon: Users },
   "/monthly-plan": { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
   "/annual-plan": { label: "연간계획", href: "/annual-plan", icon: BookOpen },
+  "/audit-prep": { label: "평가 대비 모드", href: "/audit-prep", icon: ShieldCheck },
   "/settings": { label: "환경설정", href: "/settings", icon: Settings },
 };
 
@@ -100,6 +102,10 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
     items: OPERATIONS_CHILDREN,
   },
   {
+    label: "평가",
+    items: ["/audit-prep"],
+  },
+  {
     label: "지원",
     items: ["/board", "/org", "/settings"],
   },
@@ -109,6 +115,7 @@ const GROUP_LABEL_KR: Record<string, string> = {
   Home: "Home",
   돌봄운영: "돌봄운영",
   운영관리: "운영관리",
+  평가: "평가",
   지원: "지원",
 };
 
@@ -418,10 +425,19 @@ function NavGroup({
   onToggleFavorite: (href: string) => void;
   favorites: string[];
 }) {
+  const isEvaluationGroup = label === "평가";
+
   return (
     <div className="mb-3">
-      <h3 className="px-3 mb-1 text-[11px] font-semibold tracking-wide text-slate-400">
+      <h3
+        className={`px-3 mb-1 text-[11px] font-semibold tracking-wide flex items-center gap-1.5 ${
+          isEvaluationGroup ? "text-amber-600" : "text-slate-400"
+        }`}
+      >
         {label}
+        {isEvaluationGroup && (
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+        )}
       </h3>
       <nav className="space-y-0.5">
         {items.map((item) => {
