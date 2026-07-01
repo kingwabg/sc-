@@ -34,6 +34,14 @@ export function CareLogRow({ log }: Props) {
       <div className="text-sm font-semibold text-slate-900">{log.title}</div>
       <div className="text-sm text-slate-600 mt-0.5 leading-relaxed">{log.content}</div>
       <div className="text-[11px] text-slate-400 mt-1">작성: {log.authorName}</div>
+      <a
+        href={`/preview/care-log/${log.id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 mt-1.5 text-[11px] text-brand-600 hover:text-brand-800 font-medium no-underline"
+      >
+        📄 미리보기
+      </a>
     </li>
   );
 }

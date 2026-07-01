@@ -29,10 +29,23 @@
   }
 }
 
+/* ── 인쇄용 폰트 ────────────────────────────────────────────── */
+.print-font {
+  font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+}
+
 /* 인쇄 시 화면용 UI 숨김 (탭 셀렉터, 인쇄 버튼 등) */
 @media print {
   .no-print { display: none !important; }
   body { @apply bg-white text-black; }
   .print-area { box-shadow: none !important; border-color: #e2e8f0 !important; }
-  @page { margin: 16mm; }
+  @page {
+    size: A4;
+    margin: 25mm;
+  }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
