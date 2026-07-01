@@ -1,0 +1,290 @@
+"use client";
+
+import Link from "next/link";
+import {
+  MOCK_CHILDREN,
+  ageFromBirthDate,
+} from "@/lib/children";
+import {
+  getAttendanceForMonth,
+  STATUS_LABEL,
+  STATUS_TONE,
+} from "@/lib/attendance";
+import type { AttendanceStatus } from "@/lib/children";
+import { cn } from "@/lib/utils";
+import { AlertTriangle } from "lucide-react";
+
+const DOW_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+
+export type AttendanceLedgerTableProps = {
+  filteredChildren: typeof MOCK_CHILDREN;
+  facilityCapacity: 30 | 40 | 50;
+  year: number;
+  month: number;
+  map: Record<string, Record<string, ReturnType<typeof getAttendanceForMonth>[number]>>;
+  onAbsenceClick: (childId: string, date: string) => void;
+};
+
+export function AttendanceLedgerTable({
+  filteredChildren,
+  facilityCapacity,
+  year,
+  month,
+  map,
+  onAbsenceClick,
+}: AttendanceLedgerTableProps) {
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  return (
+    <>
+      {/* Ledger grid */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide min-w-[180px] border-r border-slate-200">
+                  이름 / 나이
+                </th>
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const d = i + 1;
+                  const date = new Date(year, month - 1, d);
+                  const dow = date.getDay();
+                  return (
+                    <th
+                      key={d}
+                      className={cn(
+                        "px-0.5 py-2 text-center text-[10px] font-medium min-w-[26px]",
+                        dow === 0 ? "text-red-400" : dow === 6 ? "text-blue-400" : "text-slate-600",
+                      )}
+                      title={`${month}/${d} (${DOW_LABELS[dow]})`}
+                    >
+                      <div>{d}</div>
+                      <div className="text-[8px] mt-0.5">{DOW_LABELS[dow]}</div>
+                    </th>
+                  );
+                })}
+                <th className="px-3 py-2 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wide min-w-[60px] border-l border-slate-200">
+                  출석률
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredChildren.length === 0 ? (
+                <tr>
+                  <td colSpan={daysInMonth + 2} className="py-12 text-center text-slate-400 text-sm">
+                    해당 정원({facilityCapacity}명)에 등록된 아동이 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                <CapacityGroup
+                  cap={facilityCapacity}
+                  list={filteredChildren}
+                  year={year}
+                  month={month}
+                  daysInMonth={daysInMonth}
+                  map={map}
+                  onAbsenceClick={onAbsenceClick}
+                />
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Legend / hint */}
+      <div className="mt-4 flex items-center justify-between text-[11px] text-slate-500 flex-wrap gap-2">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
+            등원
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
+            조퇴
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-sm bg-blue-400" />
+            보건휴식
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-sm bg-red-400" />
+            결석
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-sm bg-slate-200" />
+            미등원
+          </span>
+        </div>
+        <div className="inline-flex items-center gap-1 text-amber-600">
+          <AlertTriangle className="w-3 h-3" />
+          출석 데이터는 자동으로 생성된 mock입니다. 실제 데이터로 교체 필요.
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Internal sub-components ───────────────────────────────────────────────────
+
+function CapacityGroup({
+  cap,
+  list,
+  year,
+  month,
+  daysInMonth,
+  map,
+  onAbsenceClick,
+}: {
+  cap: number;
+  list: typeof MOCK_CHILDREN;
+  year: number;
+  month: number;
+  daysInMonth: number;
+  map: Record<string, Record<string, ReturnType<typeof getAttendanceForMonth>[number]>>;
+  onAbsenceClick: (childId: string, date: string) => void;
+}) {
+  return (
+    <>
+      <tr className="bg-brand-50/60">
+        <td
+          colSpan={daysInMonth + 2}
+          className="px-3 py-1.5 text-[11px] font-bold text-brand-700 tracking-wide border-t border-slate-200"
+        >
+          정원 {cap}명 ({list.length}명 재원)
+        </td>
+      </tr>
+      {list.map((child) => (
+        <ChildRow
+          key={child.id}
+          childId={child.id}
+          childName={child.name}
+          childAge={ageFromBirthDate(child.birthDate)}
+          gender={child.gender}
+          year={year}
+          month={month}
+          daysInMonth={daysInMonth}
+          map={map}
+          onAbsenceClick={onAbsenceClick}
+        />
+      ))}
+    </>
+  );
+}
+
+function ChildRow({
+  childId,
+  childName,
+  childAge,
+  gender,
+  year,
+  month,
+  daysInMonth,
+  map,
+  onAbsenceClick,
+}: {
+  childId: string;
+  childName: string;
+  childAge: number;
+  gender: "M" | "F";
+  year: number;
+  month: number;
+  daysInMonth: number;
+  map: Record<string, Record<string, ReturnType<typeof getAttendanceForMonth>[number]>>;
+  onAbsenceClick: (childId: string, date: string) => void;
+}) {
+  let present = 0;
+  let valid = 0;
+
+  const cells = Array.from({ length: daysInMonth }).map((_, i) => {
+    const d = i + 1;
+    const date = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const dow = new Date(year, month - 1, d).getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const row = map[date]?.[childId];
+    if (row && row.status !== "미등원") {
+      valid++;
+      if (row.status === "등원") present++;
+      else if (row.status === "조퇴") present += 0.5;
+    }
+    if (isWeekend) {
+      return (
+        <td key={d} className="bg-slate-50/40 h-7 text-center text-[10px] text-slate-300">
+          ·
+        </td>
+      );
+    }
+    if (!row || row.status === "미등원") {
+      return (
+        <td key={d} className="h-7 text-center text-[10px] text-slate-300">
+          –
+        </td>
+      );
+    }
+    const tone = STATUS_TONE[row.status as AttendanceStatus];
+    const isAbsence = row.status === "결석";
+    return (
+      <td key={d} className="h-7 text-center p-0">
+        <div
+          onClick={isAbsence ? () => onAbsenceClick(childId, date) : undefined}
+          role={isAbsence ? "button" : undefined}
+          tabIndex={isAbsence ? 0 : undefined}
+          onKeyDown={
+            isAbsence
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") onAbsenceClick(childId, date);
+                }
+              : undefined
+          }
+          className={cn(
+            "h-6 mx-0.5 rounded-sm grid place-items-center text-[10px] font-bold",
+            tone.cell,
+            isAbsence
+              ? "cursor-pointer hover:ring-2 hover:ring-brand-400 hover:ring-offset-0.5 transition-shadow"
+              : "",
+          )}
+          title={`${date} ${row.status}${row.arrivedAt ? ` ${row.arrivedAt}` : ""}${row.reason ? ` (${row.reason})` : ""}${isAbsence ? " — 클릭하여 사유서 작성" : ""}`}
+        >
+          {STATUS_LABEL[row.status as AttendanceStatus][0]}
+        </div>
+      </td>
+    );
+  });
+
+  const rate = valid > 0 ? Math.round((present / valid) * 100) : 0;
+
+  return (
+    <tr className="border-t border-slate-100 hover:bg-slate-50/50">
+      <td className="sticky left-0 z-10 bg-white px-3 py-1.5 border-r border-slate-100">
+        <Link
+          href={`/children/${childId}`}
+          className="flex items-center gap-2.5"
+        >
+          <div
+            className={cn(
+              "w-7 h-7 rounded-full grid place-items-center text-xs font-bold shrink-0",
+              gender === "M" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700",
+            )}
+          >
+            {childName[0]}
+          </div>
+          <div>
+            <div className="font-medium text-slate-900 text-[13px]">{childName}</div>
+            <div className="text-[10px] text-slate-500">{childAge}세</div>
+          </div>
+        </Link>
+      </td>
+      {cells}
+      <td className="px-3 py-1.5 text-center border-l border-slate-100">
+        <span
+          className={cn(
+            "text-[11px] font-bold",
+            rate >= 90 ? "text-emerald-600" : rate >= 70 ? "text-amber-600" : "text-red-600",
+          )}
+        >
+          {rate}%
+        </span>
+      </td>
+    </tr>
+  );
+}
