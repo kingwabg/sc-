@@ -596,7 +596,6 @@ function FolderRow({
   });
 
   const rowRef = useRef<HTMLDivElement | null>(null);
-  const [hovering, setHovering] = useState(false);
 
   const isThisOver = isOver || overId === g.id;
   const count = counts[g.id] ?? 0;
@@ -607,8 +606,6 @@ function FolderRow({
         rowRef.current = node;
         setDropRef(node);
       }}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
       className={cn(
         "group relative flex items-center rounded-md transition",
         isDragging && "opacity-30",
@@ -701,17 +698,12 @@ function FolderRow({
           </button>
 
           {/* Hover actions — 시스템 노드에도 옵션은 노출 가능 */}
-          {hovering && (
-            <div
-              className="absolute right-1 top-1/2 z-10 -translate-y-1/2 flex items-center gap-0.5 px-1 py-0.5 bg-white/95 border border-slate-200 rounded-md shadow-lg whitespace-nowrap"
-              onMouseEnter={() => setHovering(true)}
-              onMouseLeave={() => setHovering(false)}
-            >
+          <div className="pointer-events-none absolute right-0 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5 rounded-md bg-white/90 px-0.5 py-0.5 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
               {/* 하위 폴더 추가 — 시스템 노드에도 노출 (depth 0에 추가 가능) */}
               <button
                 onClick={() => startAdd(g.id, depth + 1)}
                 className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600"
-                title="하위 폴더 추가"
+                aria-label="하위 폴더 추가"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -722,7 +714,7 @@ function FolderRow({
                     "w-6 h-6 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
                     g.meta?.hasFilter ? "text-brand-600" : "text-slate-500",
                   )}
-                  title="폴더 조건 (필터)"
+                  aria-label="폴더 조건"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                 </button>
@@ -732,21 +724,20 @@ function FolderRow({
                   <button
                     onClick={() => startEdit(g)}
                     className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600"
-                    title="이름 수정"
+                    aria-label="이름 수정"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDelete(g)}
                     className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-red-50 hover:text-red-500"
-                    title="삭제"
+                    aria-label="삭제"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </>
               )}
-            </div>
-          )}
+          </div>
         </>
       )}
     </div>
