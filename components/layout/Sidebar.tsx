@@ -366,7 +366,7 @@ function CollapsedSidebar({
           title="사이드바 펼치기"
           className="w-10 h-10 grid place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
         >
-          <PanelLeft className="w-[18px] h-[18px]" />
+          <PanelLeft className="w-[18px] h-[18px] -translate-x-px" />
         </button>
       </div>
 
