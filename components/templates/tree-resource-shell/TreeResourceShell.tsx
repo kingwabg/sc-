@@ -44,6 +44,7 @@ import {
   X,
   GripVertical,
   SlidersHorizontal,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -596,6 +597,7 @@ function FolderRow({
   });
 
   const rowRef = useRef<HTMLDivElement | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   const isThisOver = isOver || overId === g.id;
   const count = counts[g.id] ?? 0;
@@ -612,6 +614,7 @@ function FolderRow({
         activeDragId && isThisOver && activeDragId !== g.id && "ring-2 ring-brand-400 bg-brand-50",
       )}
       style={{ paddingLeft: depth * 16 }}
+      onMouseLeave={() => setActionsOpen(false)}
     >
       {/* Expand toggle */}
       <button
@@ -665,7 +668,10 @@ function FolderRow({
       ) : (
         <>
           <button
-            onClick={() => onSelect(g.id)}
+            onClick={() => {
+              setActionsOpen(false);
+              onSelect(g.id);
+            }}
             className={cn(
               "flex-1 flex items-center gap-1.5 px-1.5 py-1.5 rounded-md transition text-[13px] min-w-0",
               isActive
@@ -697,11 +703,28 @@ function FolderRow({
             )}
           </button>
 
-          {/* Hover actions — 시스템 노드에도 옵션은 노출 가능 */}
-          <div className="pointer-events-none absolute right-0 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5 rounded-md bg-white/90 px-0.5 py-0.5 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setActionsOpen((open) => !open);
+            }}
+            className="pointer-events-none absolute right-0 top-1/2 z-10 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-brand-600 group-hover:pointer-events-auto group-hover:opacity-100"
+            aria-label="폴더 작업 열기"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Click actions — 시스템 노드에도 옵션은 노출 가능 */}
+          {actionsOpen && (
+            <div className="absolute right-0 top-1/2 z-20 flex -translate-y-1/2 items-center gap-0.5 rounded-md bg-white px-0.5 py-0.5 shadow-sm ring-1 ring-slate-200">
               {/* 하위 폴더 추가 — 시스템 노드에도 노출 (depth 0에 추가 가능) */}
               <button
-                onClick={() => startAdd(g.id, depth + 1)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setActionsOpen(false);
+                  startAdd(g.id, depth + 1);
+                }}
                 className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600"
                 aria-label="하위 폴더 추가"
               >
@@ -709,7 +732,11 @@ function FolderRow({
               </button>
               {onOpenOptions && (
                 <button
-                  onClick={() => onOpenOptions(g.id)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setActionsOpen(false);
+                    onOpenOptions(g.id);
+                  }}
                   className={cn(
                     "w-6 h-6 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
                     g.meta?.hasFilter ? "text-brand-600" : "text-slate-500",
@@ -722,14 +749,22 @@ function FolderRow({
               {!isSystem && (
                 <>
                   <button
-                    onClick={() => startEdit(g)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActionsOpen(false);
+                      startEdit(g);
+                    }}
                     className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600"
                     aria-label="이름 수정"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(g)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActionsOpen(false);
+                      handleDelete(g);
+                    }}
                     className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-red-50 hover:text-red-500"
                     aria-label="삭제"
                   >
@@ -737,7 +772,8 @@ function FolderRow({
                   </button>
                 </>
               )}
-          </div>
+            </div>
+          )}
         </>
       )}
     </div>
