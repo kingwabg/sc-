@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Printer, Send, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { CheckCircle2, Printer, Send, ChevronLeft, ChevronRight, Plus, FileText } from "lucide-react";
 import type { DailyLog, DailyLogSummary } from "@/lib/features/daily-log/types";
 
 type Props = {
@@ -107,6 +107,17 @@ export function DailyLogViewer({ log, logs, onNavigate, onNew }: Props) {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Print Preview */}
+          <a
+            href={`/preview/daily-log/${log.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="h-8 px-3 border border-slate-200 rounded-lg text-[12px] text-slate-600 hover:bg-slate-50 transition inline-flex items-center gap-1.5 no-underline"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            미리보기
+          </a>
 
           {/* Print */}
           <button

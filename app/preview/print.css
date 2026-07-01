@@ -1,0 +1,256 @@
+/**
+ * app/preview/print.css — 인쇄용 CSS 모듈
+ *
+ * A4 종이 인쇄에 최적화된 스타일.
+ * 화면에서도 인쇄 레이아웃 미리보기로 표시.
+ */
+
+/* ── A4 Preview Container ─────────────────────────────── */
+.print-preview-page {
+  display: block;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 25mm;
+  margin: 0 auto 20mm;
+  background: white;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  font-family: "Pretendard", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #1a1a1a;
+}
+
+/* ── Screen Preview Wrapper ────────────────────────────── */
+.print-screen-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  background: #f1f5f9;
+  min-height: 100vh;
+}
+
+.print-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+/* ── Official Header ───────────────────────────────────── */
+.print-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #1e40af;
+}
+
+.print-header .org-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.print-header .doc-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.print-header .doc-subtitle {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* ── Meta Info Row ─────────────────────────────────────── */
+.print-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+
+.print-meta-item {
+  display: flex;
+  gap: 6px;
+}
+
+.print-meta-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.print-meta-value {
+  color: #111827;
+}
+
+/* ── Content Section ──────────────────────────────────── */
+.print-section {
+  margin-bottom: 20px;
+}
+
+.print-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  padding: 6px 12px;
+  background: #eff6ff;
+  border-left: 3px solid #4f46e5;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 12px;
+}
+
+.print-content {
+  font-size: 13px;
+  line-height: 1.75;
+  color: #1f2937;
+  white-space: pre-wrap;
+}
+
+/* ── Category Badge ────────────────────────────────────── */
+.print-category-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── Mood Indicator ───────────────────────────────────── */
+.print-mood {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+/* ── Signature Area ────────────────────────────────────── */
+.print-signature {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #d1d5db;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.print-signature-box {
+  text-align: center;
+  min-width: 120px;
+}
+
+.print-signature-label {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.print-signature-line {
+  display: block;
+  width: 100px;
+  height: 40px;
+  border-bottom: 1px solid #374151;
+  margin: 0 auto 4px;
+}
+
+.print-signature-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ── Print Button ─────────────────────────────────────── */
+.print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.print-btn:hover {
+  background: #4338ca;
+}
+
+/* ── Daily Log Table ───────────────────────────────────── */
+.print-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-bottom: 16px;
+}
+
+.print-log-table th {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  padding: 5px 8px;
+  font-weight: 700;
+  text-align: center;
+  color: #374151;
+}
+
+.print-log-table td {
+  border: 1px solid #d1d5db;
+  padding: 5px 8px;
+  text-align: center;
+  color: #111827;
+}
+
+.print-log-table td.text-left {
+  text-align: left;
+}
+
+/* ── Print Media Query ─────────────────────────────────── */
+@media print {
+  /* Hide everything except .print-preview-page */
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+
+  .no-print,
+  .print-toolbar,
+  .print-screen-wrapper {
+    display: none !important;
+  }
+
+  .print-preview-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: unset !important;
+  }
+}
