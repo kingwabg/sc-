@@ -18,6 +18,11 @@ import {
   type ChildGroup,
   type GroupFilter,
 } from "@/lib/features/children";
+
+export interface UseChildrenPageOptions {
+  /** Server-fetched children (Prisma). When provided, overrides MOCK_CHILDREN. */
+  dbChildren?: Child[];
+}
 import {
   getExtraChildren,
   addExtraChild,
@@ -43,7 +48,8 @@ import type { ChildrenFilter } from "../_components/ChildrenFilterDrawer";
 
 type SortKey = "name" | "grade" | "today" | "age";
 
-export function useChildrenPage() {
+export function useChildrenPage(options: UseChildrenPageOptions = {}) {
+  const { dbChildren = [] } = options;
   const toast = useToast();
   const searchParams = useSearchParams();
 
@@ -114,10 +120,16 @@ export function useChildrenPage() {
   }, [searchParams, toast]);
 
   // ── Derived ──────────────────────────────────────────────
-  const allChildren = useMemo(
-    () => (mounted ? [...MOCK_CHILDREN, ...extraChildren] : MOCK_CHILDREN),
-    [mounted, extraChildren],
-  );
+  /**
+   * allChildren: when server passes dbChildren (dbChildren.length > 0), use those.
+   * Otherwise fall back to MOCK_CHILDREN + extraChildren (localStorage).
+   * dbChildren is stable across renders (comes from server props), so using it
+   * as a useMemo dep is safe and avoids stale-closure issues.
+   */
+  const allChildren = useMemo(() => {
+    if (dbChildren.length > 0) return [...dbChildren, ...extraChildren];
+    return mounted ? [...MOCK_CHILDREN, ...extraChildren] : MOCK_CHILDREN;
+  }, [dbChildren, extraChildren, mounted]);
 
   const groupCounts = useMemo(() => {
     const counts: Record<string, number> = {};
