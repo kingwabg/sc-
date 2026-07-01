@@ -42,6 +42,7 @@ import {
   setSidebarCollapsed,
 } from "@/lib/store";
 import { SidebarUserMenu } from "./SidebarUserMenu";
+import { SidebarTodo } from "./SidebarTodo";
 
 // ─── 타입 ───────────────────────────────────────────────────
 type NavItem = {
@@ -306,6 +307,9 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* 사이드바 Todo */}
+      <SidebarTodo />
 
       {/* 사용자 메뉴 (로그아웃) — 스크롤 영역 밖, 항상 보임 */}
       <div className="mt-2 pt-2 border-t border-slate-100 px-2">
