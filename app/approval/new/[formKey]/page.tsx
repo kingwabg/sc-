@@ -3,7 +3,7 @@
 import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { ApprovalSidebar } from "../../../_components/ApprovalSidebar";
+import { ApprovalSidebar } from "@/app/approval/_components/ApprovalSidebar";
 import { RichEditor } from "@/components/editor/RichEditor";
 import {
   FileCheck2,
@@ -54,14 +54,7 @@ export default function ApprovalFormWizardPage({ params }: Props) {
   return (
     <AppShell>
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4">
-        <ApprovalSidebar
-          current="new"
-          onSelect={(view: ApprovalView) => {
-            if (view === "home") router.push("/approval");
-            else if (view !== "new") router.push(`/approval/${view}`);
-          }}
-          onWrite={() => {}}
-        />
+        <ApprovalSidebar currentFolder="new" />
         <main>
           <WizardShell formKey={formKey as Parameters<typeof getFormByKey>[0]} form={form} />
         </main>
@@ -118,7 +111,8 @@ function WizardShell({
           <h1 className="text-lg font-bold text-slate-900 m-0">{form.label}</h1>
         </div>
         <button
-          onClick={() => router.push("/approval/new")}
+          type="button"
+          onClick={() => (typeof window !== "undefined" ? (window.location.href = "/approval/new") : null)}
           className="text-xs text-slate-500 hover:text-slate-900 transition"
         >
           ← 양식 선택
@@ -245,7 +239,7 @@ function Step1Fields({
   onRemoveFile: (i: number) => void;
 }) {
   // Split fields into full and half width
-  const rows: Array<FormField[] | FormField>[] = [];
+  const rows: (FormField | FormField[])[] = [];
   let i = 0;
   while (i < form.fields.length) {
     const f = form.fields[i];
@@ -273,7 +267,7 @@ function Step1Fields({
         <tbody>
           {rows.map((row, ri) => {
             if (Array.isArray(row)) {
-              const [left, right] = row;
+              const [left, right] = row as [import("@/lib/features/approval-form").FormField, import("@/lib/features/approval-form").FormField];
               return (
                 <tr key={ri}>
                   <FieldCell field={left} value={values[left.key] ?? ""} onChange={(v) => onFieldChange(left.key, v)} />
@@ -281,9 +275,10 @@ function Step1Fields({
                 </tr>
               );
             }
+            const single = row as import("@/lib/features/approval-form").FormField;
             return (
               <tr key={ri}>
-                <FieldCell field={row} value={values[row.key] ?? ""} onChange={(v) => onFieldChange(row.key, v)} />
+                <FieldCell field={single} value={values[single.key] ?? ""} onChange={(v) => onFieldChange(single.key, v)} />
               </tr>
             );
           })}
