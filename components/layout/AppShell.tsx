@@ -5,9 +5,11 @@ import { CustomProvider } from "rsuite";
 import koKR from "rsuite/locales/ko_KR";
 import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
+import { ExecSidebar } from "./ExecSidebar";
 import { getSidebarCollapsed } from "@/lib/store";
 import { ToastProvider } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
+import { useRole } from "@/lib/auth/useRole";
 
 /**
  * AppShell + rsuite <CustomProvider>로 전체 감싸기.
@@ -25,6 +27,7 @@ export function AppShell({
   mainClassName?: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const role = useRole();
 
   useEffect(() => {
     const sync = () => setCollapsed(getSidebarCollapsed());
@@ -37,18 +40,20 @@ export function AppShell({
     };
   }, []);
 
+  const isExec = role === "exec";
+
   return (
     <CustomProvider locale={koKR}>
       <ToastProvider>
         <TopHeader />
         <div className="pt-[60px] min-h-screen flex">
-          <Sidebar />
+          {isExec ? <ExecSidebar /> : <Sidebar />}
           <main
             className={cn(
               "flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200",
               mainClassName,
             )}
-            style={{ marginLeft: collapsed ? 64 : 220 }}
+            style={{ marginLeft: isExec ? 220 : collapsed ? 64 : 220 }}
           >
             {children}
           </main>

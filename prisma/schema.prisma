@@ -783,6 +783,42 @@ model DailyLog {
   @@index([monthlyPlanId])
 }
 
+// ─── Budget (P13 — 회계 포털 예산) ────────────────────────
+
+model Budget {
+  id         String   @id @default(cuid())
+  fiscalYear Int
+  month      Int // 1~12
+  category   String // 인건비/운영비/사업비/후원금/보조금
+  limit      Int // 한도 (원)
+  used       Int     @default(0)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fiscalYear, month, category])
+  @@map("budgets")
+}
+
+// ─── Expense (P13 — 회계 포털 지출) ───────────────────────
+
+model Expense {
+  id         String   @id @default(cuid())
+  approvalId String?
+  fiscalYear Int
+  month      Int
+  date       DateTime
+  category   String
+  amount     Int
+  vendor     String?
+  memo       String?
+  status     String  @default("확정")
+  createdBy  String?
+  createdAt  DateTime @default(now())
+
+  @@map("expenses")
+}
+
 // ─── Donations (P8 — 후원금/물품 대장 + 영수증 매칭) ──────
 //
 // 재정 투명성 평가:
