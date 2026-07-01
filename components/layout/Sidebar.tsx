@@ -14,9 +14,7 @@ import {
   ClipboardList,
   MessageSquare,
   Users,
-  Settings,
   Star,
-  Plus,
   X,
   LayoutGrid,
   Folder,
@@ -113,7 +111,6 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/donations": { label: "후원금 대장", href: "/donations", icon: Gift },
   "/documents/expiry": { label: "문서 만료 알림", href: "/documents/expiry", icon: CalendarClock },
   "/preview/care-log": { label: "문서 미리보기 (데모)", href: "/preview/care-log", icon: Eye },
-  "/settings": { label: "환경설정", href: "/settings", icon: Settings },
 };
 
 // 운영관리 그룹의 하위 메뉴 (연간 → 월간 → 일지 흐름)
@@ -203,12 +200,10 @@ function useCollapsed() {
     setCollapsedState(getSidebarCollapsed());
   }, []);
   const toggle = useCallback(() => {
-    setCollapsedState((prev) => {
-      const next = !prev;
-      setSidebarCollapsed(next);
-      window.dispatchEvent(new Event("officex:sidebar-collapsed"));
-      return next;
-    });
+    const next = !getSidebarCollapsed();
+    setSidebarCollapsed(next);
+    setCollapsedState(next);
+    window.dispatchEvent(new Event("officex:sidebar-collapsed"));
   }, []);
   return { collapsed, toggle };
 }
@@ -329,34 +324,6 @@ export function Sidebar() {
           );
         })}
 
-        {!editing && (
-          <div className="mt-2 pt-2 border-t border-slate-100">
-            <p className="px-3 text-[10px] text-slate-400 mb-1">즐겨찾기에 추가</p>
-            <div className="flex flex-wrap gap-1 px-2">
-              {Object.keys(ALL_MENU_ITEMS)
-                .filter((href) => !favorites.includes(href))
-                .filter((href) => {
-                  const item = ALL_MENU_ITEMS[href];
-                  if (!item.minRole) return true;
-                  return ROLE_RANK[userRole] >= ROLE_RANK[item.minRole];
-                })
-                .slice(0, 6)
-                .map((href) => {
-                  const item = ALL_MENU_ITEMS[href];
-                  return (
-                    <button
-                      key={href}
-                      onClick={() => { toggle(href); setEditing(true); }}
-                      className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] text-slate-500 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 transition"
-                    >
-                      <Plus className="w-3 h-3" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 사용자 메뉴 (로그아웃) — 스크롤 영역 밖, 항상 보임 */}
@@ -397,13 +364,13 @@ function CollapsedSidebar({
 
   return (
     <aside className="fixed top-[60px] left-0 bottom-0 w-[64px] bg-white border-r border-slate-200 flex flex-col py-3 transition-[width] duration-200">
-      <div className="flex justify-center mb-2">
+      <div className="flex justify-center mb-2 px-2">
         <button
           onClick={onExpand}
           title="사이드바 펼치기"
-          className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+          className="w-10 h-10 grid place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
         >
-          <PanelLeft className="w-4 h-4" />
+          <PanelLeft className="w-[18px] h-[18px]" />
         </button>
       </div>
 
@@ -485,18 +452,27 @@ function NavGroup({
   onToggleFavorite: (href: string) => void;
   favorites: string[];
 }) {
-  const isEvaluationGroup = label === "평가";
+  const isGroupActive = items.some((item) => {
+    const isActive =
+      item.href === "/"
+        ? pathname === "/"
+        : pathname === item.href || pathname.startsWith(item.href + "/");
+    const childActive = item.children?.some(
+      (child) => pathname === child.href || pathname.startsWith(child.href + "/"),
+    );
+    return isActive || childActive;
+  });
 
   return (
     <div className="mb-3">
       <h3
         className={`px-3 mb-1 text-[11px] font-semibold tracking-wide flex items-center gap-1.5 ${
-          isEvaluationGroup ? "text-amber-600" : "text-slate-400"
+          isGroupActive ? "text-brand-600" : "text-slate-400"
         }`}
       >
         {label}
-        {isEvaluationGroup && (
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+        {isGroupActive && (
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 inline-block" />
         )}
       </h3>
       <nav className="space-y-0.5">
