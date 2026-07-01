@@ -6,4 +6,4 @@
 export * from "./types";
 export * from "./labels";
 export * from "./utils";
-export { crossCheckByDateRange, computeAuditSummary } from "./data";
+export { crossCheckByDateRange, computeAuditSummary, generateAuditNotice } from "./data";

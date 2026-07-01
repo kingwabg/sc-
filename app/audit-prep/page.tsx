@@ -11,6 +11,7 @@ import { db } from "@/lib/db";
 import {
   crossCheckByDateRange,
   computeAuditSummary,
+  generateAuditNotice,
   recentDays,
 } from "@/lib/features/audit";
 import { AuditClientPage } from "./_components/AuditClientPage";
@@ -19,6 +20,7 @@ export default async function AuditPrepPage() {
   // tenant 확인
   const tenant = await db.tenant.findFirst();
   const tenantId = tenant?.id ?? "t_acme";
+  const tenantName = tenant?.name ?? "전체 센터";
 
   // 최근 30일 범위
   const { from, to } = recentDays(30);
@@ -29,14 +31,18 @@ export default async function AuditPrepPage() {
     crossCheckByDateRange(tenantId, from, to),
   ]);
 
+  // 평가 통보서 미리 생성
+  const notice = await generateAuditNotice(tenantId, tenantName, summary, conflicts);
+
   return (
     <AppShell>
       <Suspense fallback={null}>
         <AuditClientPage
-          tenantName={tenant?.name ?? "전체 센터"}
+          tenantName={tenantName}
           summary={summary}
           conflicts={conflicts}
           checkedRange={{ from, to }}
+          notice={notice}
         />
       </Suspense>
     </AppShell>

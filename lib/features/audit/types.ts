@@ -41,6 +41,33 @@ export interface AuditSummary {
   sponsorship: { rate: number; light: SignalLight };
 }
 
+// ─── 평가 항목 체크 ────────────────────────────────────────
+export interface EvalItem {
+  id: string;
+  label: string;
+  threshold: string;
+  current: number | string;
+  unit?: string;
+  passed: boolean;
+  note?: string;
+}
+
+// ─── 평가 통보서 ───────────────────────────────────────────
+export interface AuditNotice {
+  id: string; // tenantId|from|to hash
+  tenantName: string;
+  generatedAt: string; // ISO
+  rangeFrom: string;
+  rangeTo: string;
+  summary: AuditSummary;
+  conflicts: ConflictItem[];
+  evalItems: EvalItem[];
+  /** 순수 텍스트 (인쇄/纸上용) */
+  plainText: string;
+  /** 간이 HTML 미리보기용 */
+  previewHtml: string;
+}
+
 // ─── 전체 크로스체크 결과 ────────────────────────────────────
 export interface CrossCheckResult {
   summary: AuditSummary;
