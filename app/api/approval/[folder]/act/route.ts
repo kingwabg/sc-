@@ -139,7 +139,7 @@ function applyAction(
 // ─── Route Handler ─────────────────────────────────────────
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ folder: string }> },
 ) {
   initMockStore();
 
@@ -155,7 +155,7 @@ export async function POST(
     return NextResponse.json({ error: "유효하지 않은 action입니다." }, { status: 400 });
   }
 
-  const { id } = await params;
+  const { folder: id } = await params;
   const existing = mockStore.get(id);
 
   if (!existing) {
@@ -175,10 +175,10 @@ export async function POST(
 // GET — 결재 단건 조회 (act page용)
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }>,
+  { params }: { params: Promise<{ folder: string }>,
 }) {
   initMockStore();
-  const { id } = await params;
+  const { folder: id } = await params;
   const req = mockStore.get(id);
   if (!req) {
     return NextResponse.json({ error: "찾을 수 없습니다." }, { status: 404 });
