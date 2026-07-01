@@ -32,7 +32,7 @@ export default async function ChildrenPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell mainClassName="pl-0 sm:pl-0 lg:pl-0">
       <Suspense fallback={null}>
         <ChildrenClientPage dbChildren={dbChildren} />
       </Suspense>

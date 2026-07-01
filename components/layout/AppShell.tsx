@@ -7,6 +7,7 @@ import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
 import { getSidebarCollapsed } from "@/lib/store";
 import { ToastProvider } from "@/components/ui/Toast";
+import { cn } from "@/lib/utils";
 
 /**
  * AppShell + rsuite <CustomProvider>로 전체 감싸기.
@@ -16,7 +17,13 @@ import { ToastProvider } from "@/components/ui/Toast";
  *  - DatePicker / Toggle / CheckPicker 등 hook 의존 컴포넌트 정상
  *  - locale 적용 (한국어)
  */
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  mainClassName,
+}: {
+  children: ReactNode;
+  mainClassName?: string;
+}) {
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -37,8 +44,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pt-[60px] min-h-screen flex">
           <Sidebar />
           <main
-            className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200"
-            style={{ marginLeft: collapsed ? 64 : 232 }}
+            className={cn(
+              "flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200",
+              mainClassName,
+            )}
+            style={{ marginLeft: collapsed ? 64 : 220 }}
           >
             {children}
           </main>
