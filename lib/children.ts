@@ -4,12 +4,23 @@
  *
  * legacy import:  import { MOCK_CHILDREN, getChildById, ... } from "@/lib/children"
  * new import:     import { MOCK_CHILDREN, ... } from "@/lib/features/children"
+ *
+ * ┌─────────────────────────────────────────────────────────────┐
+ * │  호환성 보장 표                                                   │
+ * │  @/lib/children          →  @/lib/features/children           │
+ * │  @/lib/children          →  @/lib/features/children/store      │
+ * │  @/lib/store/children   →  @/lib/features/children/store      │
+ * └─────────────────────────────────────────────────────────────┘
  */
 export * from "./features/children";
 
 import type { Child, Attendance, CareLog } from "./features/children/types";
 import { MOCK_CHILDREN, MOCK_ATTENDANCES, MOCK_CARE_LOGS } from "./features/children/data";
-import { getExtraChildren, getAttendanceOverrides, getExtraCareLogs } from "./store/children";
+import {
+  getExtraChildren,
+  getAttendanceOverrides,
+  getExtraCareLogs,
+} from "./features/children/store";
 
 // ─── Aggregation (mock + localStorage) ───────────────────────
 
