@@ -6,58 +6,8 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { useSession, MOCK_USERS, type UserRole } from "@/lib/session";
 import { useTenant } from "@/lib/tenant-context";
-import {
-  ShieldCheck,
-  ShieldAlert,
-  Shield,
-  ChevronRight,
-  ArrowLeft,
-} from "lucide-react";
-
-const ROLE_INFO: Record<UserRole, {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  bg: string;
-  description: string;
-  canAdmin: boolean;
-  canExec: boolean;
-}> = {
-  owner: {
-    label: "소유자 (Owner)",
-    icon: ShieldCheck,
-    color: "text-violet-700",
-    bg: "bg-violet-50 border-violet-200",
-    description: "전체 접근 가능 — /admin, /exec 모두 접근 가능",
-    canAdmin: true,
-    canExec: true,
-  },
-  admin: {
-    label: "관리자 (Admin)",
-    icon: ShieldAlert,
-    color: "text-blue-700",
-    bg: "bg-blue-50 border-blue-200",
-    description: "/admin 접근 가능, /exec 접근 불가",
-    canAdmin: true,
-    canExec: false,
-  },
-  member: {
-    label: "운영자 (Member)",
-    icon: Shield,
-    color: "text-slate-600",
-    bg: "bg-slate-50 border-slate-200",
-    description: "/admin, /exec 모두 접근 불가",
-    canAdmin: false,
-    canExec: false,
-  },
-};
-
-const ROUTE_TEST = [
-  { href: "/portal",    label: "홈 (/)",           roles: ["owner", "admin", "member"] },
-  { href: "/admin",     label: "관리자 (/admin)",  roles: ["owner", "admin"] },
-  { href: "/exec",      label: "임원 (/exec)",     roles: ["owner"] },
-  { href: "/children",  label: "아동관리",          roles: ["owner", "admin", "member"] },
-];
+import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ROLE_INFO, ROUTE_TEST } from "./_data";
 
 export default function RoleTestPage() {
   const router = useRouter();
