@@ -24,7 +24,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ApprovalView } from "@/lib/types/approval";
+import type { ApprovalView } from "@/lib/features/approval";
 
 // ─── 메뉴 노드 타입 ───────────────────────────────────────
 type MenuNode =

@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { Paperclip, Flame, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ApprovalView } from "@/lib/types/approval";
-import type { ApprovalDocument } from "@/lib/types/approval";
-import { MOCK_PENDING_DOCS, MOCK_COMPLETED_DOCS } from "@/lib/data/approvals";
+import type { ApprovalView, ApprovalDocument } from "@/lib/features/approval";
+import { MOCK_PENDING_DOCS, MOCK_COMPLETED_DOCS } from "@/lib/features/approval";
 
 interface ApprovalDocTableProps {
   view: ApprovalView;

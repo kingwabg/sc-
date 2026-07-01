@@ -4,8 +4,8 @@ import { ApprovalSidebar } from "../_components/ApprovalSidebar";
 import { ApprovalDocTable } from "../_components/ApprovalDocTable";
 import { StatsCards } from "../_components/StatsCards";
 import { RecentApprovalList } from "../_components/RecentApprovalList";
-import { APPROVAL_VIEW_TITLE } from "@/lib/data/approvals";
-import type { ApprovalView } from "@/lib/types/approval";
+import { APPROVAL_VIEW_TITLE } from "@/lib/features/approval";
+import type { ApprovalView } from "@/lib/features/approval";
 import { Clock, Info } from "lucide-react";
 
 const VALID_FOLDERS: ApprovalView[] = [

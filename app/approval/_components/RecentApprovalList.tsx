@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { approvalService } from "@/lib/approvals/service";
-import { APPROVAL_FORMS } from "@/lib/data/approvals";
-import type { ApprovalRequest } from "@/lib/approvals/types";
+import { approvalService, APPROVAL_FORMS } from "@/lib/features/approval";
+import type { ApprovalRequest } from "@/lib/features/approval";
 import { cn } from "@/lib/utils";
 import { Flame, Loader2, ArrowRight } from "lucide-react";
 

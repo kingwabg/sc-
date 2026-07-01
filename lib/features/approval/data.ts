@@ -1,12 +1,12 @@
 /**
- * 결재 도메인 데이터
+ * 결재 Feature Module — mock data
  */
 import type {
   ApprovalForm,
-  ApprovalLineStep,
   ApprovalDocument,
   ApprovalView,
-} from "../types/approval";
+  PortalApprovalItem,
+} from "./types";
 
 // ─── 결재 양식 ────────────────────────────────────────────
 export const APPROVAL_FORMS: ApprovalForm[] = [
@@ -19,7 +19,7 @@ export const APPROVAL_FORMS: ApprovalForm[] = [
 ];
 
 // ─── 결재선 (mock) ────────────────────────────────────────
-export const APPROVAL_LINE: ApprovalLineStep[] = [
+export const APPROVAL_LINE: import("./types").ApprovalLineStep[] = [
   { step: 1, name: "박은수", position: "지원교사", status: "approved" },
   { step: 2, name: "김선영", position: "지원교사", status: "approved" },
   { step: 3, name: "김영미", position: "所长", status: "current" },
@@ -72,13 +72,6 @@ export const APPROVAL_VIEW_TITLE: Record<ApprovalView, string> = {
 };
 
 // ─── Portal용 결재 진행 현황 ──────────────────────────────
-export type PortalApprovalItem = {
-  id: string;
-  status: "대기" | "진행" | "완료" | "반려";
-  title: string;
-  date: string;
-};
-
 export const APPROVALS: PortalApprovalItem[] = [
   { id: "a1", status: "대기", title: "휴가신청서 (7월 1일~3일)", date: "07-01" },
   { id: "a2", status: "진행", title: "지출결의서 - 클라이언트 미팅", date: "06-28" },
@@ -86,10 +79,3 @@ export const APPROVALS: PortalApprovalItem[] = [
   { id: "a4", status: "진행", title: "출장신청 - 부산 본사 방문", date: "06-27" },
   { id: "a5", status: "완료", title: "사내 동호회 지원금 신청", date: "06-25" },
 ];
-
-export const STATUS_TONE: Record<PortalApprovalItem["status"], string> = {
-  대기: "bg-amber-100 text-amber-700",
-  진행: "bg-blue-100 text-blue-700",
-  완료: "bg-emerald-100 text-emerald-700",
-  반려: "bg-red-100 text-red-700",
-};
