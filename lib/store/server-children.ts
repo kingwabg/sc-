@@ -1,58 +1,90 @@
 /**
- * Server-side Children Store (Prisma-backed) — 마이그레이션 패턴
+ * Server-side Children Store (Prisma-backed)
  *
- * ⚠️ 이 모듈은 시연용. 실제 마이그레이션 시 도메인 `Child` ↔ Prisma `Child` 정렬 작업 필요:
- *
+ * 마이그레이션 패턴:
  *   Domain Child (features/children/types.ts)  ⟷  Prisma Child (schema.prisma)
- *   ─────────────────────────────────────────────────────────────────────
+ *
  *   flat scalar nameLast/nameFirst + nested    ⟷  fully denormalized scalars
  *     object guardian / health / etc.
  *
- *   통합 매퍼 필요:
- *     toDomainChild(prismaRow): Child
- *     toPrismaChildInput(child): Prisma.ChildUncheckedCreateInput
- *
- * 페이지 레벨 가드 패턴은 아래의 `canUseDb` 참고.
+ * 페이지 레벨 가드 패턴은 `canUseDb` 참고.
  */
 
 import { db, isDatabaseReady } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import type { Child } from "@/lib/features/children/types";
+import type { Child as PrismaChild } from "@prisma/client";
 
 /**
- * 페이지 가드. 호출 예:
+ * Prisma row → domain Child 타입 매핑
  *
- *   // app/children/page.tsx (server component)
- *   export default async function Page() {
- *     if (await canUseDb()) {
- *       const children = await db.child.findMany();
- *       return <ChildrenList children={mapToDomain(children)} />;
- *     }
- *     return <ChildrenClientMOCK />;  // current behavior
- *   }
- *
- * 이 패턴의 장점: features/* 무변경, 페이지에서 분기 1번.
+ * Prisma 컬럼                    → Domain 필드
+ * ──────────────────────────────────────────────────
+ * guardianName/Relation/Type/Phone/Job/Notes  → guardian{}
+ * emergencyContactName/Phone                  → emergencyContact{}
+ * allergies[]/medications[]/healthNotes       → health{}
+ * capacityGroup (Int)                         → capacityGroup (30|40|50)
+ * authorId/name                               → writtenBy{}
+ * cardMeta/physical/observations             → 별도 1:1 테이블 → 매핑 생략 (optional)
  */
-export async function canUseDb(): Promise<boolean> {
-  return isDatabaseReady();
+export function mapPrismaChildToDomain(row: PrismaChild): Child {
+  return {
+    id: row.id,
+    tenantId: row.tenantId,
+    name: row.name,
+    nameLast: row.nameLast,
+    nameFirst: row.nameFirst,
+    birthDate: row.birthDate,
+    gender: row.gender,
+    phone: row.phone ?? undefined,
+    photoUrl: row.photoUrl ?? undefined,
+    capacityGroup: row.capacityGroup as 30 | 40 | 50,
+    grade: row.grade ?? undefined,
+    school: row.school ?? undefined,
+    guardian: {
+      name: row.guardianName,
+      relation: row.guardianRelation,
+      type: row.guardianType ?? undefined,
+      phone: row.guardianPhone,
+      job: row.guardianJob ?? undefined,
+      notes: row.guardianNotes ?? undefined,
+    },
+    emergencyContact:
+      row.emergencyContactName && row.emergencyContactPhone
+        ? { name: row.emergencyContactName, phone: row.emergencyContactPhone }
+        : undefined,
+    health: {
+      allergies: row.allergies,
+      medications: row.medications,
+      notes: row.healthNotes,
+    },
+    enrolledAt: row.enrolledAt,
+    previousEnrolledAt: row.previousEnrolledAt ?? undefined,
+    leftAt: row.leftAt ?? undefined,
+    address: row.address ?? undefined,
+    serviceType: row.serviceType ?? undefined,
+    medianIncomePct: row.medianIncomePct ?? undefined,
+    kidsCallId: row.kidsCallId ?? undefined,
+    status: row.status,
+    writtenBy:
+      row.authorName
+        ? { name: row.authorName, org: undefined, position: undefined, writtenAt: undefined }
+        : undefined,
+  };
 }
 
 /**
- * Prisma row → domain Child 매핑 (현재는 placeholder — 실제 필드 alignment 필요)
- *
- * 실제 구현 시:
- *  1) features/children/types.ts 의 Child 필드 목록 추출
- *  2) 각 필드에 대응되는 Prisma 컬럼 매핑
- *  3) nested objects (guardian, health) 는 Prisma 의 denormalized columns 에서 합성
- *
- * TODO: 완성 후 export
+ * DB 사용 가능 여부 확인
  */
-// export function mapPrismaChildToDomain(row: PrismaChild): Child { ... }
+export function canUseDb(): boolean {
+  return isDatabaseReady();
+}
 
 /**
  * Counts (DB 가용 시에만 사용)
  */
 export async function countChildrenByTenant(tenantId: string): Promise<number> {
-  if (!isDatabaseReady()) return 0;
+  if (!canUseDb()) return 0;
   return db.child.count({ where: { tenantId } });
 }
 
