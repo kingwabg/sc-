@@ -4,6 +4,9 @@
  */
 
 import { db } from "@/lib/db";
+import {
+  computeDocExpiryLight,
+} from "@/lib/features/documents/data";
 import type {
   ConflictItem,
   ConflictType,
@@ -165,19 +168,20 @@ export async function crossCheckByDateRange(
 }
 
 /**
- * 평가 대비 4개 신호등 집계
+ * 평가 대비 신호등 집계 (P6 부터 docExpiry 포함 — 5개 카드)
  */
 export async function computeAuditSummary(
   tenantId: string,
 ): Promise<AuditSummary> {
   const { from, to } = recentDays(30);
 
-  const [consultation, document, consistencyCount, sponsorship] =
+  const [consultation, document, consistencyCount, sponsorship, docExpiry] =
     await Promise.all([
       computeConsultationRate(tenantId),
       computeDocumentRate(tenantId),
       findAttendanceCareLogConflicts(tenantId, from, to).then((c) => c.length),
       computeSponsorshipRate(tenantId),
+      computeDocExpiryLight(tenantId),
     ]);
 
   return {
@@ -196,6 +200,11 @@ export async function computeAuditSummary(
     sponsorship: {
       rate: sponsorship,
       light: signalByRate(sponsorship),
+    },
+    docExpiry: {
+      expiringSoonCount: docExpiry.expiringSoonCount,
+      expiredCount: docExpiry.expiredCount,
+      light: docExpiry.light,
     },
   };
 }
