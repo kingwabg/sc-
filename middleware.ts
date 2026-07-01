@@ -56,6 +56,15 @@ async function getSupabaseUser(
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Dev bypass: Supabase 구성 됐지만 session 없으면 officex-session 쿠키 fallback
+  // (/demo-auth 가 setting 한 쿠키로 들어오는 dev preview 흐름)
+  if (!user && request.cookies.get(SESSION_COOKIE)?.value === DEV_MOCK_VALUE) {
+    return {
+      user: { id: "mock", email: "demo@office.com" } as any,
+      supabase: null,
+    };
+  }
+
   return { user, supabase };
 }
 
