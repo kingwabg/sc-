@@ -694,7 +694,7 @@ function FolderRow({
             {!isSystem && (
               <span
                 className={cn(
-                  "text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0",
+                  "text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0 transition-opacity group-hover:opacity-0",
                   isActive ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500",
                 )}
               >
@@ -709,10 +709,10 @@ function FolderRow({
               event.stopPropagation();
               setActionsOpen((open) => !open);
             }}
-            className="pointer-events-none absolute right-0 top-1/2 z-10 grid h-5 w-5 -translate-y-1/2 place-items-center rounded text-slate-400 opacity-0 transition hover:bg-slate-100 hover:text-brand-600 group-hover:pointer-events-auto group-hover:opacity-100"
+            className="pointer-events-none absolute right-0.5 top-1/2 z-10 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md border border-slate-200 bg-white text-slate-500 opacity-0 shadow-sm transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600 group-hover:pointer-events-auto group-hover:opacity-100"
             aria-label="폴더 작업 열기"
           >
-            <MoreHorizontal className="h-3.5 w-3.5" />
+            <MoreHorizontal className="h-4 w-4" />
           </button>
 
           {/* Click actions — 시스템 노드에도 옵션은 노출 가능 */}
