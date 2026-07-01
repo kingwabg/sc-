@@ -3,24 +3,19 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { ExecClient } from "./_components/ExecClient";
-import { useTenant } from "@/lib/tenant-context";
-import { useSession } from "@/lib/session";
 
-export default function ExecPage() {
+export default function ExecRootPage() {
   const router = useRouter();
-  const { ready, tenant } = useTenant();
-  const { user } = useSession();
 
   useEffect(() => {
-    if (ready && !user) router.replace("/login");
-  }, [ready, user, router]);
-
-  if (!ready || !user) return null;
+    router.replace("/exec/dashboard");
+  }, [router]);
 
   return (
     <AppShell>
-      <ExecClient />
+      <div className="flex items-center justify-center h-64 text-slate-400">
+        임원 포털로 이동 중...
+      </div>
     </AppShell>
   );
 }
