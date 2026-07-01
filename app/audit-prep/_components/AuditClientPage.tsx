@@ -2,11 +2,12 @@
 
 /**
  * app/audit-prep/_components/AuditClientPage.tsx
- * Client Component — 신호등 대시보드 + 모순 항목 리스트
+ * Client Component — 신호등 대시보드 + 모순 항목 + 평가 통보서 미리보기
  */
 
-import { FileText, Download, ShieldCheck } from "lucide-react";
-import type { AuditSummary, ConflictItem } from "@/lib/features/audit/types";
+import { useState } from "react";
+import { FileText, Download, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import type { AuditSummary, ConflictItem, AuditNotice, EvalItem } from "@/lib/features/audit/types";
 import { SIGNAL_EMOJI, SIGNAL_COLOR, CONFLICT_LABEL, CARD_DESCRIPTIONS } from "@/lib/features/audit/labels";
 
 // ─── Props ───────────────────────────────────────────────────
@@ -15,6 +16,7 @@ interface Props {
   summary: AuditSummary;
   conflicts: ConflictItem[];
   checkedRange: { from: string; to: string };
+  notice: AuditNotice;
 }
 
 // ─── 신호등 카드 ─────────────────────────────────────────────
@@ -94,6 +96,35 @@ function ConflictRow({ item }: { item: ConflictItem }) {
   );
 }
 
+// ─── 평가 항목 체크 행 ────────────────────────────────────────
+function EvalItemRow({ item }: { item: EvalItem }) {
+  return (
+    <tr className="border-b border-slate-100">
+      <td className="px-3 py-2.5">
+        <span className="font-medium text-slate-700 text-sm">{item.label}</span>
+        {item.note && (
+          <p className="text-xs text-slate-400 mt-0.5">{item.note}</p>
+        )}
+      </td>
+      <td className="px-3 py-2.5 text-sm text-slate-500 whitespace-nowrap">{item.threshold}</td>
+      <td className="px-3 py-2.5 text-sm font-semibold text-slate-700 whitespace-nowrap">
+        {item.current}{item.unit ?? ""}
+      </td>
+      <td className="px-3 py-2.5">
+        {item.passed ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
+            통과
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700">
+            미통과
+          </span>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 // ─── 빈 상태 ─────────────────────────────────────────────────
 function EmptyState() {
   return (
@@ -108,8 +139,20 @@ function EmptyState() {
 }
 
 // ─── 메인 컴포넌트 ───────────────────────────────────────────
-export function AuditClientPage({ tenantName, summary, conflicts, checkedRange }: Props) {
+export function AuditClientPage({ tenantName, summary, conflicts, checkedRange, notice }: Props) {
   const hasConflicts = conflicts.length > 0;
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const passCount = notice.evalItems.filter((e) => e.passed).length;
+
+  const handleHtmlDownload = () => {
+    const blob = new Blob([notice.previewHtml], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `평가통보서_${notice.rangeFrom}_${notice.rangeTo}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -208,21 +251,98 @@ export function AuditClientPage({ tenantName, summary, conflicts, checkedRange }
           )}
         </div>
 
-        {/* ── 하단 액션 (P9) ───────────────────────────── */}
+        {/* ── 평가 항목 체크리스트 ─────────────────────── */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-slate-700">평가 항목별 점검</h2>
+              <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
+                {passCount}/{notice.evalItems.length} 항목 통과
+              </span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 text-left text-xs text-slate-500 font-medium">
+                  <th className="px-3 py-2.5 rounded-tl">평가 항목</th>
+                  <th className="px-3 py-2.5">기준</th>
+                  <th className="px-3 py-2.5">현재값</th>
+                  <th className="px-3 py-2.5 rounded-tr">결과</th>
+                </tr>
+              </thead>
+              <tbody>
+                {notice.evalItems.map((item) => (
+                  <EvalItemRow key={item.id} item={item} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── 평가 통보서 미리보기 ─────────────────────── */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-indigo-600" />
+              <h2 className="text-sm font-semibold text-slate-700">평가 통보서 미리보기</h2>
+              <span className="text-xs text-slate-400">
+                {notice.rangeFrom} ~ {notice.rangeTo}
+              </span>
+            </div>
+            <button
+              onClick={() => setNoticeOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition"
+            >
+              {noticeOpen ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5" /> 접기
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5" /> 미리보기
+                </>
+              )}
+            </button>
+          </div>
+
+          {noticeOpen && (
+            <div className="border-t border-slate-100">
+              <div
+                className="p-6 bg-slate-50"
+                dangerouslySetInnerHTML={{ __html: notice.previewHtml }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ── 다운로드 버튼 ─────────────────────────────── */}
         <div className="flex gap-3 flex-wrap">
+          {/* HTML — 활성 */}
           <button
-            disabled
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-400 cursor-not-allowed"
+            onClick={handleHtmlDownload}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
           >
-            <FileText className="w-4 h-4" />
-            평가 통보서 미리 작성
+            <Download className="w-4 h-4" />
+            📥 HTML 다운로드
           </button>
+          {/* HWP — P9에서 구현 */}
           <button
             disabled
+            title="P9 작업에서 구현 예정"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-400 cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
-            HWP 다운로드
+            📥 HWP 다운로드
+          </button>
+          {/* PDF — P9-A에서 구현 */}
+          <button
+            disabled
+            title="P9-A 작업에서 구현 예정"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-400 cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            📥 PDF 다운로드
           </button>
         </div>
 
