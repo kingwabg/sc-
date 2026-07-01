@@ -4,14 +4,14 @@
  * TreeResourceShell — 도메인 무관 계층형 그룹 사이드바
  *
  * ChildrenSidebar에서 추출. dnd-kit 기반 그룹 트리 + 인라인 편집 +
- * 호버 액션 메뉴(portal) + 시스템 노드 보호 포함.
+ * 호버 액션 메뉴 + 시스템 노드 보호 포함.
  *
  * 책임:
  *  - 그룹 트리 렌더링 (재귀, depth 기반 들여쓰기)
  *  - 그룹 CRUD UI (이름 편집/추가/삭제)
  *  - 드래그&드롭으로 그룹 이동 (계층 변경)
  *  - 펼침/접힘 상태
- *  - 호버 시 portal 액션 메뉴
+ *  - 호버 시 행 내부 액션 메뉴
  *
  * 책임 아님 (외부):
  *  - 그룹 데이터 정의/저장 (페이지에서 도메인 store로)
@@ -19,7 +19,6 @@
  */
 
 import { useState, useRef, useEffect, useMemo, forwardRef } from "react";
-import { createPortal } from "react-dom";
 import {
   DndContext,
   PointerSensor,
@@ -45,6 +44,7 @@ import {
   X,
   GripVertical,
   SlidersHorizontal,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -472,8 +472,8 @@ type AddRowProps = {
 const AddRow = forwardRef<HTMLInputElement, AddRowProps>(
   ({ value, onChange, onKeyDown, onSave, onCancel, placeholder, depth }, ref) => (
     <div
-      className="flex items-center gap-1.5 pl-6 pr-2 py-1"
-      style={{ paddingLeft: depth * 16 + 20 }}
+      className="grid w-full min-w-0 grid-cols-[16px_minmax(0,1fr)_24px_24px] items-center gap-1 pr-1 py-1"
+      style={{ paddingLeft: Math.min(depth, 4) * 14 + 20 }}
     >
       <Folder className="w-4 h-4 text-slate-300 shrink-0" />
       <input
@@ -482,17 +482,17 @@ const AddRow = forwardRef<HTMLInputElement, AddRowProps>(
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className="flex-1 px-2 py-1 text-[12px] border border-slate-200 rounded-md outline-none focus:border-brand-500"
+        className="min-w-0 px-2 py-1 text-[12px] border border-slate-200 rounded-md outline-none focus:border-brand-500"
       />
       <button
         onClick={onSave}
-        className="w-6 h-6 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
+        className="w-6 h-6 shrink-0 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
       >
         <Check className="w-3 h-3" />
       </button>
       <button
         onClick={onCancel}
-        className="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
+        className="w-6 h-6 shrink-0 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
       >
         <X className="w-3 h-3" />
       </button>
@@ -597,33 +597,7 @@ function FolderRow({
   });
 
   const rowRef = useRef<HTMLDivElement | null>(null);
-  const [hovering, setHovering] = useState(false);
-  const [portalPos, setPortalPos] = useState<{ top: number; right: number } | null>(
-    null,
-  );
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  function updatePortalPos() {
-    const el = rowRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    setPortalPos({ top: r.top + r.height / 2, right: window.innerWidth - r.right });
-  }
-
-  useEffect(() => {
-    if (hovering) {
-      updatePortalPos();
-      const onScroll = () => updatePortalPos();
-      const onResize = () => updatePortalPos();
-      window.addEventListener("scroll", onScroll, true);
-      window.addEventListener("resize", onResize);
-      return () => {
-        window.removeEventListener("scroll", onScroll, true);
-        window.removeEventListener("resize", onResize);
-      };
-    }
-  }, [hovering]);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   const isThisOver = isOver || overId === g.id;
   const count = counts[g.id] ?? 0;
@@ -634,14 +608,13 @@ function FolderRow({
         rowRef.current = node;
         setDropRef(node);
       }}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
       className={cn(
-        "group relative flex items-center rounded-md transition",
+        "group relative flex w-full min-w-0 items-center rounded-md transition",
         isDragging && "opacity-30",
         activeDragId && isThisOver && activeDragId !== g.id && "ring-2 ring-brand-400 bg-brand-50",
       )}
       style={{ paddingLeft: depth * 16 }}
+      onMouseLeave={() => setActionsOpen(false)}
     >
       {/* Expand toggle */}
       <button
@@ -670,24 +643,24 @@ function FolderRow({
 
       {isEditing ? (
         /* Inline edit */
-        <div className="flex-1 flex items-center gap-1">
+        <div className="flex-1 min-w-0 flex items-center gap-1">
           <Folder className="w-4 h-4 text-slate-300 shrink-0" />
           <input
             ref={editRef}
             value={editLabel}
             onChange={(e) => setEditLabel(e.target.value)}
             onKeyDown={handleEditKey}
-            className="flex-1 px-1.5 py-0.5 text-[12px] border border-brand-300 rounded outline-none focus:border-brand-500 bg-white"
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[12px] border border-brand-300 rounded outline-none focus:border-brand-500 bg-white"
           />
           <button
             onClick={saveEdit}
-            className="w-5 h-5 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
+            className="w-5 h-5 shrink-0 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
           >
             <Check className="w-3 h-3" />
           </button>
           <button
             onClick={() => setEditingId(null)}
-            className="w-5 h-5 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
+            className="w-5 h-5 shrink-0 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
           >
             <X className="w-3 h-3" />
           </button>
@@ -695,7 +668,10 @@ function FolderRow({
       ) : (
         <>
           <button
-            onClick={() => onSelect(g.id)}
+            onClick={() => {
+              setActionsOpen(false);
+              onSelect(g.id);
+            }}
             className={cn(
               "flex-1 flex items-center gap-1.5 px-1.5 py-1.5 rounded-md transition text-[13px] min-w-0",
               isActive
@@ -718,7 +694,7 @@ function FolderRow({
             {!isSystem && (
               <span
                 className={cn(
-                  "text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0",
+                  "text-[11px] font-bold px-1.5 py-0.5 rounded-md shrink-0 transition-opacity group-hover:opacity-0",
                   isActive ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500",
                 )}
               >
@@ -727,30 +703,45 @@ function FolderRow({
             )}
           </button>
 
-          {/* Hover actions (portal) — 시스템 노드에도 옵션은 노출 가능 */}
-          {mounted && hovering && portalPos && createPortal(
-            <div
-              className="fixed z-50 -translate-y-1/2 flex items-center gap-0.5 px-1 py-0.5 bg-white border border-slate-200 rounded-md shadow-xl whitespace-nowrap"
-              style={{ top: portalPos.top, right: portalPos.right }}
-              onMouseEnter={() => setHovering(true)}
-              onMouseLeave={() => setHovering(false)}
-            >
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setActionsOpen((open) => !open);
+            }}
+            className="pointer-events-none absolute right-0.5 top-1/2 z-10 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md border border-slate-200 bg-white text-slate-500 opacity-0 shadow-sm transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600 group-hover:pointer-events-auto group-hover:opacity-100"
+            aria-label="폴더 작업 열기"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+
+          {/* Click actions — 시스템 노드에도 옵션은 노출 가능 */}
+          {actionsOpen && (
+            <div className="absolute right-0 top-1/2 z-20 flex -translate-y-1/2 items-center gap-0.5 rounded-md bg-white px-0.5 py-0.5 shadow-sm ring-1 ring-slate-200">
               {/* 하위 폴더 추가 — 시스템 노드에도 노출 (depth 0에 추가 가능) */}
               <button
-                onClick={() => startAdd(g.id, depth + 1)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setActionsOpen(false);
+                  startAdd(g.id, depth + 1);
+                }}
                 className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600"
-                title="하위 폴더 추가"
+                aria-label="하위 폴더 추가"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
               {onOpenOptions && (
                 <button
-                  onClick={() => onOpenOptions(g.id)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setActionsOpen(false);
+                    onOpenOptions(g.id);
+                  }}
                   className={cn(
                     "w-6 h-6 grid place-items-center rounded hover:bg-slate-100 hover:text-brand-600",
                     g.meta?.hasFilter ? "text-brand-600" : "text-slate-500",
                   )}
-                  title="폴더 조건 (필터)"
+                  aria-label="폴더 조건"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                 </button>
@@ -758,23 +749,30 @@ function FolderRow({
               {!isSystem && (
                 <>
                   <button
-                    onClick={() => startEdit(g)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActionsOpen(false);
+                      startEdit(g);
+                    }}
                     className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-slate-100 hover:text-brand-600"
-                    title="이름 수정"
+                    aria-label="이름 수정"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(g)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActionsOpen(false);
+                      handleDelete(g);
+                    }}
                     className="w-6 h-6 grid place-items-center rounded text-slate-500 hover:bg-red-50 hover:text-red-500"
-                    title="삭제"
+                    aria-label="삭제"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </>
               )}
-            </div>,
-            document.body,
+            </div>
           )}
         </>
       )}
