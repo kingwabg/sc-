@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ApprovalSidebar } from "../_components/ApprovalSidebar";
-import { ApprovalDocTable } from "../_components/ApprovalDocTable";
+import { ApprovalListTable } from "./_components/ApprovalListTable";
 import { StatsCards } from "../_components/StatsCards";
 import { RecentApprovalList } from "../_components/RecentApprovalList";
 import { APPROVAL_VIEW_TITLE } from "@/lib/features/approval";
 import type { ApprovalView } from "@/lib/features/approval";
+import { FOLDER_LABELS } from "@/lib/features/approval-folder";
+import type { FolderKey } from "@/lib/features/approval-folder";
 import { Clock, Info } from "lucide-react";
 
 const VALID_FOLDERS: ApprovalView[] = [
@@ -27,6 +29,13 @@ const VALID_FOLDERS: ApprovalView[] = [
   "dept-send",
   "config",
   "inquiry",
+];
+
+// P11-3 approval-folder module의 12개 folder key
+const FOLDER_KEYS: FolderKey[] = [
+  "standby", "inbox", "cc", "expected",
+  "default", "draft", "temporary", "sign",
+  "ccbox", "inboxbox", "sendbox", "appr",
 ];
 
 // folder path → ApprovalView mapping
@@ -129,19 +138,34 @@ function FolderContent({ view, title }: { view: ApprovalView; title: string }) {
     );
   }
 
+  // 12개 folder key → ApprovalListTable 사용
+  if (FOLDER_KEYS.includes(view as FolderKey)) {
+    return (
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
+          <h1 className="text-xl font-bold text-slate-900">{title}</h1>
+          <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full">
+            <Clock className="w-3 h-3" />
+            결재함 폴더별로 조회됩니다.
+          </div>
+        </div>
+        <ApprovalListTable folder={view as FolderKey} />
+      </div>
+    );
+  }
+
+  // dept-* 폴더는 안내 카운
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
-      {/* 헤더 */}
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
+      <div className="px-6 py-4 border-b border-slate-200">
         <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full">
-          <Clock className="w-3 h-3" />
-          결재함 폴더별로 조회됩니다.
-        </div>
       </div>
-
-      {/* 테이블 */}
-      <ApprovalDocTable view={view} />
+      <div className="p-10 text-center text-slate-400">
+        <div className="w-12 h-12 rounded-full bg-slate-100 grid place-items-center mx-auto mb-3">
+          <Clock className="w-5 h-5 text-slate-400" />
+        </div>
+        <p className="text-sm">{title} 기능은 준비 중입니다.</p>
+      </div>
     </div>
   );
 }
