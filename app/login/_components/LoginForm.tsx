@@ -1,10 +1,10 @@
 // app/login/_components/LoginForm.tsx — 로그인 폼 (Client Component)
 "use client";
 
-import { useState, useEffect } from "react";
+import { useActionState, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useFormState, useFormStatus } from "react-dom";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toaster";
 import { signInAction, signUpAction } from "../actions";
@@ -48,7 +48,7 @@ function SubmitButton({
 /* ===== Login Panel ===== */
 function LoginPanel() {
   const router = useRouter();
-  const [state, formAction] = useFormState(signInAction, null);
+  const [state, formAction] = useActionState(signInAction, null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -182,7 +182,7 @@ function LoginPanel() {
 
 /* ===== Signup Panel ===== */
 function SignupPanel() {
-  const [state, formAction] = useFormState(signUpAction, null);
+  const [state, formAction] = useActionState(signUpAction, null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");

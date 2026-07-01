@@ -199,12 +199,10 @@ function useCollapsed() {
     setCollapsedState(getSidebarCollapsed());
   }, []);
   const toggle = useCallback(() => {
-    setCollapsedState((prev) => {
-      const next = !prev;
-      setSidebarCollapsed(next);
-      window.dispatchEvent(new Event("officex:sidebar-collapsed"));
-      return next;
-    });
+    const next = !getSidebarCollapsed();
+    setSidebarCollapsed(next);
+    setCollapsedState(next);
+    window.dispatchEvent(new Event("officex:sidebar-collapsed"));
   }, []);
   return { collapsed, toggle };
 }
@@ -393,13 +391,13 @@ function CollapsedSidebar({
 
   return (
     <aside className="fixed top-[60px] left-0 bottom-0 w-[64px] bg-white border-r border-slate-200 flex flex-col py-3 transition-[width] duration-200">
-      <div className="flex justify-center mb-2">
+      <div className="flex justify-center mb-2 px-2">
         <button
           onClick={onExpand}
           title="사이드바 펼치기"
-          className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+          className="w-10 h-10 grid place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
         >
-          <PanelLeft className="w-4 h-4" />
+          <PanelLeft className="w-[18px] h-[18px]" />
         </button>
       </div>
 
