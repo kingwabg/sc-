@@ -220,6 +220,52 @@ enum DonationType {
   GOODS
 }
 
+// ─── Meetings (P10 — 회의록 3종 + 운영위원회 결재 자동 트리거) ──────
+
+/// 회의 종류 — 평가단 점검 영역
+///   CHILD_COUNCIL: 아동자치회의 (월 1회 이상 권장)
+///   GOVERNANCE:    운영위원회 (분기 1회 이상 — 결재 자동 트리거)
+///   STAFF:         종사자회의 (월 1회 이상 권장)
+enum MeetingType {
+  CHILD_COUNCIL
+  GOVERNANCE
+  STAFF
+}
+
+/// 회의록 — 안건/본문/참석자/결정사항/첨부 문서 연결
+/// GOVERNANCE 타입으로 저장 시 자동으로 ApprovalRequest 생성 (시설장 → 센터장 2-step)
+model Meeting {
+  id         String      @id @default(cuid())
+  tenantId   String
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type       MeetingType
+  title      String
+  /// 회의 일시 (DateTime — day + time)
+  heldAt     DateTime
+  location   String?
+  /// 안건 목록
+  agenda     String[]
+  /// 본문 (마크다운/HTML)
+  content    String?
+  /// 참석자 이름 목록
+  attendees  String[]
+  /// 결석자 이름 목록
+  absent     String[]
+  /// 결정 사항 목록
+  decisions  String[]
+  /// 첨부 문서 id (Doc 모델 연결, 추후 HWP export)
+  docId      String?
+  /// GOVERNANCE 결재 시 자동 spawn된 ApprovalRequest id
+  approvalId String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, type])
+  @@index([tenantId, heldAt])
+  @@index([approvalId])
+}
+
 // ─── Tenant & Users ────────────────────────────────────
 
 /// 멀티테넌트 루트 (양산애사희적합동조합 내 여러 아동센터)
@@ -246,6 +292,7 @@ model Tenant {
   dailyLogs    DailyLog[]
   inspections  Inspection[]
   donations    Donation[]
+  meetings     Meeting[]
 }
 
 /// 종사자 · 조합원 · 자원봉사자 통합 유저
