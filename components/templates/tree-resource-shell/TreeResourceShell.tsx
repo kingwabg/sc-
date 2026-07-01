@@ -471,8 +471,8 @@ type AddRowProps = {
 const AddRow = forwardRef<HTMLInputElement, AddRowProps>(
   ({ value, onChange, onKeyDown, onSave, onCancel, placeholder, depth }, ref) => (
     <div
-      className="flex items-center gap-1.5 pl-6 pr-2 py-1"
-      style={{ paddingLeft: depth * 16 + 20 }}
+      className="grid w-full min-w-0 grid-cols-[16px_minmax(0,1fr)_24px_24px] items-center gap-1 pr-1 py-1"
+      style={{ paddingLeft: Math.min(depth, 4) * 14 + 20 }}
     >
       <Folder className="w-4 h-4 text-slate-300 shrink-0" />
       <input
@@ -481,17 +481,17 @@ const AddRow = forwardRef<HTMLInputElement, AddRowProps>(
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className="flex-1 px-2 py-1 text-[12px] border border-slate-200 rounded-md outline-none focus:border-brand-500"
+        className="min-w-0 px-2 py-1 text-[12px] border border-slate-200 rounded-md outline-none focus:border-brand-500"
       />
       <button
         onClick={onSave}
-        className="w-6 h-6 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
+        className="w-6 h-6 shrink-0 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
       >
         <Check className="w-3 h-3" />
       </button>
       <button
         onClick={onCancel}
-        className="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
+        className="w-6 h-6 shrink-0 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
       >
         <X className="w-3 h-3" />
       </button>
@@ -607,7 +607,7 @@ function FolderRow({
         setDropRef(node);
       }}
       className={cn(
-        "group relative flex items-center rounded-md transition",
+        "group relative flex w-full min-w-0 items-center rounded-md transition",
         isDragging && "opacity-30",
         activeDragId && isThisOver && activeDragId !== g.id && "ring-2 ring-brand-400 bg-brand-50",
       )}
@@ -640,24 +640,24 @@ function FolderRow({
 
       {isEditing ? (
         /* Inline edit */
-        <div className="flex-1 flex items-center gap-1">
+        <div className="flex-1 min-w-0 flex items-center gap-1">
           <Folder className="w-4 h-4 text-slate-300 shrink-0" />
           <input
             ref={editRef}
             value={editLabel}
             onChange={(e) => setEditLabel(e.target.value)}
             onKeyDown={handleEditKey}
-            className="flex-1 px-1.5 py-0.5 text-[12px] border border-brand-300 rounded outline-none focus:border-brand-500 bg-white"
+            className="flex-1 min-w-0 px-1.5 py-0.5 text-[12px] border border-brand-300 rounded outline-none focus:border-brand-500 bg-white"
           />
           <button
             onClick={saveEdit}
-            className="w-5 h-5 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
+            className="w-5 h-5 shrink-0 rounded grid place-items-center bg-brand-600 text-white hover:bg-brand-700"
           >
             <Check className="w-3 h-3" />
           </button>
           <button
             onClick={() => setEditingId(null)}
-            className="w-5 h-5 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
+            className="w-5 h-5 shrink-0 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
           >
             <X className="w-3 h-3" />
           </button>
