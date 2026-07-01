@@ -32,6 +32,11 @@ import {
   ShieldAlert,
   Crown,
   Bug,
+  ClipboardCheck,
+  MessagesSquare,
+  Gift,
+  CalendarClock,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -98,6 +103,11 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/admin":   { label: "관리자",         href: "/admin",   icon: ShieldAlert, minRole: "admin" },
   "/exec":    { label: "임원 대시보드",  href: "/exec",    icon: Crown,       minRole: "owner" },
   "/role-test": { label: "역할 테스트",  href: "/role-test", icon: Bug },
+  "/facility/inspection": { label: "시설 안전점검", href: "/facility/inspection", icon: ClipboardCheck },
+  "/meetings": { label: "회의록", href: "/meetings", icon: MessagesSquare },
+  "/donations": { label: "후원금 대장", href: "/donations", icon: Gift },
+  "/documents/expiry": { label: "문서 만료 알림", href: "/documents/expiry", icon: CalendarClock },
+  "/preview/care-log": { label: "문서 미리보기 (데모)", href: "/preview/care-log", icon: Eye },
   "/settings": { label: "환경설정", href: "/settings", icon: Settings },
 };
 
@@ -112,15 +122,15 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "돌봄운영",
-    items: ["/children", "/staff", "/documents"],
+    items: ["/children", "/staff", "/facility/inspection", "/meetings", "/documents"],
   },
   {
     label: "운영관리",
-    items: OPERATIONS_CHILDREN,
+    items: [...OPERATIONS_CHILDREN, "/donations"],
   },
   {
     label: "평가",
-    items: ["/audit-prep"],
+    items: ["/audit-prep", "/documents/expiry", "/preview/care-log"],
   },
   {
     label: "관리",
