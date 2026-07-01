@@ -1,6 +1,6 @@
 import { CheckSquare } from "lucide-react";
 import { Card } from "./Card";
-import { APPROVALS, STATUS_TONE } from "@/lib/data/approvals";
+import { APPROVALS, STATUS_TONE } from "@/lib/features/approval";
 
 export function ApprovalCard() {
   return (

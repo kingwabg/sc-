@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOCK_STAFF, POSITION_LABELS } from "@/lib/staff";
-import { APPROVAL_FORMS, APPROVAL_LINE } from "@/lib/data/approvals";
-import type { ApprovalFormKey } from "@/lib/types/approval";
+import { APPROVAL_FORMS, APPROVAL_LINE } from "@/lib/features/approval";
+import type { ApprovalFormKey } from "@/lib/features/approval";
 
 export function NewApprovalForm({ onClose }: { onClose?: () => void }) {
   const [formKey, setFormKey] = useState<ApprovalFormKey>("education");

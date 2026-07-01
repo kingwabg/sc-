@@ -6,6 +6,8 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Home,
   Mail,
+  Send,
+  MessageCircle,
   FileCheck2,
   CalendarDays,
   Baby,
@@ -35,6 +37,7 @@ import {
   Gift,
   CalendarClock,
   Eye,
+  Palmtree,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -74,6 +77,7 @@ const ROLE_RANK: Record<UserRole, number> = {
 const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/portal": { label: "홈", href: "/portal", icon: Home },
   "/mail": { label: "메일", href: "/mail", icon: Mail },
+  "/messenger": { label: "메신저", href: "/messenger", icon: MessageCircle },
   "/approval": { label: "결재", href: "/approval", icon: FileCheck2 },
   "/calendar": { label: "일정", href: "/calendar", icon: CalendarDays },
   "/documents": { label: "문서관리", href: "/documents", icon: Folder },
@@ -93,6 +97,8 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/daily-log": { label: "운영일지", href: "/daily-log", icon: NotebookPen },
   "/staff": { label: "종사자관리", href: "/staff", icon: UserCog },
   "/board": { label: "게시판", href: "/board", icon: MessageSquare },
+  "/volunteers": { label: "봉사자 관리", href: "/volunteers", icon: Users },
+  "/leave": { label: "휴가 관리", href: "/leave", icon: Palmtree },
   "/org": { label: "조직도", href: "/org", icon: Users },
   "/monthly-plan": { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
   "/annual-plan": { label: "연간계획", href: "/annual-plan", icon: BookOpen },
@@ -116,7 +122,7 @@ const OPERATIONS_CHILDREN = ["/annual-plan", "/monthly-plan", "/daily-log"];
 const FIXED_GROUPS: { label: string; items: string[] }[] = [
   {
     label: "Home",
-    items: ["/portal", "/my-attendance", "/calendar", "/mail", "/approval"],
+    items: ["/portal", "/my-attendance", "/calendar", "/mail", "/messenger", "/approval"],
   },
   {
     label: "돌봄운영",
@@ -136,7 +142,7 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "지원",
-    items: ["/board", "/org", "/todo", "/role-test"],
+    items: ["/board", "/volunteers", "/org", "/leave", "/todo", "/role-test", "/settings"],
   },
 ];
 

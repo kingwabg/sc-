@@ -1,5 +1,5 @@
 /**
- * 결재 요청 저장소 (localStorage)
+ * 결재 Feature Module — storage (localStorage)
  */
 import type { ApprovalRequest } from "./types";
 
@@ -42,7 +42,9 @@ export const approvalRequestStorage = {
     return readAll().find((r) => r.id === id) ?? null;
   },
 
-  create(input: Omit<ApprovalRequest, "id" | "createdAt" | "status">): ApprovalRequest {
+  create(
+    input: Omit<ApprovalRequest, "id" | "createdAt" | "status">,
+  ): ApprovalRequest {
     const now = Date.now();
     const req: ApprovalRequest = {
       ...input,
@@ -54,7 +56,10 @@ export const approvalRequestStorage = {
     return req;
   },
 
-  update(id: string, patch: Partial<ApprovalRequest>): ApprovalRequest | null {
+  update(
+    id: string,
+    patch: Partial<ApprovalRequest>,
+  ): ApprovalRequest | null {
     const all = readAll();
     const idx = all.findIndex((r) => r.id === id);
     if (idx < 0) return null;

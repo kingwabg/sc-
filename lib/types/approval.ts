@@ -3,7 +3,16 @@
  */
 
 // ─── 결재 양식 ────────────────────────────────────────────
-export type ApprovalFormKey = "education" | "leave" | "expense" | "purchase" | "report" | "memo";
+export type ApprovalFormKey =
+  | "education"
+  | "leave"
+  | "expense"
+  | "purchase"
+  | "report"
+  | "memo"
+  | "duty_assignment"   // 업무 분장표 (지역아동센터 핵심)
+  | "meeting"            // 회의록 (P10 연동)
+  | "donation";          // 후원금 영수증 (P8 연동)
 
 export type ApprovalForm = {
   key: ApprovalFormKey;
