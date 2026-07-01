@@ -88,6 +88,57 @@ enum VolunteerType {
   기타
 }
 
+// ─── Leave (휴가) ────────────────────────────────────────
+
+/// 휴가 종류
+enum LeaveType {
+  ANNUAL             // 연차
+  MATERNITY          // 출산휴가
+  MATERNITY_MULTI    // 출산휴가-다태아
+  SPOUSE_CARE        // 배우자돌봄휴가
+  FAMILY_CARE        // 가족돌봄휴가
+  REFRESH            // Refresh휴가 (3년 근속)
+  EARLY_LEAVE        // 조퇴
+  LATE_ARRIVAL       // 지각
+  FAMILY_EVENT       // 경조사
+  OFFICIAL           // 공가
+  SICK               // 병가
+  HALF_DAY           // 반차
+}
+
+/// 휴가 요청 상태
+enum LeaveStatus {
+  PENDING    // 대기
+  APPROVED   // 승인
+  REJECTED   // 반려
+  CANCELLED  // 취소
+  USED       // 사용완료
+}
+
+/// 휴가 요청
+model LeaveRequest {
+  id          String      @id @default(cuid())
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  staffId     String
+  staff       Staff       @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  type        LeaveType
+  startDate   String      // YYYY-MM-DD
+  endDate     String      // YYYY-MM-DD
+  days        Float       // 휴가 일수 (반차 0.5)
+  reason      String?
+  status      LeaveStatus @default(PENDING)
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([tenantId])
+  @@index([staffId])
+  @@index([startDate])
+  @@index([status])
+}
+
 enum MemberStatus {
   active
   leave
@@ -293,9 +344,10 @@ model Tenant {
   approvals    ApprovalRequest[]
   annualPlans  AnnualPlan[]
   dailyLogs    DailyLog[]
-  inspections  Inspection[]
-  donations    Donation[]
-  meetings     Meeting[]
+  inspections   Inspection[]
+  donations     Donation[]
+  meetings      Meeting[]
+  leaveRequests LeaveRequest[]
 }
 
 /// 종사자 · 조합원 · 자원봉사자 통합 유저
@@ -467,7 +519,8 @@ model Staff {
   email    String?
   status   StaffStatus @default(active)
 
-  attendances StaffAttendance[]
+  attendances   StaffAttendance[]
+  leaveRequests LeaveRequest[]
 
   @@index([tenantId])
 }
