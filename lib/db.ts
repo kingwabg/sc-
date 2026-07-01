@@ -12,14 +12,23 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-export const db: PrismaClient =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function makeClient(): PrismaClient {
+  const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL / DIRECT_DATABASE_URL not set");
+  }
+  const adapter = new PrismaPg({ connectionString: url });
+  return new PrismaClient({
+    adapter,
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
+}
+
+export const db: PrismaClient = globalForPrisma.prisma ?? makeClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;
