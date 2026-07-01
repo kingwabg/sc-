@@ -448,18 +448,27 @@ function NavGroup({
   onToggleFavorite: (href: string) => void;
   favorites: string[];
 }) {
-  const isEvaluationGroup = label === "평가";
+  const isGroupActive = items.some((item) => {
+    const isActive =
+      item.href === "/"
+        ? pathname === "/"
+        : pathname === item.href || pathname.startsWith(item.href + "/");
+    const childActive = item.children?.some(
+      (child) => pathname === child.href || pathname.startsWith(child.href + "/"),
+    );
+    return isActive || childActive;
+  });
 
   return (
     <div className="mb-3">
       <h3
         className={`px-3 mb-1 text-[11px] font-semibold tracking-wide flex items-center gap-1.5 ${
-          isEvaluationGroup ? "text-amber-600" : "text-slate-400"
+          isGroupActive ? "text-brand-600" : "text-slate-400"
         }`}
       >
         {label}
-        {isEvaluationGroup && (
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+        {isGroupActive && (
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 inline-block" />
         )}
       </h3>
       <nav className="space-y-0.5">
