@@ -4,14 +4,14 @@
  * TreeResourceShell — 도메인 무관 계층형 그룹 사이드바
  *
  * ChildrenSidebar에서 추출. dnd-kit 기반 그룹 트리 + 인라인 편집 +
- * 호버 액션 메뉴(portal) + 시스템 노드 보호 포함.
+ * 호버 액션 메뉴 + 시스템 노드 보호 포함.
  *
  * 책임:
  *  - 그룹 트리 렌더링 (재귀, depth 기반 들여쓰기)
  *  - 그룹 CRUD UI (이름 편집/추가/삭제)
  *  - 드래그&드롭으로 그룹 이동 (계층 변경)
  *  - 펼침/접힘 상태
- *  - 호버 시 portal 액션 메뉴
+ *  - 호버 시 행 내부 액션 메뉴
  *
  * 책임 아님 (외부):
  *  - 그룹 데이터 정의/저장 (페이지에서 도메인 store로)
@@ -19,7 +19,6 @@
  */
 
 import { useState, useRef, useEffect, useMemo, forwardRef } from "react";
-import { createPortal } from "react-dom";
 import {
   DndContext,
   PointerSensor,
@@ -598,32 +597,6 @@ function FolderRow({
 
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [hovering, setHovering] = useState(false);
-  const [portalPos, setPortalPos] = useState<{ top: number; right: number } | null>(
-    null,
-  );
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  function updatePortalPos() {
-    const el = rowRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    setPortalPos({ top: r.top + r.height / 2, right: window.innerWidth - r.right });
-  }
-
-  useEffect(() => {
-    if (hovering) {
-      updatePortalPos();
-      const onScroll = () => updatePortalPos();
-      const onResize = () => updatePortalPos();
-      window.addEventListener("scroll", onScroll, true);
-      window.addEventListener("resize", onResize);
-      return () => {
-        window.removeEventListener("scroll", onScroll, true);
-        window.removeEventListener("resize", onResize);
-      };
-    }
-  }, [hovering]);
 
   const isThisOver = isOver || overId === g.id;
   const count = counts[g.id] ?? 0;
@@ -727,11 +700,10 @@ function FolderRow({
             )}
           </button>
 
-          {/* Hover actions (portal) — 시스템 노드에도 옵션은 노출 가능 */}
-          {mounted && hovering && portalPos && createPortal(
+          {/* Hover actions — 시스템 노드에도 옵션은 노출 가능 */}
+          {hovering && (
             <div
-              className="fixed z-50 -translate-y-1/2 flex items-center gap-0.5 px-1 py-0.5 bg-white border border-slate-200 rounded-md shadow-xl whitespace-nowrap"
-              style={{ top: portalPos.top, right: portalPos.right }}
+              className="absolute right-1 top-1/2 z-10 -translate-y-1/2 flex items-center gap-0.5 px-1 py-0.5 bg-white/95 border border-slate-200 rounded-md shadow-lg whitespace-nowrap"
               onMouseEnter={() => setHovering(true)}
               onMouseLeave={() => setHovering(false)}
             >
@@ -773,8 +745,7 @@ function FolderRow({
                   </button>
                 </>
               )}
-            </div>,
-            document.body,
+            </div>
           )}
         </>
       )}
