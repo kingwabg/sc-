@@ -43,8 +43,10 @@ function DemoAuthInner() {
     };
     // window.location 사용 (전체 페이지 리로드 — 헤드리스 캡처에 더 안정적)
     localStorage.setItem("officex.session.v1", JSON.stringify(demoSession));
-    // 미들웨어 인증 가드 통과용 쿠키도 같이 set (middleware.ts와 동일한 이름).
+    // 미들웨어 인증 가드 통과용 쿠키 (middleware.ts와 동일한 이름).
     document.cookie = "officex-session=1; path=/; max-age=86400; SameSite=Lax";
+    // 역할 분기 가드용 쿠키 — demo는 owner 역할
+    document.cookie = "officex-role=owner; path=/; max-age=86400; SameSite=Lax";
     // 약간의 딜레이 후 페이지 이동 — 캡처 시간 확보
     setTimeout(() => {
       window.location.href = redirect;

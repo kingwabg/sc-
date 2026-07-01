@@ -2,12 +2,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 /**
- * 인증 가드 미들웨어 (Edge Runtime).
+ * 인증 + 역할 가드 미들웨어 (Edge Runtime).
  *
  * - Supabase `getUser()` 로 세션을 검증 (쿠키 기반).
  *   환경변수 미설정 시 dev mock 쿠키(`officex-session=1`)로 fallback.
  * - `/login`, `/signup`, `/demo-auth` 는 인증 없이 접근 가능.
  * - 정적 자산(_next/*, 이미지, favicon 등)은 matcher에서 제외.
+ *
+ * 역할 분기 가드:
+ *   - `/admin/*`  → role = admin OR owner 만 통과 (owner도 포함)
+ *   - `/exec/*`   → role = owner 만 통과
+ *   - 그 외 페이지 → 모두 통과 (session만 있으면 OK)
  *
  * 동기화 책임:
  *   - `app/login/actions.ts` 의 signOutAction: Supabase 쿠키를 clear 한 뒤 redirect.
@@ -16,6 +21,7 @@ import { createServerClient } from "@supabase/ssr";
  */
 
 const SESSION_COOKIE = "officex-session";
+const ROLE_COOKIE = "officex-role";
 const DEV_MOCK_VALUE = "1";
 
 const PUBLIC_PATHS = new Set<string>(["/login", "/signup", "/demo-auth"]);
@@ -25,6 +31,14 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/_next/")) return true;
   if (pathname.startsWith("/api/")) return true;
   return false;
+}
+
+type UserRole = "owner" | "admin" | "member";
+
+function parseRoleFromCookie(request: NextRequest): UserRole {
+  const role = request.cookies.get(ROLE_COOKIE)?.value as UserRole | undefined;
+  if (role === "owner" || role === "admin" || role === "member") return role;
+  return "member";
 }
 
 async function getSupabaseUser(
@@ -68,6 +82,12 @@ async function getSupabaseUser(
   return { user, supabase };
 }
 
+function redirectWithNext(request: NextRequest, pathname: string): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.redirect(url);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -76,9 +96,7 @@ export async function middleware(request: NextRequest) {
     if (pathname === "/login" || pathname === "/signup") {
       const { user } = await getSupabaseUser(request);
       if (user) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
+        return redirectWithNext(request, "/");
       }
     }
     return NextResponse.next();
@@ -91,6 +109,23 @@ export async function middleware(request: NextRequest) {
     url.pathname = "/login";
     url.search = `next=${encodeURIComponent(pathname + search)}`;
     return NextResponse.redirect(url);
+  }
+
+  // ── Role 분기 가드 ───────────────────────────────────────────
+  const role = parseRoleFromCookie(request);
+
+  if (pathname.startsWith("/admin")) {
+    // /admin/* → owner 또는 admin만 통과
+    if (role !== "owner" && role !== "admin") {
+      return redirectWithNext(request, "/");
+    }
+  }
+
+  if (pathname.startsWith("/exec")) {
+    // /exec/* → owner만 통과
+    if (role !== "owner") {
+      return redirectWithNext(request, "/");
+    }
   }
 
   return NextResponse.next();

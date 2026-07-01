@@ -29,6 +29,9 @@ import {
   CalendarRange,
   NotebookPen,
   ShieldCheck,
+  ShieldAlert,
+  Crown,
+  Bug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -42,6 +45,7 @@ import {
   setSidebarCollapsed,
 } from "@/lib/store";
 import { SidebarUserMenu } from "./SidebarUserMenu";
+import { useSession, type UserRole } from "@/lib/session";
 
 // ─── 타입 ───────────────────────────────────────────────────
 type NavItem = {
@@ -52,6 +56,15 @@ type NavItem = {
   /** 외부 링크 (새 탭 열기) */
   external?: boolean;
   children?: NavItem[];
+  /** 최소 필요 역할 (owner > admin > member) */
+  minRole?: UserRole;
+};
+
+/** 역할 순위 — 숫자가 클수록 높은 권한 */
+const ROLE_RANK: Record<UserRole, number> = {
+  owner: 3,
+  admin: 2,
+  member: 1,
 };
 
 // ─── 전체 메뉴 풀 ────────────────────────────────────────────
@@ -81,6 +94,9 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/monthly-plan": { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
   "/annual-plan": { label: "연간계획", href: "/annual-plan", icon: BookOpen },
   "/audit-prep": { label: "평가 대비 모드", href: "/audit-prep", icon: ShieldCheck },
+  "/admin":   { label: "관리자",         href: "/admin",   icon: ShieldAlert, minRole: "admin" },
+  "/exec":    { label: "임원 대시보드",  href: "/exec",    icon: Crown,       minRole: "owner" },
+  "/role-test": { label: "역할 테스트",  href: "/role-test", icon: Bug },
   "/settings": { label: "환경설정", href: "/settings", icon: Settings },
 };
 
@@ -106,8 +122,12 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
     items: ["/audit-prep"],
   },
   {
+    label: "관리",
+    items: ["/admin", "/exec"],
+  },
+  {
     label: "지원",
-    items: ["/board", "/org", "/settings"],
+    items: ["/board", "/org", "/role-test", "/settings"],
   },
 ];
 
@@ -117,6 +137,7 @@ const GROUP_LABEL_KR: Record<string, string> = {
   운영관리: "운영관리",
   평가: "평가",
   지원: "지원",
+  관리: "관리",
 };
 
 const BADGE_FN: Record<string, () => number> = {
@@ -182,6 +203,9 @@ export function Sidebar() {
   const badges = useBadges();
   const { favorites, toggle, editing, setEditing } = useFavorites();
   const { collapsed, toggle: toggleCollapse } = useCollapsed();
+  const { user } = useSession();
+
+  const userRole: UserRole = user?.role ?? "member";
 
   if (collapsed) {
     return <CollapsedSidebar pathname={pathname} badges={badges} onExpand={toggleCollapse} />;
@@ -224,6 +248,8 @@ export function Sidebar() {
             {favorites.map((href) => {
               const item = ALL_MENU_ITEMS[href];
               if (!item) return null;
+              // 역할 필터
+              if (item.minRole && ROLE_RANK[userRole] < ROLE_RANK[item.minRole]) return null;
               const isActive = pathname === href || pathname.startsWith(href + "/");
               return (
                 <div key={href} className="group relative flex items-center">
@@ -264,7 +290,12 @@ export function Sidebar() {
           const items = group.items
             .filter((href) => !favorites.includes(href))
             .map((href) => ALL_MENU_ITEMS[href])
-            .filter(Boolean) as NavItem[];
+            .filter(Boolean)
+            .filter((item) => {
+              // minRole이 설정된 항목은 권한 등급으로 필터링
+              if (!item.minRole) return true;
+              return ROLE_RANK[userRole] >= ROLE_RANK[item.minRole];
+            }) as NavItem[];
 
           if (items.length === 0) return null;
 
@@ -288,6 +319,11 @@ export function Sidebar() {
             <div className="flex flex-wrap gap-1 px-2">
               {Object.keys(ALL_MENU_ITEMS)
                 .filter((href) => !favorites.includes(href))
+                .filter((href) => {
+                  const item = ALL_MENU_ITEMS[href];
+                  if (!item.minRole) return true;
+                  return ROLE_RANK[userRole] >= ROLE_RANK[item.minRole];
+                })
                 .slice(0, 6)
                 .map((href) => {
                   const item = ALL_MENU_ITEMS[href];
@@ -326,12 +362,20 @@ function CollapsedSidebar({
   onExpand: () => void;
 }) {
   const { favorites } = useFavorites();
+  const { user } = useSession();
+  const userRole: UserRole = user?.role ?? "member";
 
-  // 펼쳤을 때와 같은 순서로 보여줄 메뉴
+  // 펼쳤을 때와 같은 순서로 보여줄 메뉴 (역할 필터 적용)
   const orderedHrefs = [
     ...favorites,
     ...FIXED_GROUPS.flatMap((g) =>
-      g.items.filter((h) => !favorites.includes(h)),
+      g.items
+        .filter((h) => !favorites.includes(h))
+        .filter((h) => {
+          const item = ALL_MENU_ITEMS[h];
+          if (!item?.minRole) return true;
+          return ROLE_RANK[userRole] >= ROLE_RANK[item.minRole];
+        }),
     ),
   ];
 
