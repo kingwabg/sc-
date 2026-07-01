@@ -1,5 +1,5 @@
 /**
- * 결재 요청 서비스 — 비즈니스 로직 + 인덱스 연동
+ * 결재 Feature Module — service
  *
  * 결재 요청 생성/승인/반려/회수 시:
  *  1. 결재함(localStorage) 업데이트
@@ -71,7 +71,6 @@ function createRequest(input: CreateInput): ApprovalRequest {
     requesterId: CURRENT_AUTHOR.id,
     requesterName: input.requesterName ?? CURRENT_AUTHOR.name,
   });
-  // 통합 인덱스에도 등록
   documentService.upsert({
     id: `approval-${req.id}`,
     kind: "approval-doc",
@@ -87,7 +86,11 @@ function createRequest(input: CreateInput): ApprovalRequest {
 }
 
 // ─── 승인 ──────────────────────────────────────────────
-function approveStep(reqId: string, step: number, comment?: string): ApprovalRequest | null {
+function approveStep(
+  reqId: string,
+  step: number,
+  comment?: string,
+): ApprovalRequest | null {
   const req = approvalRequestStorage.get(reqId);
   if (!req) return null;
   if (req.status !== "결재중") return req;
@@ -103,7 +106,6 @@ function approveStep(reqId: string, step: number, comment?: string): ApprovalReq
     return s;
   });
 
-  // 다음 단계가 없으면 완료
   const hasNext = newLine.some((s) => s.step === step + 1);
   const nextStatus = hasNext ? "결재중" : "완료";
 
@@ -113,7 +115,6 @@ function approveStep(reqId: string, step: number, comment?: string): ApprovalReq
     completedAt: hasNext ? undefined : now,
   });
 
-  // 인덱스 메타 업데이트
   if (updated) {
     documentService.upsert({
       id: `approval-${updated.id}`,
@@ -131,14 +132,20 @@ function approveStep(reqId: string, step: number, comment?: string): ApprovalReq
 }
 
 // ─── 반려 ──────────────────────────────────────────────
-function rejectStep(reqId: string, step: number, comment?: string): ApprovalRequest | null {
+function rejectStep(
+  reqId: string,
+  step: number,
+  comment?: string,
+): ApprovalRequest | null {
   const req = approvalRequestStorage.get(reqId);
   if (!req) return null;
   if (req.status !== "결재중") return req;
 
   const now = Date.now();
   const newLine = req.line.map((s) =>
-    s.step === step ? { ...s, status: "rejected" as const, actedAt: now, comment } : s,
+    s.step === step
+      ? ({ ...s, status: "rejected" as const, actedAt: now, comment } as ApprovalStep)
+      : s,
   );
 
   const updated = approvalRequestStorage.update(reqId, {

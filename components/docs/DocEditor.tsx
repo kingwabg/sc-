@@ -8,9 +8,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { NaverEditor, type NaverEditorHandle } from "./NaverEditor";
 import { ApprovalRequestDialog } from "./ApprovalRequestDialog";
 import { docStorage } from "@/lib/docs/storage";
-import { approvalService } from "@/lib/approvals/service";
+import { approvalService } from "@/lib/features/approval";
 import type { Doc } from "@/lib/docs/types";
-import type { ApprovalFormKey, ApprovalLineInput } from "@/lib/approvals/types";
+import type { ApprovalFormKey, ApprovalLineInput } from "@/lib/features/approval";
 import { useToast } from "@/components/ui/Toast";
 
 type SaveState = "idle" | "saving" | "saved";

@@ -1,78 +1,147 @@
-"use client";
-
-import { useRouter, useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ApprovalSidebar } from "../_components/ApprovalSidebar";
-import { ArrowLeft, FileCheck2, Inbox } from "lucide-react";
-import type { ApprovalView } from "@/lib/types/approval";
-import { APPROVAL_VIEW_TITLE } from "@/lib/data/approvals";
+import { ApprovalDocTable } from "../_components/ApprovalDocTable";
+import { StatsCards } from "../_components/StatsCards";
+import { RecentApprovalList } from "../_components/RecentApprovalList";
+import { APPROVAL_VIEW_TITLE } from "@/lib/features/approval";
+import type { ApprovalView } from "@/lib/features/approval";
+import { Clock, Info } from "lucide-react";
 
 const VALID_FOLDERS: ApprovalView[] = [
-  "pending",
-  "received",
+  "standby",
+  "inbox",
   "cc",
-  "scheduled",
-  "period",
+  "expected",
+  "default",
   "draft",
-  "search",
-  "approved",
-  "dept",
+  "temporary",
+  "sign",
+  "ccbox",
+  "inboxbox",
+  "sendbox",
+  "appr",
+  "dept-default",
+  "dept-draft",
+  "dept-cc",
+  "dept-send",
+  "config",
+  "inquiry",
 ];
 
-export default function ApprovalFolderPage() {
-  const router = useRouter();
-  const params = useParams<{ folder: string }>();
-  const folder = params.folder as ApprovalView;
-  const isValid = VALID_FOLDERS.includes(folder);
-  const title = APPROVAL_VIEW_TITLE[folder] ?? "결재함";
+// folder path → ApprovalView mapping
+const FOLDER_TO_VIEW: Record<string, ApprovalView> = {
+  standby: "standby",
+  inbox: "inbox",
+  cc: "cc",
+  expected: "expected",
+  default: "default",
+  draft: "draft",
+  temporary: "temporary",
+  sign: "sign",
+  ccbox: "ccbox",
+  inboxbox: "inboxbox",
+  sendbox: "sendbox",
+  appr: "appr",
+  "dept-default": "dept-default",
+  "dept-draft": "dept-draft",
+  "dept-cc": "dept-cc",
+  "dept-send": "dept-send",
+  config: "config",
+  inquiry: "inquiry",
+  dept: "dept",
+};
 
-  function handleSelect(view: ApprovalView) {
-    if (view === "new") router.push("/approval/new");
-    else if (view === "home") router.push("/approval");
-    else router.push(`/approval/${view}`);
+interface PageProps {
+  params: Promise<{ folder: string }>;
+}
+
+export default async function ApprovalFolderPage({ params }: PageProps) {
+  const { folder } = await params;
+  const view = FOLDER_TO_VIEW[folder];
+
+  if (!view || !VALID_FOLDERS.includes(view)) {
+    notFound();
   }
 
-  if (!isValid) {
-    return (
-      <AppShell>
-        <div className="max-w-[600px] mx-auto text-center py-20">
-          <div className="text-base font-bold text-slate-900 mb-2">존재하지 않는 결재함이에요</div>
-          <button onClick={() => router.push("/approval")} className="text-sm text-brand-600 hover:underline">
-            ← 전자결재 홈으로
-          </button>
-        </div>
-      </AppShell>
-    );
-  }
+  const title = APPROVAL_VIEW_TITLE[view] ?? view;
 
   return (
     <AppShell>
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4">
-        <ApprovalSidebar current={folder} onSelect={handleSelect} onWrite={() => router.push("/approval/new")} />
+        <ApprovalSidebar currentFolder={folder} />
 
         <main>
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
-            {/* 헤더 */}
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-2">
-              <button onClick={() => router.push("/approval")} className="text-xs text-slate-500 hover:text-slate-900">
-                <ArrowLeft className="w-3 h-3 inline mr-1" />
-                전자결재 홈
-              </button>
-              <span className="text-slate-300">/</span>
-              <h1 className="text-base font-bold text-slate-900 m-0">{title}</h1>
-            </div>
-
-            {/* 빈 상태 */}
-            <div className="px-6 py-16 text-center">
-              <Inbox className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-              <div className="text-sm text-slate-400 mb-1">{title}에 문서가 없습니다</div>
-              <div className="text-xs text-slate-400">
-                새 결재를 진행하려면 <button onClick={() => router.push("/approval/new")} className="text-brand-600 hover:underline">새 결재 작성</button>으로 이동하세요.
-              </div>
-            </div>
-          </div>
+          {view === "default" ? (
+            <DefaultDashboard title={title} />
+          ) : (
+            <FolderContent view={view} title={title} />
+          )}
         </main>
       </div>
     </AppShell>
+  );
+}
+
+// ─── 기본 문서함 대시보드 ───────────────────────────────
+function DefaultDashboard({ title }: { title: string }) {
+  return (
+    <div className="space-y-4">
+      {/* 페이지 헤더 */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 m-0">전자결재</h1>
+            <p className="text-xs text-slate-500 mt-0.5">다우 전자결재에 오신 것을 환영합니다.</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full">
+            <Info className="w-3 h-3" />
+            상반기의 끝자락, 새로운 행사는 작은 여유
+          </div>
+        </div>
+      </div>
+
+      {/* 통계 카드 4개 */}
+      <StatsCards />
+
+      {/* 최근 결재 목록 */}
+      <RecentApprovalList />
+    </div>
+  );
+}
+
+// ─── 일반 폴더 콘텐츠 ───────────────────────────────────
+function FolderContent({ view, title }: { view: ApprovalView; title: string }) {
+  // 환경설정 / 문서관리는 안내 카드
+  if (view === "config" || view === "inquiry") {
+    return (
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200">
+          <h1 className="text-xl font-bold text-slate-900">{title}</h1>
+        </div>
+        <div className="p-10 text-center text-slate-400">
+          <div className="w-12 h-12 rounded-full bg-slate-100 grid place-items-center mx-auto mb-3">
+            <Clock className="w-5 h-5 text-slate-400" />
+          </div>
+          <p className="text-sm">{title} 기능은 준비 중입니다.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+      {/* 헤더 */}
+      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
+        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
+        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full">
+          <Clock className="w-3 h-3" />
+          결재함 폴더별로 조회됩니다.
+        </div>
+      </div>
+
+      {/* 테이블 */}
+      <ApprovalDocTable view={view} />
+    </div>
   );
 }

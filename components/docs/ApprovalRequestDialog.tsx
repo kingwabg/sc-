@@ -10,8 +10,8 @@
 import { useState } from "react";
 import { Plus, X, Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { APPROVAL_FORMS } from "@/lib/data/approvals";
-import type { ApprovalFormKey, ApprovalLineInput } from "@/lib/approvals/types";
+import { APPROVAL_FORMS } from "@/lib/features/approval";
+import type { ApprovalFormKey, ApprovalLineInput } from "@/lib/features/approval";
 
 const SUGGESTED_LINE: ApprovalLineInput[] = [
   { name: "박은수", position: "지원교사" },
