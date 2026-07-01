@@ -45,14 +45,29 @@ export const MOCK_COMPLETED_DOCS: ApprovalDocument[] = [
 export const APPROVAL_VIEW_TITLE: Record<ApprovalView, string> = {
   home: "전자결재 홈",
   new: "새 결재 작성",
-  pending: "결재 대기 문서",
-  received: "결재 수신 문서",
+  // 그룹 1: 결재하기
+  standby: "결재 대기 문서",
+  inbox: "결재 수신 문서",
   cc: "참조/열람 대기 문서",
-  scheduled: "결재 예정 문서",
-  period: "기간 문서함",
-  draft: "임시 저장함",
-  search: "검색 문서함",
-  approved: "결재 문서함",
+  expected: "결재 예정 문서",
+  // 그룹 2: 개인 문서함
+  default: "기본 문서함",
+  draft: "기안 문서함",
+  temporary: "임시 저장함",
+  sign: "결재 문서함",
+  ccbox: "참조/열람 문서함",
+  inboxbox: "수신 문서함",
+  sendbox: "발송 문서함",
+  appr: "공문 문서함",
+  // 그룹 3: 부서 문서함
+  "dept-default": "부서 기본 문서함",
+  "dept-draft": "기안 완료함",
+  "dept-cc": "부서 참조함",
+  "dept-send": "공문 발송함",
+  // 그룹 4: 환경설정
+  config: "전자결재 환경설정",
+  // 그룹 5: 전자결재 문서관리
+  inquiry: "양식별 문서 조회",
   dept: "부서 문서함",
 };
 

@@ -23,18 +23,29 @@ export type ApprovalLineStep = {
 };
 
 // ─── 결재 사이드바 뷰 ─────────────────────────────────────
+// folder key = URL path segment for /approval/[folder]
 export type ApprovalView =
   | "home"
   | "new"
-  | "pending"
-  | "received"
-  | "cc"
-  | "scheduled"
-  | "period"
-  | "draft"
-  | "search"
-  | "approved"
-  | "dept";
+  | "standby"   // 결재 대기 문서
+  | "inbox"      // 결재 수신 문서
+  | "cc"         // 참조/열람 대기 문서
+  | "expected"   // 결재 예정 문서
+  | "default"    // 기본 문서함
+  | "draft"      // 기안 문서함
+  | "temporary"  // 임시 저장함
+  | "sign"       // 결재 문서함
+  | "ccbox"      // 참조/열람 문서함
+  | "inboxbox"   // 수신 문서함
+  | "sendbox"    // 발송 문서함
+  | "appr"       // 공문 문서함
+  | "dept-default"  // 부서 기본 문서함
+  | "dept-draft"   // 부서 기안 완료함
+  | "dept-cc"      // 부서 참조함
+  | "dept-send"    // 부서 공문 발송함
+  | "config"     // 환경설정
+  | "inquiry"    // 양식별 문서 조회
+  | "dept";      // 부서 문서함 (레거시)
 
 export type ApprovalMailboxTitle = Record<ApprovalView, string>;
 
