@@ -81,7 +81,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/documents": { label: "문서관리", href: "/documents", icon: Folder },
   "/docs": { label: "내 문서", href: "/docs", icon: FileText },
   "/servicemap": { label: "서비스 맵", href: "/servicemap", icon: LayoutGrid },
-  "/attendance/members": { label: "전체 출결 관리", href: "/attendance/members", icon: CalendarCheck },
+  "/attendance/members": { label: "출석 / 일지", href: "/attendance/members", icon: CalendarCheck },
   "/my-attendance": { label: "내 근태", href: "/my-attendance", icon: Clock },
   "/children": {
     label: "아동관리",
@@ -98,6 +98,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/org": { label: "조직도", href: "/org", icon: Users },
   "/monthly-plan": { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
   "/annual-plan": { label: "연간계획", href: "/annual-plan", icon: BookOpen },
+  "/programs":   { label: "프로그램 (계획/일지/평가)", href: "/annual-plan", icon: NotebookPen },
   "/audit-prep": { label: "평가 대비 모드", href: "/audit-prep", icon: ShieldCheck },
   "/admin":   { label: "관리자",         href: "/admin",   icon: ShieldAlert, minRole: "admin" },
   "/exec":    { label: "임원 대시보드",  href: "/exec",    icon: Crown,       minRole: "owner" },
@@ -126,7 +127,7 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "운영관리",
-    items: [...OPERATIONS_CHILDREN, "/donations"],
+    items: ["/programs", "/attendance/members", ...OPERATIONS_CHILDREN, "/donations"],
   },
   {
     label: "평가",
