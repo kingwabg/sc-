@@ -47,7 +47,7 @@ export function ChildrenClientPage({ dbChildren }: ChildrenClientPageProps) {
 
   return (
     <>
-      <div className="mx-auto grid w-full max-w-[1080px] grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
+      <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] gap-4 items-start">
         <div className="h-[calc(100vh-108px)] min-h-[560px]">
           <ChildrenSidebar
             selectedGroupId={c.selectedGroupId}
