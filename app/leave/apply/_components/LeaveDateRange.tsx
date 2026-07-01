@@ -32,13 +32,13 @@ function calcDays(start: string, end: string, kind: LeaveKind): number {
     const dow = day.getDay();
     if (dow !== 0 && dow !== 6) workdays++;
   }
-  if (kind === "반차") return 0.5;
+  if (kind === "half") return 0.5;
   return workdays;
 }
 
 export function LeaveDateRange({ kind, startDate, endDate, reason, onChange }: Props) {
   const days = useMemo(() => calcDays(startDate, endDate, kind), [startDate, endDate, kind]);
-  const isHalf = kind === "반차";
+  const isHalf = kind === "half";
 
   return (
     <div className="space-y-3">

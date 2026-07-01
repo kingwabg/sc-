@@ -68,7 +68,7 @@ export function LeavePreview({ kind, startDate, endDate, days, reason, onSubmit 
         <div className="flex justify-between px-3 py-2">
           <dt className="text-slate-500">잔여</dt>
           <dd className="text-slate-700">
-            {balance ? `${balance.remainingDays}일` : "-"}
+            {balance ? `${balance.remaining}일` : "-"}
           </dd>
         </div>
         {reason && (

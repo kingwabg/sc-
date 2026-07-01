@@ -31,7 +31,7 @@ function calcDays(start: string, end: string, kind: LeaveKind): number {
     const dow = day.getDay();
     if (dow !== 0 && dow !== 6) workdays++;
   }
-  if (kind === "반차") return 0.5;
+  if (kind === "half") return 0.5;
   return workdays;
 }
 

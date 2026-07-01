@@ -14,18 +14,18 @@ import { LEAVE_KIND_LABELS, LEAVE_KIND_EMOJIS } from "@/lib/features/leave-mock"
 import type { LeaveKind } from "@/lib/features/leave-mock";
 
 const KIND_ICONS: Record<LeaveKind, typeof Palmtree> = {
-  연차: Palmtree,
-  출산휴가: Baby,
-  "출산휴가-다태아": Users,
-  배우자돌봄휴가: Heart,
-  가족돌봄휴가: Users,
-  Refresh휴가: RefreshCw,
-  조퇴: Clock,
-  지각: Calendar,
-  경조사: Cake,
-  공가: Briefcase,
-  병가: Stethoscope,
-  반차: Timer,
+  annual: Palmtree,
+  half: Timer,
+  sick: Stethoscope,
+  condolence: Cake,
+  public: Briefcase,
+  menstrual: Heart,
+  childcare: Baby,
+  pregnancy: Baby,
+  commuting: Baby,
+  family: Users,
+  reinstatement: RefreshCw,
+  etc: Calendar,
 };
 
 interface Props {
