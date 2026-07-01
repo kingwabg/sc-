@@ -14,7 +14,6 @@ import {
   Users,
   Settings,
   Star,
-  Plus,
   X,
   LayoutGrid,
   Folder,
@@ -323,34 +322,6 @@ export function Sidebar() {
           );
         })}
 
-        {!editing && (
-          <div className="mt-2 pt-2 border-t border-slate-100">
-            <p className="px-3 text-[10px] text-slate-400 mb-1">즐겨찾기에 추가</p>
-            <div className="flex flex-wrap gap-1 px-2">
-              {Object.keys(ALL_MENU_ITEMS)
-                .filter((href) => !favorites.includes(href))
-                .filter((href) => {
-                  const item = ALL_MENU_ITEMS[href];
-                  if (!item.minRole) return true;
-                  return ROLE_RANK[userRole] >= ROLE_RANK[item.minRole];
-                })
-                .slice(0, 6)
-                .map((href) => {
-                  const item = ALL_MENU_ITEMS[href];
-                  return (
-                    <button
-                      key={href}
-                      onClick={() => { toggle(href); setEditing(true); }}
-                      className="inline-flex items-center gap-1 h-6 px-2 rounded-md text-[11px] text-slate-500 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 transition"
-                    >
-                      <Plus className="w-3 h-3" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 사용자 메뉴 (로그아웃) — 스크롤 영역 밖, 항상 보임 */}
