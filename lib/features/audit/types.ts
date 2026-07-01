@@ -1,0 +1,49 @@
+/**
+ * lib/features/audit/types.ts
+ * 평가 대비 크로스체크 타입 정의
+ */
+
+// ─── Conflict 타입 ─────────────────────────────────────────
+export type ConflictType =
+  | "ATTENDANCE_NO_LOG"   // 출석부 등재됐으나 해당 날짜 일지(돌봄기록) 없음
+  | "LOG_NO_ATTENDANCE"   // 일지(돌봄기록)里有但 출석부 결석
+  | "ATTENDANCE_NO_PROGRAM" // 출석부 등재됐으나 프로그램 운영기록 없음
+  | "PROGRAM_NO_ATTENDANCE"; // 프로그램 기록里有但 출석부 결석
+
+export type SignalLight = "GREEN" | "YELLOW" | "RED";
+
+// ─── 개별 충돌 항목 ─────────────────────────────────────────
+export interface ConflictItem {
+  childId: string;
+  childName: string;
+  date: string;          // YYYY-MM-DD
+  attendanceStatus: string | null; // null = 출석 기록 없음
+  careLogExists: boolean;
+  conflictType: ConflictType;
+  severity: "LOW" | "MEDIUM" | "HIGH";
+}
+
+// ─── 신호등 카드 ─────────────────────────────────────────────
+export interface SignalCard {
+  key: "consultation" | "document" | "consistency" | "sponsorship";
+  label: string;
+  description: string;
+  light: SignalLight;
+  value: number | string;
+  unit?: string;
+}
+
+// ─── 평가 요약 ──────────────────────────────────────────────
+export interface AuditSummary {
+  consultation: { rate: number; light: SignalLight };
+  document: { rate: number; light: SignalLight };
+  consistency: { conflictCount: number; light: SignalLight };
+  sponsorship: { rate: number; light: SignalLight };
+}
+
+// ─── 전체 크로스체크 결과 ────────────────────────────────────
+export interface CrossCheckResult {
+  summary: AuditSummary;
+  conflicts: ConflictItem[];
+  checkedRange: { from: string; to: string };
+}
