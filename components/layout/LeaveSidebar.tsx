@@ -16,6 +16,7 @@ const SIDEBAR_MENU: MenuNode[] = [
   { kind: "header", label: "내 휴가" },
   { kind: "item", label: "휴가현황",   href: "/leave" },
   { kind: "item", label: "연차내역",   href: "/leave/annual" },
+  { kind: "item", label: "휴가 통계",   href: "/leave/stats" },
 
   // ── 전사 휴가관리 (admin only) ─────────
   { kind: "header", label: "전사 휴가관리" },
