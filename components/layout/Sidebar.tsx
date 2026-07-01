@@ -12,7 +12,6 @@ import {
   ClipboardList,
   MessageSquare,
   Users,
-  Settings,
   Star,
   X,
   LayoutGrid,
@@ -108,7 +107,6 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/donations": { label: "후원금 대장", href: "/donations", icon: Gift },
   "/documents/expiry": { label: "문서 만료 알림", href: "/documents/expiry", icon: CalendarClock },
   "/preview/care-log": { label: "문서 미리보기 (데모)", href: "/preview/care-log", icon: Eye },
-  "/settings": { label: "환경설정", href: "/settings", icon: Settings },
 };
 
 // 운영관리 그룹의 하위 메뉴 (연간 → 월간 → 일지 흐름)
@@ -138,7 +136,7 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "지원",
-    items: ["/board", "/org", "/todo", "/role-test", "/settings"],
+    items: ["/board", "/org", "/todo", "/role-test"],
   },
 ];
 
