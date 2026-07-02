@@ -20,6 +20,8 @@ import {
   X,
   Plus,
   UserPlus,
+  Info,
+  List,
 } from "lucide-react";
 import { getFormByKey, type FormField } from "@/lib/features/approval-form";
 import { getDefaultApprovalLine, type ApprovalLineStepData } from "@/lib/features/approval-line";
@@ -238,6 +240,19 @@ function Step1Fields({
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveFile: (i: number) => void;
 }) {
+  if (form.key === "leave") {
+    return (
+      <LeaveDocumentTemplate
+        form={form}
+        values={values}
+        files={files}
+        onFieldChange={onFieldChange}
+        onFileChange={onFileChange}
+        onRemoveFile={onRemoveFile}
+      />
+    );
+  }
+
   // Split fields into full and half width
   const rows: (FormField | FormField[])[] = [];
   let i = 0;
@@ -347,6 +362,259 @@ function Step1Fields({
         />
       </div>
     </div>
+  );
+}
+
+// ─── Leave Template: document-like form ─────────────────────
+function LeaveDocumentTemplate({
+  form,
+  values,
+  files,
+  onFieldChange,
+  onFileChange,
+  onRemoveFile,
+}: {
+  form: NonNullable<ReturnType<typeof getFormByKey>>;
+  values: Record<string, string>;
+  files: File[];
+  onFieldChange: (key: string, value: string) => void;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveFile: (i: number) => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const leaveType = form.fields.find((field) => field.key === "leave_type");
+  const startDate = form.fields.find((field) => field.key === "start_date");
+  const endDate = form.fields.find((field) => field.key === "end_date");
+  const reason = form.fields.find((field) => field.key === "reason");
+
+  return (
+    <div className="bg-white">
+      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-2 text-[11px] text-slate-600">
+        <div className="flex flex-wrap items-center gap-3">
+          <button className="inline-flex items-center gap-1 hover:text-slate-900">
+            <FileCheck2 className="h-3.5 w-3.5" />
+            결재요청
+          </button>
+          <button className="inline-flex items-center gap-1 hover:text-slate-900">
+            <Save className="h-3.5 w-3.5" />
+            임시저장
+          </button>
+          <button className="inline-flex items-center gap-1 hover:text-slate-900">
+            <Eye className="h-3.5 w-3.5" />
+            미리보기
+          </button>
+          <button className="inline-flex items-center gap-1 hover:text-slate-900">
+            <X className="h-3.5 w-3.5" />
+            취소
+          </button>
+          <button className="inline-flex items-center gap-1 hover:text-slate-900">
+            <Info className="h-3.5 w-3.5" />
+            결재 정보
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <select className="h-8 rounded border border-slate-300 bg-white px-2 text-[11px] text-slate-700">
+            <option>자동저장안함</option>
+            <option>자동저장 5분</option>
+          </select>
+          <button className="inline-flex items-center gap-1 hover:text-slate-900">
+            <List className="h-3.5 w-3.5" />
+            목록
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 px-6 py-8 xl:grid-cols-[minmax(720px,920px)_220px]">
+        <section className="max-w-[920px]">
+          <h2 className="mb-8 text-center text-[28px] font-black tracking-tight text-black">
+            휴가신청서
+          </h2>
+
+          <div className="mb-5 flex items-end justify-between gap-8">
+            <table className="w-[280px] border-collapse text-[12px] text-black">
+              <tbody>
+                <DocRow label="기안자" value="왕준하" />
+                <DocRow label="소속" value="사회복지사" />
+                <DocRow label="기안일" value={today} />
+                <DocRow label="문서번호" value="" />
+              </tbody>
+            </table>
+
+            <table className="w-[96px] border-collapse text-center text-[11px] text-black">
+              <tbody>
+                <tr>
+                  <th rowSpan={4} className="w-7 border border-black bg-slate-100 p-1 font-bold [writing-mode:vertical-rl]">
+                    신청
+                  </th>
+                  <th className="h-7 border border-black bg-slate-50 font-medium">팀장</th>
+                </tr>
+                <tr>
+                  <td className="h-16 border border-black text-[10px]">왕준하</td>
+                </tr>
+                <tr>
+                  <td className="h-7 border border-black" />
+                </tr>
+                <tr>
+                  <td className="h-7 border border-black" />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <table className="w-full border-collapse text-[12px] text-black">
+            <tbody>
+              {leaveType && (
+                <tr>
+                  <DocLabel required>휴가 종류</DocLabel>
+                  <td className="border border-black px-2 py-1">
+                    <select
+                      value={values.leave_type ?? ""}
+                      onChange={(event) => onFieldChange("leave_type", event.target.value)}
+                      className="h-7 w-[180px] border border-slate-300 bg-white px-2 text-[12px] outline-none focus:border-black"
+                    >
+                      <option value="">선택</option>
+                      {leaveType.options?.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              )}
+              {(startDate || endDate) && (
+                <tr>
+                  <DocLabel required>휴가 기간</DocLabel>
+                  <td className="border border-black px-2 py-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <input
+                        type="date"
+                        value={values.start_date ?? ""}
+                        onChange={(event) => onFieldChange("start_date", event.target.value)}
+                        className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+                      />
+                      <span>~</span>
+                      <input
+                        type="date"
+                        value={values.end_date ?? ""}
+                        onChange={(event) => onFieldChange("end_date", event.target.value)}
+                        className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+                      />
+                      <span className="ml-2 font-bold">사용일수:</span>
+                      <input
+                        value={values.leave_days ?? ""}
+                        onChange={(event) => onFieldChange("leave_days", event.target.value)}
+                        className="h-7 w-[64px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+                      />
+                      <span>일</span>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {reason && (
+                <tr>
+                  <DocLabel required>휴가 사유</DocLabel>
+                  <td className="border border-black p-1">
+                    <textarea
+                      value={values.reason ?? ""}
+                      onChange={(event) => onFieldChange("reason", event.target.value)}
+                      className="min-h-[104px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] outline-none focus:border-black"
+                    />
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="mt-4 space-y-1 text-[11px] font-semibold leading-relaxed text-black">
+            <p>[당일 반차 신청시] 시작일은 오전/오후 체크</p>
+            <p>[예비군/민방위 신청시] 통지서 스캔하여 파일 첨부</p>
+            <p>[경조휴가 신청시] 증빙서류 스캔하여 파일 첨부 (예: 청첩장 등본 등)</p>
+          </div>
+
+          <div className="mt-20 grid grid-cols-[90px_1fr] items-center gap-4 text-[12px]">
+            <div className="font-bold text-black">파일첨부</div>
+            <label className="flex min-h-12 cursor-pointer items-center justify-center rounded border border-dashed border-slate-300 text-[12px] text-slate-500 hover:border-slate-500">
+              이곳에 파일을 드래그 하세요 또는 파일선택 ({files.length}MB)
+              <input type="file" multiple onChange={onFileChange} className="hidden" />
+            </label>
+          </div>
+
+          {files.length > 0 && (
+            <ul className="mt-2 ml-[106px] space-y-1 text-[11px] text-slate-600">
+              {files.map((file, index) => (
+                <li key={`${file.name}-${index}`} className="flex items-center gap-2">
+                  <span className="flex-1 truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveFile(index)}
+                    className="text-slate-400 hover:text-red-500"
+                  >
+                    삭제
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-4 grid grid-cols-[90px_1fr] items-center gap-4 text-[12px]">
+            <div className="font-bold text-black">관련문서</div>
+            <button className="h-8 w-fit rounded border border-slate-300 px-3 text-[12px] text-slate-700 hover:bg-slate-50">
+              문서 검색
+            </button>
+          </div>
+        </section>
+
+        <aside className="hidden xl:block">
+          <div className="rounded border border-slate-200 bg-slate-50 text-[11px] text-slate-700">
+            <div className="flex items-center justify-between border-b border-slate-300 px-3 py-2">
+              <button className="text-slate-400">‹</button>
+              <div className="flex gap-4 font-bold">
+                <span>결재선</span>
+                <span className="text-slate-500">문서정보</span>
+              </div>
+              <button className="text-slate-400">›</button>
+            </div>
+            <div className="flex gap-2 p-3">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-slate-200 text-slate-400">
+                ●
+              </div>
+              <div>
+                <div className="font-bold text-slate-900">왕준하 팀장</div>
+                <div className="mt-1 text-slate-500">사회복지사</div>
+                <div className="text-slate-500">기안</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function DocRow({ label, value }: { label: string; value: string }) {
+  return (
+    <tr>
+      <th className="w-20 border border-black bg-slate-100 px-2 py-1.5 text-center font-bold">
+        {label}
+      </th>
+      <td className="border border-black px-2 py-1.5">{value}</td>
+    </tr>
+  );
+}
+
+function DocLabel({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) {
+  return (
+    <th className="w-[110px] border border-black bg-slate-100 px-2 py-2 text-left font-bold">
+      {required && <span className="mr-1 text-red-600">*</span>}
+      {children}
+    </th>
   );
 }
 
