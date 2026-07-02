@@ -396,3 +396,60 @@ Net change: X added / Y deleted across N files.
 `.githooks/post-commit`이 자동으로 `origin main`에 push.
 - 끄기 (한 번): `OFFICEX_AUTO_PUSH=0 git commit -m "..."`
 - 끄기 (영구): `chmod -x .githooks/post-commit`
+
+---
+
+## 11. 작업 보고 / 푸시 보고 규칙
+
+다른 컴퓨터, GitHub Copilot, Codex, 자동화 에이전트가 작업하더라도 아래 형식을 우선한다.
+
+### 11.1 작업 요약 형식
+
+작업 중이거나 커밋 전 변경사항을 설명할 때는 다음 형식으로 적는다.
+
+```
+파일명 / 위치 / 영역: 내용요약
+```
+
+예시:
+
+```
+TodoBoard.tsx / app/todo / 할일 보드: 기한 입력을 공통 일정 모달로 변경
+DateRangeModal.tsx / components/schedule / 공통 일정 모달: 최소/중간/최대 크기 옵션 추가
+```
+
+### 11.2 푸시 후 보고 형식
+
+푸시 후에는 한국어로, 아래 형식을 따른다.
+
+```
+푸시 완료:
+커밋해시 커밋메시지
+
+수정 파일:
+- 경로
+  위치: 화면/기능 > 정확한 영역
+  내용: 변경 요약
+```
+
+예시:
+
+```
+푸시 완료:
+d821e26 공통 일정 모달 추가
+
+수정 파일:
+- app/todo/_components/TodoBoard.tsx
+  위치: 할일 보드 > 기한 선택 영역
+  내용: 텍스트 입력을 공통 일정 모달 버튼으로 변경
+
+- components/schedule/DateRangeModal.tsx
+  위치: 공통 일정 모달
+  내용: 일자조회/기한선택에서 함께 쓰는 날짜 범위 모달 추가
+```
+
+### 11.3 커밋 메시지 언어
+
+- 커밋 메시지는 가능하면 한국어로 작성한다.
+- 의미가 분명한 짧은 문장으로 쓴다.
+- 예: `일정 모달 전체 크기 축소`, `최소 일정 모달 버튼 전체 표시`
