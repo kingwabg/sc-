@@ -42,7 +42,7 @@ export function StaffPageHeader({
       : POSITION_LABELS[positionFilter] ?? positionFilter;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-card px-5 py-4">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-card px-5 py-4 dark:bg-slate-900/95 dark:border-slate-800 dark:shadow-none">
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold tracking-tight text-slate-900 m-0">
@@ -103,7 +103,7 @@ export function StaffPageHeader({
             <div className="text-[10px] text-slate-500">오늘 출근율</div>
           </div>
         </div>
-        <div className="h-6 w-px bg-slate-200" />
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
         <div className="flex items-center gap-3 text-[12px]">
           <StatChip icon={LogIn} color="emerald" label="출근" count={stats.present} />
           <StatChip icon={LogOut} color="amber" label="퇴근" count={stats.clockedOut} />

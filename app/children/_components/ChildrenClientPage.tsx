@@ -83,14 +83,12 @@ export function ChildrenClientPage({ dbChildren }: ChildrenClientPageProps) {
             tableOptionsChanged={c.tableOptionsChanged}
             onOpenTableOptions={() => c.setTableOptionsOpen(true)}
           />
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
-            <ChildrenTable
-              children={c.filtered}
-              attendanceMap={c.attendanceState}
-              options={c.tableOptions}
-              onStatusChange={c.handleStatusChange}
-            />
-          </div>
+          <ChildrenTable
+            children={c.filtered}
+            attendanceMap={c.attendanceState}
+            options={c.tableOptions}
+            onStatusChange={c.handleStatusChange}
+          />
         </div>
       </div>
 

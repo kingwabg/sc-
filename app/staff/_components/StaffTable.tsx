@@ -137,14 +137,19 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
     {
       key: "position",
       header: "직위",
-      width: 100,
+      width: 112,
       align: "center",
       minWidth: 50,
       sortable: options.sortable,
       resizable: options.resizable,
       fullText: options.fullText,
       cell: (row) => (
-        <span className="inline-block text-[12px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">
+        <span
+          className={cn(
+            "inline-flex h-6 items-center justify-center rounded-full border px-2.5 text-[11.5px] font-semibold leading-none",
+            positionTone(row.position),
+          )}
+        >
           {POSITION_LABELS[row.position] ?? row.position}
         </span>
       ),
@@ -163,9 +168,9 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
           <a
             href={`tel:${row.phone}`}
             onClick={(e) => e.stopPropagation()}
-            className="text-[13px] text-brand-600 hover:underline inline-flex items-center gap-1"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md bg-slate-50 px-2 text-[12.5px] font-medium tabular-nums text-slate-700 ring-1 ring-inset ring-slate-200 transition hover:bg-brand-50 hover:text-brand-700 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 dark:hover:bg-slate-800 dark:hover:text-sky-300"
           >
-            <Phone className="w-3 h-3" />
+            <Phone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
             {row.phone}
           </a>
         ) : (
@@ -361,6 +366,21 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
       renderExpanded={(row) => <StaffExpandedPanel row={row} />}
     />
   );
+}
+
+function positionTone(position: Staff["position"]) {
+  switch (position) {
+    case "所长":
+      return "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/70 dark:bg-violet-950/35 dark:text-violet-200";
+    case "支援교사":
+      return "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/35 dark:text-sky-200";
+    case "조리사":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/35 dark:text-emerald-200";
+    case "행정":
+      return "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200";
+    default:
+      return "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300";
+  }
 }
 
 // ─── 펼쳐진 영역 ────────────────────────────────────────────────
