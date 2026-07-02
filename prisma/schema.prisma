@@ -324,16 +324,25 @@ model Meeting {
 
 /// 멀티테넌트 루트 (양산애사희적합동조합 내 여러 아동센터)
 model Tenant {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  name        String
-  emoji       String?
-  /// 그라데이션 (예: "from-orange-500-to-rose-500")
-  gradient    String?
-  accentBg    String?
-  accentText  String?
-  memberCount Int      @default(0)
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  tenantCode      String   @unique  // 사이트 아이디 (e.g., 17000004442)
+  siteName        String   // 사이트명 (e.g., 서창지역아동센터)
+  defaultDomain   String   @unique  // 기본 도메인 (e.g., sc23.ourdomain.com)
+  customDomain    String?  @unique  // 커스텀 도메인 (e.g., 55hsxpm6fe.co.co)
+  plan            String   @default("basic")  // basic/pro/enterprise
+  status          String   @default("active")  // active/suspended/deleted
+  startDate       DateTime
+  expireDate      DateTime?
+  memberLimit     Int      @default(20)  // 회원 제한
+  storageLimit    Int      @default(5368709120)  // 5GB 기본
+  usedStorage     Int      @default(0)
+  enabledApps     String   @default("dashboard,staff,children,approval,attendance")  // CSV
+  theme           String?  // 테마 색상
+  logoUrl         String?
+  ownerEmail      String?  // 최고관리자 이메일
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   users        User[]
   children     Child[]
@@ -348,6 +357,10 @@ model Tenant {
   donations     Donation[]
   meetings      Meeting[]
   leaveRequests LeaveRequest[]
+
+  @@index([tenantCode])
+  @@index([defaultDomain])
+  @@map("tenants")
 }
 
 /// 종사자 · 조합원 · 자원봉사자 통합 유저
@@ -427,16 +440,20 @@ model Child {
 /// 아동 카드 메타 (1:1)
 model ChildCardMeta {
   childId          String  @id
+  tenantId         String  @default("t-001")
   child            Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
   number           String? // 예: AC-2026-001
   identityType     String?
   identityVerified String?
   referredBy       String?
+
+  @@index([tenantId])
 }
 
 /// 신체 정보 (1:1)
 model ChildPhysical {
   childId   String  @id
+  tenantId  String  @default("t-001")
   child     Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
   height    Float?
   weight    Float?
@@ -444,11 +461,14 @@ model ChildPhysical {
   faceShape String?
   hairColor String?
   hairStyle String?
+
+  @@index([tenantId])
 }
 
 /// 자유 기술 7개 섹션 (1:1)
 model ChildObservations {
   childId     String  @id
+  tenantId    String  @default("t-001")
   child       Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
   personality String?
   family      String?
@@ -457,11 +477,14 @@ model ChildObservations {
   interests   String?
   learning    String?
   behavior    String?
+
+  @@index([tenantId])
 }
 
 /// 일별 출석 (Child)
 model Attendance {
   id        String                @id @default(cuid())
+  tenantId  String                @default("t-001")
   childId   String
   child     Child                 @relation(fields: [childId], references: [id], onDelete: Cascade)
   date      String // YYYY-MM-DD
@@ -471,12 +494,14 @@ model Attendance {
   createdAt DateTime              @default(now())
 
   @@unique([childId, date])
+  @@index([tenantId])
   @@index([date])
 }
 
 /// 돌봄일지
 model CareLog {
   id         String          @id @default(cuid())
+  tenantId   String          @default("t-001")
   childId    String
   child      Child           @relation(fields: [childId], references: [id], onDelete: Cascade)
   date       String
@@ -486,12 +511,14 @@ model CareLog {
   authorName String
   createdAt  DateTime        @default(now())
 
+  @@index([tenantId])
   @@index([childId, date])
 }
 
 /// 아동 첨부 문서 (IEP, 사진 등)
 model ChildDocument {
   id        String            @id @default(cuid())
+  tenantId  String            @default("t-001")
   childId   String
   child     Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
   filename  String
@@ -500,6 +527,8 @@ model ChildDocument {
   kind      ChildDocumentKind
   authorId  String
   createdAt DateTime          @default(now())
+
+  @@index([tenantId])
 }
 
 // ─── Staff ─────────────────────────────────────────────
@@ -531,6 +560,7 @@ model Staff {
 /// 직원 근태 (출퇴근 + 휴가/외출/미체크)
 model StaffAttendance {
   id          String                @id @default(cuid())
+  tenantId    String                @default("t-001")
   staffId     String
   staff       Staff                 @relation(fields: [staffId], references: [id], onDelete: Cascade)
   date        String
@@ -542,6 +572,7 @@ model StaffAttendance {
   authorId    String
 
   @@unique([staffId, date])
+  @@index([tenantId])
   @@index([date])
 }
 
@@ -569,6 +600,7 @@ model Volunteer {
 /// 봉사자 등원/결석
 model VolunteerAttendance {
   id          String    @id @default(cuid())
+  tenantId    String    @default("t-001")
   volunteerId String
   volunteer   Volunteer @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
   date        String
@@ -577,6 +609,7 @@ model VolunteerAttendance {
   authorId    String
 
   @@unique([volunteerId, date])
+  @@index([tenantId])
   @@index([date])
 }
 
@@ -681,6 +714,7 @@ model ApprovalRequest {
 /// 결재선 단계
 model ApprovalStep {
   id        String             @id @default(cuid())
+  tenantId  String             @default("t-001")
   requestId String
   request   ApprovalRequest    @relation(fields: [requestId], references: [id], onDelete: Cascade)
   step      Int // 1..N
@@ -691,6 +725,7 @@ model ApprovalStep {
   comment   String?
 
   @@unique([requestId, step])
+  @@index([tenantId])
 }
 
 // ─── 운영 계획 (Annual → Monthly → Daily) ──────────────
@@ -723,6 +758,7 @@ model AnnualPlan {
 /// 연간 프로그램 (심리안정, 학습멘토링, 방과후교실 등)
 model Program {
   id              String     @id @default(cuid())
+  tenantId        String     @default("t-001")
   annualPlanId    String
   annualPlan      AnnualPlan @relation(fields: [annualPlanId], references: [id], onDelete: Cascade)
   name            String
@@ -731,12 +767,15 @@ model Program {
   method          String
   monthlyTargets  String[]
   materials       String[]
+
+  @@index([tenantId])
 }
 
 model MonthlyPlan {
   id           String            @id @default(cuid())
+  tenantId     String            @default("t-001")
   annualPlanId String
-  annualPlan   AnnualPlan        @relation(fields: [annualPlanId], references: [id], onDelete: Cascade)
+  annualPlan   AnnualPlan         @relation(fields: [annualPlanId], references: [id], onDelete: Cascade)
   year         Int
   /// 1..12
   month        Int
@@ -751,10 +790,12 @@ model MonthlyPlan {
   dailyLogs   DailyLog[]
 
   @@unique([annualPlanId, month])
+  @@index([tenantId])
 }
 
 model WeeklyGoal {
   id            String      @id @default(cuid())
+  tenantId      String      @default("t-001")
   monthlyPlanId String
   monthlyPlan   MonthlyPlan @relation(fields: [monthlyPlanId], references: [id], onDelete: Cascade)
   /// 1..5
@@ -763,6 +804,7 @@ model WeeklyGoal {
   activities    String[]
 
   @@unique([monthlyPlanId, weekNumber])
+  @@index([tenantId])
 }
 
 /// 운영일지 — raw HTML content
@@ -790,6 +832,7 @@ model DailyLog {
 
 model Budget {
   id         String   @id @default(cuid())
+  tenantId   String   @default("t-001")
   fiscalYear Int
   month      Int // 1~12
   category   String // 인건비/운영비/사업비/후원금/보조금
@@ -800,6 +843,7 @@ model Budget {
   updatedAt  DateTime @updatedAt
 
   @@unique([fiscalYear, month, category])
+  @@index([tenantId])
   @@map("budgets")
 }
 
@@ -807,6 +851,7 @@ model Budget {
 
 model Expense {
   id         String   @id @default(cuid())
+  tenantId   String   @default("t-001")
   approvalId String?
   fiscalYear Int
   month      Int
@@ -819,6 +864,7 @@ model Expense {
   createdBy  String?
   createdAt  DateTime @default(now())
 
+  @@index([tenantId])
   @@map("expenses")
 }
 
@@ -861,6 +907,7 @@ model Donation {
 
 model StaffCareer {
   id          String   @id @default(cuid())
+  tenantId    String   @default("t-001")
   staffId     String
   staff       Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
   startDate   DateTime
@@ -872,12 +919,14 @@ model StaffCareer {
   notes       String?
   createdAt   DateTime @default(now())
 
+  @@index([tenantId])
   @@index([staffId])
   @@map("staff_careers")
 }
 
 model StaffCertification {
   id          String    @id @default(cuid())
+  tenantId    String    @default("t-001")
   staffId     String
   staff       Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
   certType    String
@@ -888,12 +937,14 @@ model StaffCertification {
   recognition Boolean   @default(true)
   createdAt   DateTime  @default(now())
 
+  @@index([tenantId])
   @@index([staffId])
   @@map("staff_certifications")
 }
 
 model StaffTraining {
   id           String    @id @default(cuid())
+  tenantId     String    @default("t-001")
   staffId      String
   staff        Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
   trainingName String
@@ -905,33 +956,7 @@ model StaffTraining {
   type         String?
   createdAt    DateTime  @default(now())
 
+  @@index([tenantId])
   @@index([staffId])
   @@map("staff_trainings")
-}
-
-// ─── Tenant (멀티테넌트 SaaS) ──────────────────────────────────
-model Tenant {
-  id              String   @id @default(cuid())
-  tenantCode      String   @unique  // 사이트 아이디 (e.g., 17000004442)
-  siteName        String   // 사이트명 (e.g., 서창지역아동센터)
-  defaultDomain   String   @unique  // 기본 도메인 (e.g., sc23.ourdomain.com)
-  customDomain    String?  @unique  // 커스텀 도메인 (e.g., 55hsxpm6fe.co.co)
-  plan            String   @default("basic")  // basic/pro/enterprise
-  status          String   @default("active")  // active/suspended/deleted
-  startDate       DateTime
-  expireDate      DateTime?
-  memberLimit     Int      @default(20)  // 회원 제한
-  storageLimit    Int      @default(5368709120)  // 5GB 기본
-  usedStorage     Int      @default(0)
-  enabledApps     String   @default("dashboard,staff,children,approval,attendance")  // CSV
-  theme           String?  // 테마 색상
-  logoUrl         String?
-  ownerEmail      String?  // 최고관리자 이메일
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([tenantCode])
-  @@index([defaultDomain])
-  @@map("tenants")
 }
