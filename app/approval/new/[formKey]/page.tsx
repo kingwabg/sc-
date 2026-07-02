@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  List,
 } from "lucide-react";
 import { getFormByKey, type FormField } from "@/lib/features/approval-form";
 import { cn } from "@/lib/utils";
@@ -275,28 +274,6 @@ function DocumentFormTemplate({
 
   return (
     <div className="bg-white">
-      <div className="flex items-center justify-between border-b border-slate-200 px-6 py-2 text-[12px] text-slate-500">
-        <div className="flex items-center gap-5">
-          <button className="border-b-2 border-slate-900 pb-1 font-bold text-slate-900">
-            문서 정보
-          </button>
-          <button className="pb-1 transition hover:text-slate-900">
-            결재 정보
-          </button>
-          <button className="pb-1 transition hover:text-slate-900">
-            첨부·연결
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-400">자동저장 꺼짐</span>
-          <span className="h-3 w-px bg-slate-200" />
-          <button className="inline-flex items-center gap-1 text-[11px] hover:text-slate-900">
-            <List className="h-3.5 w-3.5" />
-            목록
-          </button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 gap-8 px-6 py-8 xl:grid-cols-[minmax(720px,920px)_220px]">
         <section className="max-w-[920px]">
           <h2 className="mb-8 text-center text-[28px] font-black tracking-tight text-black">
