@@ -908,3 +908,30 @@ model StaffTraining {
   @@index([staffId])
   @@map("staff_trainings")
 }
+
+// ─── Tenant (멀티테넌트 SaaS) ──────────────────────────────────
+model Tenant {
+  id              String   @id @default(cuid())
+  tenantCode      String   @unique  // 사이트 아이디 (e.g., 17000004442)
+  siteName        String   // 사이트명 (e.g., 서창지역아동센터)
+  defaultDomain   String   @unique  // 기본 도메인 (e.g., sc23.ourdomain.com)
+  customDomain    String?  @unique  // 커스텀 도메인 (e.g., 55hsxpm6fe.co.co)
+  plan            String   @default("basic")  // basic/pro/enterprise
+  status          String   @default("active")  // active/suspended/deleted
+  startDate       DateTime
+  expireDate      DateTime?
+  memberLimit     Int      @default(20)  // 회원 제한
+  storageLimit    Int      @default(5368709120)  // 5GB 기본
+  usedStorage     Int      @default(0)
+  enabledApps     String   @default("dashboard,staff,children,approval,attendance")  // CSV
+  theme           String?  // 테마 색상
+  logoUrl         String?
+  ownerEmail      String?  // 최고관리자 이메일
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tenantCode])
+  @@index([defaultDomain])
+  @@map("tenants")
+}

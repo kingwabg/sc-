@@ -128,6 +128,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/console")) {
+    // /console/* → owner만 통과 (서비스 운영자 super-admin)
+    if (role !== "owner") {
+      return redirectWithNext(request, "/");
+    }
+  }
+
   return NextResponse.next();
 }
 
