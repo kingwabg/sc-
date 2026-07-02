@@ -7,6 +7,7 @@ import { LayoutGrid, Search, Sun, Moon, Bell, Settings, ChevronDown, Check, Buil
 import { useTenant } from "@/lib/tenant-context";
 import { TENANT_LIST, type Tenant } from "@/lib/tenants";
 import { TENANT_VISUAL } from "@/lib/features/tenants";
+import { cn } from "@/lib/utils";
 import {
   THEME_MODE_EVENT,
   applyThemeMode,
@@ -26,6 +27,21 @@ export function TopHeader() {
   const portalSwitch = isAccountingPortal
     ? { href: "/portal", label: "업무포털", Icon: BriefcaseBusiness }
     : { href: "/accounting", label: "회계포털", Icon: Calculator };
+  const brand = isAccountingPortal
+    ? {
+        href: "/accounting",
+        title: "회계포털",
+        subtitle: "수입 · 지출 · 결산",
+        Icon: Calculator,
+        iconClassName: "bg-slate-950 text-white shadow-md shadow-slate-950/20",
+      }
+    : {
+        href: tenant ? "/portal" : "/",
+        title: "Office",
+        subtitle: "임직원 포털",
+        Icon: LayoutGrid,
+        iconClassName: "bg-gradient-to-br from-brand-600 to-brand-700 text-white shadow-md shadow-brand-600/30",
+      };
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -70,13 +86,13 @@ export function TopHeader() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-[60px] bg-white border-b border-slate-200 flex items-center px-6 gap-6">
       {/* Brand */}
-      <Link href={tenant ? "/portal" : "/"} className="flex items-center gap-2.5 min-w-[200px]">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-600 to-brand-700 text-white grid place-items-center shadow-md shadow-brand-600/30">
-          <LayoutGrid className="w-5 h-5" strokeWidth={2.2} />
+      <Link href={brand.href} className="flex items-center gap-2.5 min-w-[200px]">
+        <div className={cn("w-9 h-9 rounded-lg grid place-items-center", brand.iconClassName)}>
+          <brand.Icon className="w-5 h-5" strokeWidth={2.2} />
         </div>
         <div className="flex flex-col leading-tight">
-          <span className="text-base font-bold text-slate-900 tracking-tight">Office</span>
-          <span className="text-[11px] text-slate-500 mt-px">임직원 포털</span>
+          <span className="text-base font-bold text-slate-900 tracking-tight">{brand.title}</span>
+          <span className="text-[11px] text-slate-500 mt-px">{brand.subtitle}</span>
         </div>
       </Link>
 
