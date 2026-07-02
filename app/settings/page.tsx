@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import {
@@ -32,6 +32,9 @@ import {
   Bell,
   Palette,
   Info,
+  ExternalLink,
+  RefreshCw,
+  EyeOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -438,53 +441,96 @@ function FormForSub({
 
   if (subId === "business") {
     return (
-      <div className="space-y-4">
-        <FormRow label="시설명" required>
-          <input
-            className={inputClass}
-            placeholder="행복한지역아동센터"
-            value={tenantSettings.businessName}
-            onChange={(e) => onChange({ ...tenantSettings, businessName: e.target.value })}
-          />
-        </FormRow>
-        <FormRow label="대표자명" required>
-          <input
-            className={inputClass}
-            placeholder="김민수"
-            value={tenantSettings.representative}
-            onChange={(e) => onChange({ ...tenantSettings, representative: e.target.value })}
-          />
-        </FormRow>
-        <FormRow label="사업자등록번호" required>
-          <input
-            className={inputClass}
-            placeholder="000-00-00000"
-            value={tenantSettings.businessRegNo}
-            onChange={(e) => onChange({ ...tenantSettings, businessRegNo: e.target.value })}
-          />
-        </FormRow>
-        <FormRow label="시설 정원" required>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              className={inputClass + " w-28"}
-              placeholder="50"
-              min={1}
-              max={999}
-              value={tenantSettings.capacity}
-              onChange={(e) =>
-                onChange({ ...tenantSettings, capacity: parseInt(e.target.value, 10) || 0 })
-              }
-            />
-            <span className="text-sm text-slate-500">명</span>
-            <span className="text-xs text-slate-400">
-              (아동 출결대장의 정원으로 자동 반영됩니다)
-            </span>
+      <div className="space-y-8">
+        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-[15px] font-extrabold text-slate-900">사업자 정보</div>
+              <p className="m-0 mt-1 text-[12px] leading-5 text-slate-500">
+                고객포털의 회사법인정보가 반영됩니다. 동기화되는 사업자 정보는 고객포털에서 직접 수정할 수 있습니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              고객포털 바로가기
+            </button>
           </div>
-        </FormRow>
-        <FormRow label="대표자 내/외국인 구분">
-          <RadioGroup options={["내국인", "외국인"]} />
-        </FormRow>
+          <div className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-white px-3 text-[12px] font-semibold text-slate-500 ring-1 ring-slate-200">
+            <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
+            최근 동기화 일자
+            <span className="font-bold text-slate-700">2026-06-26 11:06</span>
+          </div>
+        </div>
+
+        <FormSection
+          title="회사 정보"
+          description="서비스 사용을 위해 꼭 입력해야 하는 필수 회사 정보입니다."
+        >
+          <FormRow label="법인 여부" required>
+            <RadioGroup options={["법인", "개인"]} />
+          </FormRow>
+          <FormRow label="회사명" required>
+            <input
+              className={inputClass}
+              placeholder="서창지역아동센터"
+              value={tenantSettings.businessName}
+              onChange={(e) => onChange({ ...tenantSettings, businessName: e.target.value })}
+            />
+          </FormRow>
+          <FormRow label="대표자명" required>
+            <input
+              className={inputClass}
+              placeholder="최문태"
+              value={tenantSettings.representative}
+              onChange={(e) => onChange({ ...tenantSettings, representative: e.target.value })}
+            />
+          </FormRow>
+          <FormRow label="사업자등록번호" required>
+            <SegmentedBusinessNumber
+              value={tenantSettings.businessRegNo}
+              onChange={(value) => onChange({ ...tenantSettings, businessRegNo: value })}
+            />
+          </FormRow>
+          <FormRow label="법인등록번호" required>
+            <div className="flex items-center gap-2">
+              <input className={inputClass + " w-40"} placeholder="000000" />
+              <span className="text-slate-400">-</span>
+              <input className={inputClass + " w-40"} placeholder="0000000" />
+            </div>
+          </FormRow>
+          <FormRow label="시설 정원" required>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                className={inputClass + " w-28"}
+                placeholder="50"
+                min={1}
+                max={999}
+                value={tenantSettings.capacity}
+                onChange={(e) =>
+                  onChange({ ...tenantSettings, capacity: parseInt(e.target.value, 10) || 0 })
+                }
+              />
+              <span className="text-sm text-slate-500">명</span>
+              <span className="text-xs text-slate-400">
+                아동 출결대장의 정원으로 자동 반영됩니다.
+              </span>
+            </div>
+          </FormRow>
+        </FormSection>
+
+        <FormSection
+          title="상세 정보"
+          description="각종 서식과 보고 문서에서 사용하는 대표자 상세 정보입니다."
+        >
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <RepresentativeFields title="대표자 1" />
+            <RepresentativeFields title="대표자 2" />
+          </div>
+        </FormSection>
       </div>
     );
   }
@@ -641,6 +687,101 @@ function InfoCard({
   );
 }
 
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <div>
+        <h3 className="m-0 text-[15px] font-extrabold text-slate-900">{title}</h3>
+        <p className="m-0 mt-1 text-[12px] leading-5 text-slate-500">{description}</p>
+      </div>
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-2">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function SegmentedBusinessNumber({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [first = "", second = "", third = ""] = value.split("-");
+
+  function update(index: number, nextValue: string) {
+    const parts = [first, second, third];
+    parts[index] = nextValue.replace(/\D/g, "");
+    onChange(parts.join("-"));
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        className={inputClass + " w-24"}
+        inputMode="numeric"
+        maxLength={3}
+        value={first}
+        onChange={(event) => update(0, event.target.value)}
+      />
+      <span className="text-slate-400">-</span>
+      <input
+        className={inputClass + " w-24"}
+        inputMode="numeric"
+        maxLength={2}
+        value={second}
+        onChange={(event) => update(1, event.target.value)}
+      />
+      <span className="text-slate-400">-</span>
+      <input
+        className={inputClass + " w-28"}
+        inputMode="numeric"
+        maxLength={5}
+        value={third}
+        onChange={(event) => update(2, event.target.value)}
+      />
+    </div>
+  );
+}
+
+function RepresentativeFields({ title }: { title: string }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+      <div className="mb-3 text-[13px] font-extrabold text-slate-900">{title}</div>
+      <div className="space-y-3">
+        <div>
+          <div className="mb-1 text-[12px] font-bold text-slate-600">내/외국인 구분</div>
+          <RadioGroup options={["내국인", "외국인"]} />
+        </div>
+        <div>
+          <div className="mb-1 text-[12px] font-bold text-slate-600">주민번호</div>
+          <div className="flex items-center gap-2">
+            <input className={inputClass + " w-28"} inputMode="numeric" maxLength={6} placeholder="000000" />
+            <span className="text-slate-400">-</span>
+            <div className="relative">
+              <input className={inputClass + " w-32 pr-10"} inputMode="numeric" maxLength={7} placeholder="0000000" type="password" />
+              <EyeOff className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="mb-1 text-[12px] font-bold text-slate-600">직책</div>
+          <input className={inputClass} placeholder="대표자 직책" defaultValue={title === "대표자 1" ? "센터장" : ""} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UsageBar({
   label,
   value,
@@ -700,13 +841,15 @@ function FormRow({
 }
 
 function RadioGroup({ options }: { options: string[] }) {
+  const groupId = useId();
+
   return (
     <div className="flex items-center gap-6 pt-2">
       {options.map((o, i) => (
         <label key={o} className="flex items-center gap-2 cursor-pointer">
           <input
             type="radio"
-            name={`radio-${options.join("-")}`}
+            name={`radio-${groupId}`}
             defaultChecked={i === 0}
             className="w-4 h-4 accent-brand-600"
           />
