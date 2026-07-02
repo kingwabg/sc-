@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { CustomProvider } from "rsuite";
 import koKR from "rsuite/locales/ko_KR";
 import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
 import { ExecSidebar } from "./ExecSidebar";
+import { AccountingSidebar } from "./AccountingSidebar";
 import {
   THEME_MODE_EVENT,
   applyThemeMode,
@@ -34,6 +36,7 @@ export function AppShell({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const role = useRole();
+  const pathname = usePathname();
   const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
@@ -48,6 +51,7 @@ export function AppShell({
   }, []);
 
   const isExec = role === "exec";
+  const isAccounting = pathname?.startsWith("/accounting");
 
   useEffect(() => {
     const sync = () => {
@@ -74,13 +78,13 @@ export function AppShell({
       <ToastProvider>
         <TopHeader />
         <div className="pt-[60px] min-h-screen flex">
-          {isExec ? <ExecSidebar /> : <Sidebar />}
+          {isAccounting ? <AccountingSidebar /> : isExec ? <ExecSidebar /> : <Sidebar />}
           <main
             className={cn(
               "flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6 min-w-0 transition-[margin] duration-200",
               mainClassName,
             )}
-            style={{ marginLeft: isExec ? 220 : collapsed ? 64 : 220 }}
+            style={{ marginLeft: isAccounting || isExec ? 220 : collapsed ? 64 : 220 }}
           >
             {children}
           </main>
