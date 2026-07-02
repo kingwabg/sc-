@@ -214,7 +214,7 @@ function WizardShell({
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-visible">
       {/* ── 헤더 ── */}
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -1542,7 +1542,7 @@ function StepIndicator({
   const currentIndex = steps.indexOf(current);
 
   return (
-    <div className="border-b border-slate-200 bg-white px-6">
+    <div className="sticky top-[60px] z-30 border-b border-slate-200 bg-white px-6 shadow-sm">
       <div className="flex h-12 items-center gap-8">
         {steps.map((s, i) => {
           const done = i < currentIndex;
