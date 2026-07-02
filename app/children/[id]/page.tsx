@@ -559,25 +559,7 @@ function BasicInfoTab({ child }: { child: Child }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr]">
-        <aside className="border-b border-slate-100 bg-slate-50/60 px-5 py-4 lg:border-b-0 lg:border-r">
-          <div className="divide-y divide-slate-100">
-            <SummaryPill label="입소일" value={formatDate(child.enrolledAt)} icon={CalendarDays} muted={!child.enrolledAt} />
-            <SummaryPill label="이용유형" value={serviceType} icon={IdCard} muted={!child.serviceType} />
-            <SummaryPill label="기준 중위소득" value={medianIncome} icon={TrendingUp} muted={typeof child.medianIncomePct !== "number"} />
-            <div className="py-3">
-              <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500">
-                <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                주소
-              </div>
-              <div className={cn("mt-1.5 text-[14px] font-semibold leading-relaxed", child.address ? "text-slate-900" : "text-slate-400")}>
-                {child.address || empty}
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <div className="p-5">
+      <div className="p-5">
           {activeInfoTab === "basic" && (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-8 gap-y-6">
               <InfoGroup title="대상자 정보">
@@ -669,7 +651,6 @@ function BasicInfoTab({ child }: { child: Child }) {
               </InfoGroup>
             </div>
           )}
-        </div>
       </div>
     </section>
   );
