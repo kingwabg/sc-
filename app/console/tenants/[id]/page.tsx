@@ -1,5 +1,7 @@
 "use client";
 
+import { use } from "react";
+
 /**
  * app/console/tenants/[id]/page.tsx — 센터 상세 (서비스 정보)
  */
@@ -10,8 +12,9 @@ import { getTenantById, MOCK_TENANTS } from "@/lib/features/tenant";
 import { formatStorage, daysUntilExpire, storagePercent } from "@/lib/features/tenant/utils";
 import { ChevronLeft, Building2, Globe, Calendar, Users, HardDrive, Mail, Server } from "lucide-react";
 
-export default function TenantDetailPage({ params }: { params: { id: string } }) {
-  const tenant = getTenantById(params.id);
+export default function TenantDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const tenant = getTenantById(id);
   if (!tenant) notFound();
 
   const days = daysUntilExpire(tenant.expireDate);
