@@ -102,7 +102,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/org": { label: "조직도", href: "/org", icon: Users },
   "/monthly-plan": { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
   "/annual-plan": { label: "연간계획", href: "/annual-plan", icon: BookOpen },
-  "/programs":   { label: "프로그램 (계획/일지/평가)", href: "/annual-plan", icon: NotebookPen },
+  "/programs":   { label: "프로그램", href: "/annual-plan", icon: NotebookPen },
   "/audit-prep": { label: "평가 대비 모드", href: "/audit-prep", icon: ShieldCheck },
   "/admin":   { label: "관리자",         href: "/admin",   icon: ShieldAlert, minRole: "admin" },
   "/exec":    { label: "임원 대시보드",  href: "/exec",    icon: Crown,       minRole: "owner" },
@@ -239,24 +239,25 @@ export function Sidebar() {
       </div>
 
       {/* 즐겨찾기 영역 */}
-      {favorites.length > 0 && (
-        <div className="mb-3 px-2">
-          <div className="flex items-center justify-between mb-1">
-            <span className="px-2 text-[11px] font-semibold tracking-wide text-slate-400">
-              ★ 즐겨찾기
-            </span>
-            <button
-              onClick={() => setEditing((v) => !v)}
-              className={cn(
-                "text-[11px] px-1.5 py-0.5 rounded transition",
-                editing
-                  ? "bg-brand-100 text-brand-700 font-semibold"
-                  : "text-slate-400 hover:text-brand-600 hover:bg-brand-50",
-              )}
-            >
-              {editing ? "완료" : "편집"}
-            </button>
-          </div>
+      <div className="mb-3 px-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="px-2 text-[11px] font-semibold tracking-wide text-slate-400 flex items-center gap-1.5">
+            <Star className="w-3 h-3" />
+            즐겨찾기
+          </span>
+          <button
+            onClick={() => setEditing((v) => !v)}
+            className={cn(
+              "text-[11px] px-1.5 py-0.5 rounded transition",
+              editing
+                ? "bg-brand-100 text-brand-700 font-semibold"
+                : "text-slate-400 hover:text-brand-600 hover:bg-brand-50",
+            )}
+          >
+            {editing ? "완료" : "편집"}
+          </button>
+        </div>
+        {favorites.length > 0 && (
           <nav className="space-y-0.5">
             {favorites.map((href) => {
               const item = ALL_MENU_ITEMS[href];
@@ -294,8 +295,8 @@ export function Sidebar() {
               );
             })}
           </nav>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 고정 그룹 */}
       <div className="sidebar-scroll flex-1 overflow-y-auto px-2">
@@ -492,6 +493,7 @@ function NavGroup({
               )
             : false;
           const expanded = hasChildren && childActive;
+          const badge = badges[item.href];
 
           return (
             <div key={item.label} className="group relative">
@@ -501,7 +503,8 @@ function NavGroup({
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 h-9 px-3 rounded-lg text-[13.5px] font-medium transition",
+                  "flex items-center gap-2.5 h-9 pl-3 rounded-lg text-[13.5px] font-medium transition",
+                  editingFavorites ? (badge ? "pr-16" : "pr-10") : badge ? "pr-10" : "pr-3",
                   isActive || childActive
                     ? "bg-brand-50 text-brand-700"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
@@ -517,12 +520,18 @@ function NavGroup({
                 {item.external && (
                   <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 )}
-                {badges[item.href] ? (
-                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center">
-                    {badges[item.href]}
-                  </span>
-                ) : null}
               </Link>
+
+              {badge ? (
+                <span
+                  className={cn(
+                    "pointer-events-none absolute top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center",
+                    editingFavorites ? "right-9" : "right-3",
+                  )}
+                >
+                  {badge}
+                </span>
+              ) : null}
 
               {/* 하위 메뉴 — children이 있고, 그 중 하나가 active면 펼침 */}
               {hasChildren && expanded && (
@@ -551,11 +560,11 @@ function NavGroup({
                 </div>
               )}
 
-              {!editingFavorites && (
+              {editingFavorites && (
                 <button
                   onClick={() => onToggleFavorite(item.href)}
-                  className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition"
-                  title="즐겨찾기에 추가"
+                  className="hidden md:grid absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 place-items-center rounded-md text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition"
+                  title={favorites.includes(item.href) ? "즐겨찾기 해제" : "즐겨찾기에 추가"}
                 >
                   <Star className={cn("w-3.5 h-3.5", favorites.includes(item.href) ? "fill-amber-400 text-amber-400" : "")} />
                 </button>
