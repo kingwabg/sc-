@@ -26,7 +26,7 @@ export function TopHeader() {
   const isAccountingPortal = pathname?.startsWith("/accounting");
   const portalSwitch = isAccountingPortal
     ? { href: "/portal", label: "업무포털", Icon: BriefcaseBusiness }
-    : { href: "/accounting", label: "회계포털", Icon: Calculator };
+    : { href: "/accounting", label: "전사포털", Icon: Calculator };
   const brand = isAccountingPortal
     ? {
         href: "/accounting",
