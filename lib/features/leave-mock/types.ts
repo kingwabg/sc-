@@ -49,6 +49,7 @@ export const LEAVE_KIND_EMOJIS: Record<LeaveKind, string> = {
 
 // ─── 휴가 잔여/사용 정보 ─────────────────────────────────
 export type LeaveBalance = {
+  tenantId?: string;
   kind: LeaveKind;
   total: number;   // 총 일수
   used: number;    // 사용 일수
@@ -61,6 +62,7 @@ export type LeaveStatus = "대기" | "승인" | "반려" | "취소";
 // ─── 개인 휴가 기록 (한 건) ──────────────────────────────
 export type LeaveRecord = {
   id: string;
+  tenantId: string;
   kind: LeaveKind;
   status: LeaveStatus;
   days: number;       // 일수
@@ -72,6 +74,7 @@ export type LeaveRecord = {
 
 // ─── 전사 휴가 현황 (admin용) ───────────────────────────
 export type CompanyLeaveEntry = {
+  tenantId: string;
   staffId: string;
   name: string;
   position: string;
@@ -81,6 +84,7 @@ export type CompanyLeaveEntry = {
 
 // ─── 근속연수 + 회계연도 ────────────────────────────────
 export type LeaveYearInfo = {
+  tenantId: string;
   hireDate: string;          // 입사일 YYYY-MM-DD
   tenureYears: number;       // 근속연수
   tenureMonths: number;     //残余月

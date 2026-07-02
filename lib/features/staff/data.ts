@@ -48,38 +48,38 @@ const TODAY = new Date().toISOString().slice(0, 10);
 
 export const MOCK_STAFF: Staff[] = [
   {
-    id: "s01", tenantId: "t_acme", name: "김영미", loginId: "kimym",
+    id: "s01", tenantId: "t-001", name: "김영미", loginId: "kimym",
     gender: "F", phone: "010-5811-4237", position: "所长",
     joinDate: "2020-03-01", status: "active",
   },
   {
-    id: "s02", tenantId: "t_acme", name: "이소연", loginId: "leeso",
+    id: "s02", tenantId: "t-001", name: "이소연", loginId: "leeso",
     gender: "F", phone: "010-2345-6789", position: "支援교사",
     joinDate: "2021-03-01", status: "active",
   },
   {
-    id: "s03", tenantId: "t_acme", name: "정미경", loginId: "jungmk",
+    id: "s03", tenantId: "t-001", name: "정미경", loginId: "jungmk",
     gender: "F", phone: "010-3456-7890", position: "支援교사",
     joinDate: "2022-09-01", status: "active",
   },
   {
-    id: "s04", tenantId: "t_acme", name: "박동수", loginId: "parkds",
+    id: "s04", tenantId: "t-001", name: "박동수", loginId: "parkds",
     gender: "M", phone: "010-4567-8901", position: "조리사",
     joinDate: "2019-03-01", status: "active",
   },
   {
-    id: "s05", tenantId: "t_acme", name: "최지연", loginId: "choijy",
+    id: "s05", tenantId: "t-001", name: "최지연", loginId: "choijy",
     gender: "F", phone: "010-5678-9012", position: "행정",
     joinDate: "2023-01-15", status: "active",
   },
 ];
 
 export const MOCK_STAFF_ATTENDANCES: StaffAttendance[] = [
-  { id: "sa01", tenantId: "t_acme", staffId: "s01", date: TODAY, clockIn: "08:30", clockOut: "17:30", authorId: "u_1" },
-  { id: "sa02", tenantId: "t_acme", staffId: "s02", date: TODAY, clockIn: "08:45", clockOut: "18:00", authorId: "u_1" },
-  { id: "sa03", tenantId: "t_acme", staffId: "s03", date: TODAY, clockIn: "09:00", clockOut: "18:30", authorId: "u_1" },
-  { id: "sa04", tenantId: "t_acme", staffId: "s04", date: TODAY, clockIn: "06:30", clockOut: "15:00", authorId: "u_1" },
-  { id: "sa05", tenantId: "t_acme", staffId: "s05", date: TODAY, clockIn: "09:00", note: "외출 14:00~15:00", authorId: "u_1" },
+  { id: "sa01", tenantId: "t-001", staffId: "s01", date: TODAY, clockIn: "08:30", clockOut: "17:30", authorId: "u_1" },
+  { id: "sa02", tenantId: "t-001", staffId: "s02", date: TODAY, clockIn: "08:45", clockOut: "18:00", authorId: "u_1" },
+  { id: "sa03", tenantId: "t-001", staffId: "s03", date: TODAY, clockIn: "09:00", clockOut: "18:30", authorId: "u_1" },
+  { id: "sa04", tenantId: "t-001", staffId: "s04", date: TODAY, clockIn: "06:30", clockOut: "15:00", authorId: "u_1" },
+  { id: "sa05", tenantId: "t-001", staffId: "s05", date: TODAY, clockIn: "09:00", note: "외출 14:00~15:00", authorId: "u_1" },
 ];
 
 export const POSITION_LABELS: Record<string, string> = {

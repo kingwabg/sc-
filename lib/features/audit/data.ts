@@ -54,10 +54,10 @@ async function tryAuditPrisma<T>(
   }
 }
 
-function mockConflicts(from: string, to: string): ConflictItem[] {
+function mockConflicts(tenantId: string, from: string, to: string): ConflictItem[] {
   return [
     {
-      childId: "c_mock_001",
+      childId: `${tenantId}_c01`,
       childName: "김민준",
       date: to,
       attendanceStatus: "출석",
@@ -66,7 +66,7 @@ function mockConflicts(from: string, to: string): ConflictItem[] {
       severity: computeSeverity("ATTENDANCE_NO_LOG"),
     },
     {
-      childId: "c_mock_002",
+      childId: `${tenantId}_c02`,
       childName: "이서준",
       date: from,
       attendanceStatus: "결석",
@@ -76,6 +76,14 @@ function mockConflicts(from: string, to: string): ConflictItem[] {
     },
   ];
 }
+
+/** MOCK_AUDIT_ITEMS — 평가 항목 mock (tenantId 부착) */
+export const MOCK_AUDIT_ITEMS = [
+  { tenantId: "t-001", id: "ai-001", label: "아동 상담 기록률", threshold: "≥ 80%", current: 92, unit: "%", passed: true },
+  { tenantId: "t-001", id: "ai-002", label: "결재 서류 보관율", threshold: "≥ 80%", current: 86, unit: "%", passed: true },
+  { tenantId: "t-001", id: "ai-003", label: "출석-일지 일관성", threshold: "0건", current: "2건", passed: false },
+  { tenantId: "t-001", id: "ai-004", label: "후원금 입금 매칭율", threshold: "≥ 80%", current: 85, unit: "%", passed: true },
+];
 
 // ─── Attendance + CareLog 충돌 조회 ─────────────────────────
 //
@@ -226,7 +234,7 @@ export async function crossCheckByDateRange(
 ): Promise<ConflictItem[]> {
   return tryAuditPrisma(
     () => findAttendanceCareLogConflicts(tenantId, from, to),
-    () => mockConflicts(from, to),
+    () => mockConflicts(tenantId, from, to),
   );
 }
 

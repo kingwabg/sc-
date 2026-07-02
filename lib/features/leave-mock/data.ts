@@ -5,18 +5,18 @@ import type { LeaveBalance, LeaveRecord, CompanyLeaveEntry, LeaveYearInfo, Leave
 
 // ─── 내 연차 잔여 (12종) ────────────────────────────────
 export const MY_LEAVE_BALANCES: LeaveBalance[] = [
-  { kind: "annual",        total: 15, used: 3,  remaining: 12 },
-  { kind: "half",          total: 4,  used: 1,  remaining: 3  },
-  { kind: "sick",          total: 30, used: 0,  remaining: 30 },
-  { kind: "condolence",    total: 5,  used: 0,  remaining: 5  },
-  { kind: "public",        total: 1,  used: 0,  remaining: 1  },
-  { kind: "menstrual",     total: 1,  used: 0,  remaining: 1  },
-  { kind: "childcare",     total: 0,  used: 0,  remaining: 0  },
-  { kind: "pregnancy",     total: 0,  used: 0,  remaining: 0  },
-  { kind: "commuting",     total: 0,  used: 0,  remaining: 0  },
-  { kind: "family",        total: 3,  used: 0,  remaining: 3  },
-  { kind: "reinstatement", total: 0,  used: 0,  remaining: 0  },
-  { kind: "etc",           total: 0,  used: 0,  remaining: 0  },
+  { tenantId: "t-001", kind: "annual",        total: 15, used: 3,  remaining: 12 },
+  { tenantId: "t-001", kind: "half",          total: 4,  used: 1,  remaining: 3  },
+  { tenantId: "t-001", kind: "sick",          total: 30, used: 0,  remaining: 30 },
+  { tenantId: "t-001", kind: "condolence",    total: 5,  used: 0,  remaining: 5  },
+  { tenantId: "t-001", kind: "public",        total: 1,  used: 0,  remaining: 1  },
+  { tenantId: "t-001", kind: "menstrual",     total: 1,  used: 0,  remaining: 1  },
+  { tenantId: "t-001", kind: "childcare",     total: 0,  used: 0,  remaining: 0  },
+  { tenantId: "t-001", kind: "pregnancy",     total: 0,  used: 0,  remaining: 0  },
+  { tenantId: "t-001", kind: "commuting",     total: 0,  used: 0,  remaining: 0  },
+  { tenantId: "t-001", kind: "family",        total: 3,  used: 0,  remaining: 3  },
+  { tenantId: "t-001", kind: "reinstatement", total: 0,  used: 0,  remaining: 0  },
+  { tenantId: "t-001", kind: "etc",           total: 0,  used: 0,  remaining: 0  },
 ];
 
 // ─── 내 휴가 기록 (예정 + 지난) ─────────────────────────
@@ -24,6 +24,7 @@ export const MY_LEAVE_RECORDS: LeaveRecord[] = [
   // 예정
   {
     id: "lr-001",
+    tenantId: "t-001",
     kind: "annual",
     status: "대기",
     days: 3,
@@ -34,6 +35,7 @@ export const MY_LEAVE_RECORDS: LeaveRecord[] = [
   },
   {
     id: "lr-002",
+    tenantId: "t-001",
     kind: "half",
     status: "승인",
     days: 0.5,
@@ -45,6 +47,7 @@ export const MY_LEAVE_RECORDS: LeaveRecord[] = [
   // 지난
   {
     id: "lr-003",
+    tenantId: "t-001",
     kind: "annual",
     status: "승인",
     days: 2,
@@ -55,6 +58,7 @@ export const MY_LEAVE_RECORDS: LeaveRecord[] = [
   },
   {
     id: "lr-004",
+    tenantId: "t-001",
     kind: "half",
     status: "승인",
     days: 0.5,
@@ -65,6 +69,7 @@ export const MY_LEAVE_RECORDS: LeaveRecord[] = [
   },
   {
     id: "lr-005",
+    tenantId: "t-001",
     kind: "sick",
     status: "승인",
     days: 1,
@@ -75,6 +80,7 @@ export const MY_LEAVE_RECORDS: LeaveRecord[] = [
   },
   {
     id: "lr-006",
+    tenantId: "t-001",
     kind: "condolence",
     status: "승인",
     days: 2,
@@ -112,54 +118,60 @@ export const MONTHLY_LEAVE_HISTORY: { month: string; records: LeaveRecord[] }[] 
 // ─── 전사 휴가 현황 (admin) ─────────────────────────────
 export const COMPANY_LEAVE_ENTRIES: CompanyLeaveEntry[] = [
   {
+    tenantId: "t-001",
     staffId: "s1",
     name: "김영미",
     position: "所长",
     department: "운영",
     balances: [
-      { kind: "annual", total: 18, used: 5, remaining: 13 },
+      { tenantId: "t-001", kind: "annual", total: 18, used: 5, remaining: 13 },
     ],
   },
   {
+    tenantId: "t-001",
     staffId: "s2",
     name: "박은수",
     position: "지원교사",
     department: "돌봄",
     balances: [
-      { kind: "annual", total: 15, used: 3, remaining: 12 },
+      { tenantId: "t-001", kind: "annual", total: 15, used: 3, remaining: 12 },
     ],
   },
   {
+    tenantId: "t-001",
     staffId: "s3",
     name: "김선영",
     position: "지원교사",
     department: "돌봄",
     balances: [
-      { kind: "annual", total: 12, used: 7, remaining: 5 },
+      { tenantId: "t-001", kind: "annual", total: 12, used: 7, remaining: 5 },
     ],
   },
   {
+    tenantId: "t-001",
     staffId: "s4",
     name: "이서준",
     position: "원감",
     department: "운영",
     balances: [
-      { kind: "annual", total: 18, used: 10, remaining: 8 },
+      { tenantId: "t-001", kind: "annual", total: 18, used: 10, remaining: 8 },
     ],
   },
   {
+    tenantId: "t-001",
     staffId: "s5",
     name: "정예린",
     position: "مدير",
     department: "운영",
     balances: [
-      { kind: "annual", total: 15, used: 2, remaining: 13 },
+      { tenantId: "t-001", kind: "annual", total: 15, used: 2, remaining: 13 },
     ],
   },
 ];
 
 // ─── 근속연수 + 회계연도 ────────────────────────────────
 export const MY_LEAVE_YEAR_INFO: LeaveYearInfo = {
+  tenantId: "t-001",
   hireDate: "2020-03-01",
   tenureYears: 5,
   tenureMonths: 4,

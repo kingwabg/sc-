@@ -7,7 +7,7 @@ export const MOCK_CHILDREN: Child[] = [
   // 임시 3명 (테스트용 — 모든 새 필드 채움)
   {
     id: "c01",
-    tenantId: "t_acme",
+    tenantId: "t-001",
     name: "박서연",
     nameLast: "박",
     nameFirst: "서연",
@@ -68,7 +68,7 @@ export const MOCK_CHILDREN: Child[] = [
   },
   {
     id: "c02",
-    tenantId: "t_acme",
+    tenantId: "t-001",
     name: "장민서",
     nameLast: "장",
     nameFirst: "민서",
@@ -127,7 +127,7 @@ export const MOCK_CHILDREN: Child[] = [
   },
   {
     id: "c03",
-    tenantId: "t_acme",
+    tenantId: "t-001",
     name: "한지유",
     nameLast: "한",
     nameFirst: "지유",
@@ -193,9 +193,9 @@ export const MOCK_CHILDREN: Child[] = [
 const _today = new Date().toISOString().slice(0, 10);
 
 export const MOCK_ATTENDANCES: Attendance[] = [
-  { id: "a01", tenantId: "t_acme", childId: "c01", date: _today, status: "등원", arrivedAt: "09:05", guardianNotified: true, authorId: "u_1" },
-  { id: "a02", tenantId: "t_acme", childId: "c02", date: _today, status: "결석", reason: "개인 사정", guardianNotified: true, authorId: "u_1" },
-  { id: "a03", tenantId: "t_acme", childId: "c03", date: _today, status: "보건휴식", arrivedAt: "09:20", reason: "두통", guardianNotified: true, authorId: "u_1" },
+  { id: "a01", tenantId: "t-001", childId: "c01", date: _today, status: "등원", arrivedAt: "09:05", guardianNotified: true, authorId: "u_1" },
+  { id: "a02", tenantId: "t-001", childId: "c02", date: _today, status: "결석", reason: "개인 사정", guardianNotified: true, authorId: "u_1" },
+  { id: "a03", tenantId: "t-001", childId: "c03", date: _today, status: "보건휴식", arrivedAt: "09:20", reason: "두통", guardianNotified: true, authorId: "u_1" },
 ];
 
 // ─── CareLog (돌봄 일지) mock ────────────────────────────────────
