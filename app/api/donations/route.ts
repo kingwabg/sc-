@@ -28,6 +28,7 @@ import {
 } from "@/lib/features/donation/data";
 import { validateDonationInput } from "@/lib/features/donation/utils";
 import type { DonationInput } from "@/lib/features/donation";
+import { withTenant } from "@/lib/api/withTenant";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export async function GET() {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTenant<{ params: Promise<Record<string, never>> }>(async (req, _ctx, scope) => {
   let body: DonationInput;
   try {
     body = (await req.json()) as DonationInput;
@@ -61,7 +62,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const created = await createDonation(body);
-    return NextResponse.json(created, { status: 201 });
+    const { tenantId: _t, ...rest } = created as unknown as { tenantId: string; [k: string]: unknown };
+    return NextResponse.json(
+      { ok: true, tenantId: scope.tenantId, ...rest },
+      { status: 201 },
+    );
   } catch (err) {
     console.error("[api/donations POST]", err);
     return NextResponse.json(
@@ -69,4 +74,4 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

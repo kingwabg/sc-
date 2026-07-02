@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { MOCK_STAFF, type Staff } from "@/lib/features/staff";
+import { withTenant } from "@/lib/api/withTenant";
 
 const DEFAULT_TENANT = process.env.DEFAULT_TENANT_ID ?? "t_acme";
 
@@ -54,7 +55,7 @@ export async function GET() {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTenant(async (req, _ctx, scope) => {
   let body: CreateStaffInput;
   try {
     body = (await req.json()) as CreateStaffInput;
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       async () => {
         const row = await prisma.staff.create({
           data: {
-            tenantId: DEFAULT_TENANT,
+            tenantId: scope.tenantId,
             name: body.name,
             loginId: body.loginId,
             gender: body.gender,
@@ -100,11 +101,12 @@ export async function POST(req: NextRequest) {
       },
       async () => ({
         id: `s-${Date.now()}`,
-        tenantId: DEFAULT_TENANT,
+        tenantId: scope.tenantId,
         ...body,
       }),
     );
-    return NextResponse.json(created, { status: 201 });
+    const { tenantId: _t, ...rest } = created as Staff;
+    return NextResponse.json({ ok: true, tenantId: scope.tenantId, ...rest }, { status: 201 });
   } catch (err) {
     console.error("[api/staff] POST failed:", err);
     return NextResponse.json(
@@ -112,4 +114,4 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

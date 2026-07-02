@@ -12,6 +12,7 @@ import {
   createLeave,
 } from "@/lib/features/leave/data";
 import type { LeaveType } from "@/lib/features/leave/types";
+import { withTenant } from "@/lib/api/withTenant";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
+export const POST = withTenant(async (req, _ctx, scope) => {
   try {
     const body = (await req.json()) as {
       staffId: string;
@@ -70,8 +71,9 @@ export async function POST(req: NextRequest) {
       reason: body.reason,
     });
 
-    return NextResponse.json(created, { status: 201 });
+    const { tenantId: _t, ...rest } = created as unknown as { tenantId: string; [k: string]: unknown };
+    return NextResponse.json({ ok: true, tenantId: scope.tenantId, ...rest }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
-}
+});
