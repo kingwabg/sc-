@@ -1,22 +1,19 @@
 "use client";
 
+/**
+ * app/staff/list/page.tsx — 직원 목록 (Mavis 직접 fix)
+ *
+ * ResourceTable 셸 사용 (AGENTS.md §1 "공통 셸 사용"). 자체 table 금지.
+ */
+
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import {
-  MOCK_STAFF_PROFILES,
-  type StaffProfile,
-} from "@/lib/features/staff";
-import { maskName, formatPhone, calcYearsOfService } from "@/lib/features/staff/utils";
-import { Search, Shield, Eye, EyeOff } from "lucide-react";
+import { MOCK_STAFF_PROFILES } from "@/lib/features/staff";
+import { Search, Shield } from "lucide-react";
+import { StaffListTable } from "./_components/StaffListTable";
+import type { TableOptions } from "@/components/ui/TableOptionsDrawer";
 
 type WorkStatus = "재직" | "휴직" | "퇴사";
-
-const STATUS_COLORS: Record<string, string> = {
-  "재직": "bg-green-50 text-green-700 border-green-200",
-  "휴직": "bg-yellow-50 text-yellow-700 border-yellow-200",
-  "퇴사": "bg-slate-100 text-slate-500 border-slate-200",
-};
 
 interface Filter {
   query: string;
@@ -26,30 +23,34 @@ interface Filter {
 
 const EMPTY_FILTER: Filter = { query: "", dept: "", status: "all" };
 
+const DEFAULT_OPTIONS: TableOptions = {
+  bordered: true,
+  cellBordered: false,
+  hover: true,
+  resizable: true,
+  sortable: true,
+  paginated: true,
+  pageSize: 50,
+  wordWrap: false,
+  fullText: false,
+  expandable: false,
+  density: "normal",
+  loading: false,
+  autoHeight: false,
+  height: 600,
+  minHeight: 400,
+  maxHeight: 1200,
+  pageSizeRows: 50,
+};
+
 export default function StaffListPage() {
   const [filter, setFilter] = useState<Filter>(EMPTY_FILTER);
   const [masking, setMasking] = useState(true);
-
-  const filtered = useMemo(() => {
-    return MOCK_STAFF_PROFILES.filter((p) => {
-      const q = filter.query.toLowerCase();
-      if (q && !p.basic.serialNo.toLowerCase().includes(q) &&
-          !p.basic.nameKr.toLowerCase().includes(q) &&
-          !p.basic.department.toLowerCase().includes(q) &&
-          !p.id.toLowerCase().includes(q)) return false;
-      if (filter.dept && p.basic.department !== filter.dept) return false;
-      if (filter.status !== "all" && p.basic.workStatus !== filter.status) return false;
-      return true;
-    });
-  }, [filter]);
 
   const departments = useMemo(() => {
     const set = new Set(MOCK_STAFF_PROFILES.map((p) => p.basic.department));
     return Array.from(set).sort();
   }, []);
-
-  const displayName = (p: StaffProfile) =>
-    masking ? maskName(p.basic.nameKr) : p.basic.nameKr;
 
   return (
     <AppShell>
@@ -60,21 +61,18 @@ export default function StaffListPage() {
             <div>
               <h1 className="text-lg font-bold text-slate-800">직원 목록</h1>
               <p className="text-xs text-slate-400 mt-0.5">
-                총 {filtered.length}명 / 전체 {MOCK_STAFF_PROFILES.length}명
+                인사카드 관리 — 검색 / 필터 / 마스킹
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="flex items-center gap-1.5 text-xs text-indigo-600 border border-indigo-200 hover:border-indigo-300 rounded-lg px-3 py-1.5 transition-colors">
-                + 직원 등록
-              </button>
-            </div>
+            <button className="flex items-center gap-1.5 text-xs text-indigo-600 border border-indigo-200 hover:border-indigo-300 rounded-lg px-3 py-1.5 transition-colors">
+              + 직원 등록
+            </button>
           </div>
         </div>
 
         {/* ── 검색/필터 바 ── */}
         <div className="bg-white border-b border-slate-200 px-6 py-3">
           <div className="flex flex-wrap items-center gap-3">
-            {/* 키워드 검색 */}
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <input
@@ -85,8 +83,6 @@ export default function StaffListPage() {
                 className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300"
               />
             </div>
-
-            {/* 부서 필터 */}
             <select
               value={filter.dept}
               onChange={(e) => setFilter((f) => ({ ...f, dept: e.target.value }))}
@@ -97,8 +93,6 @@ export default function StaffListPage() {
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
-
-            {/* 근무상태 필터 */}
             <select
               value={filter.status}
               onChange={(e) => setFilter((f) => ({ ...f, status: e.target.value as Filter["status"] }))}
@@ -109,8 +103,6 @@ export default function StaffListPage() {
               <option value="휴직">휴직</option>
               <option value="퇴사">퇴사</option>
             </select>
-
-            {/* 초기화 */}
             {(filter.query || filter.dept || filter.status !== "all") && (
               <button
                 onClick={() => setFilter(EMPTY_FILTER)}
@@ -119,8 +111,6 @@ export default function StaffListPage() {
                 초기화
               </button>
             )}
-
-            {/* 개인정보 마스킹 토글 */}
             <label className="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer ml-auto">
               <input
                 type="checkbox"
@@ -134,69 +124,9 @@ export default function StaffListPage() {
           </div>
         </div>
 
-        {/* ── 테이블 ── */}
+        {/* ── 테이블 (ResourceTable 셸) ── */}
         <div className="px-6 py-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">직렬번호</th>
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">직원명</th>
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">부서</th>
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">직위</th>
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">호봉</th>
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">근무상태</th>
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">입사일</th>
-                    <th className="text-left py-2.5 px-4 font-medium text-slate-500">연락처</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-12 text-slate-400">
-                        검색 결과가 없습니다
-                      </td>
-                    </tr>
-                  ) : (
-                    filtered.map((p, i) => {
-                      const yos = calcYearsOfService(p.basic.joinDate);
-                      return (
-                        <tr
-                          key={p.id}
-                          className="border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer transition-colors"
-                          onClick={() => window.location.href = `/staff/${p.id}`}
-                        >
-                          <td className="py-2.5 px-4 text-slate-500">{p.basic.serialNo}</td>
-                          <td className="py-2.5 px-4">
-                            <span className="font-medium text-slate-800">{displayName(p)}</span>
-                            {p.basic.nameCn && (
-                              <span className="ml-1 text-slate-400">{p.basic.nameCn}</span>
-                            )}
-                          </td>
-                          <td className="py-2.5 px-4 text-slate-600">{p.basic.department}</td>
-                          <td className="py-2.5 px-4 text-slate-600">{p.basic.position}</td>
-                          <td className="py-2.5 px-4 text-slate-600">{p.basic.salaryStep}호봉</td>
-                          <td className="py-2.5 px-4">
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded border text-xs font-medium ${STATUS_COLORS[p.basic.workStatus] ?? "bg-slate-50 text-slate-500"}`}>
-                              {p.basic.workStatus}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-4 text-slate-500">
-                            {p.basic.joinDate}
-                            <span className="ml-1 text-slate-400">({yos.years}년)</span>
-                          </td>
-                          <td className="py-2.5 px-4 text-slate-500">
-                            {masking ? "010-****-****" : p.basic.mobile ? formatPhone(p.basic.mobile) : "—"}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <StaffListTable filter={filter} masking={masking} options={DEFAULT_OPTIONS} />
         </div>
       </div>
     </AppShell>
