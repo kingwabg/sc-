@@ -210,9 +210,9 @@ function DefaultBottomBar({
   onPageChange: (page: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-3 border-t border-slate-100 bg-slate-50/60 text-[12px] text-slate-600">
+    <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-3 border-t border-slate-100 bg-slate-50/60 text-[12px] text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500">
       <span>
-        총 <strong className="text-slate-900">{total}</strong>명
+        총 <strong className="text-slate-900 dark:text-slate-300">{total}</strong>명
         {paginated && (
           <>
             {" "}· {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} 표시
