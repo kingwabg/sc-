@@ -40,6 +40,10 @@ export type { StaffAttendanceMap, VolunteerAttendanceMap } from "./staff";
 
 // UI / badges / favorites / sidebar / mail accounts
 export {
+  THEME_MODE_EVENT,
+  applyThemeMode,
+  getThemeMode,
+  setThemeMode,
   getSidebarCollapsed,
   setSidebarCollapsed,
   getFavoriteHrefs,
@@ -57,3 +61,4 @@ export {
   removeMailAccount,
   updateMailAccount,
 } from "./ui";
+export type { ThemeMode } from "./ui";

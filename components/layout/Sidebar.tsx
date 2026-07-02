@@ -298,7 +298,7 @@ export function Sidebar() {
       )}
 
       {/* 고정 그룹 */}
-      <div className="flex-1 overflow-y-auto px-2">
+      <div className="sidebar-scroll flex-1 overflow-y-auto px-2">
         {FIXED_GROUPS.map((group) => {
           const items = group.items
             .filter((href) => !favorites.includes(href))
@@ -372,11 +372,11 @@ function CollapsedSidebar({
           title="사이드바 펼치기"
           className="w-10 h-10 grid place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition"
         >
-          <PanelLeft className="w-[18px] h-[18px]" />
+          <PanelLeft className="w-[18px] h-[18px] -translate-x-[3px]" />
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 space-y-0.5">
+      <nav className="sidebar-scroll flex-1 overflow-y-auto px-2 space-y-0.5">
         {orderedHrefs.map((href) => {
           const item = ALL_MENU_ITEMS[href];
           if (!item) return null;

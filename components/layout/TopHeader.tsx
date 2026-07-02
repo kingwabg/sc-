@@ -3,13 +3,21 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LayoutGrid, Search, Sun, Bell, Settings, ChevronDown, Check, Building2 } from "lucide-react";
+import { LayoutGrid, Search, Sun, Moon, Bell, Settings, ChevronDown, Check, Building2 } from "lucide-react";
 import { useTenant } from "@/lib/tenant-context";
 import { TENANT_LIST, type Tenant } from "@/lib/tenants";
+import {
+  THEME_MODE_EVENT,
+  applyThemeMode,
+  getThemeMode,
+  setThemeMode,
+  type ThemeMode,
+} from "@/lib/store";
 
 export function TopHeader() {
   const { tenant, setTenant } = useTenant();
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>("light");
   const router = useRouter();
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -21,10 +29,36 @@ export function TopHeader() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  useEffect(() => {
+    const sync = () => {
+      const mode = getThemeMode();
+      applyThemeMode(mode);
+      setTheme(mode);
+    };
+    const onThemeChange = (event: Event) => {
+      const next = event instanceof CustomEvent ? event.detail : getThemeMode();
+      setTheme(next === "dark" ? "dark" : "light");
+    };
+
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener(THEME_MODE_EVENT, onThemeChange);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener(THEME_MODE_EVENT, onThemeChange);
+    };
+  }, []);
+
   function onPickTenant(t: Tenant) {
     setTenant(t.id);
     setOpen(false);
     router.push("/portal");
+  }
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    setThemeMode(next);
   }
 
   return (
@@ -57,8 +91,17 @@ export function TopHeader() {
 
       {/* Right actions */}
       <div className="flex items-center gap-1">
-        <IconBtn aria-label="다크모드">
-          <Sun className="w-[18px] h-[18px]" />
+        <IconBtn
+          aria-label={theme === "dark" ? "라이트모드" : "다크모드"}
+          aria-pressed={theme === "dark"}
+          title={theme === "dark" ? "라이트모드" : "다크모드"}
+          onClick={toggleTheme}
+        >
+          {theme === "dark" ? (
+            <Moon className="w-[18px] h-[18px]" />
+          ) : (
+            <Sun className="w-[18px] h-[18px]" />
+          )}
         </IconBtn>
         <IconBtn aria-label="알림" badge={5}>
           <Bell className="w-[18px] h-[18px]" />
