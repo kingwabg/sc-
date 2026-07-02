@@ -309,7 +309,7 @@ export function TodoBoard() {
           </div>
         </div>
 
-        <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_150px_120px_auto]">
+        <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_150px_190px_auto]">
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -331,10 +331,11 @@ export function TodoBoard() {
           <button
             type="button"
             onClick={() => setDateModalOpen(true)}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition hover:border-blue-300 hover:bg-blue-50 focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
+            className="inline-flex h-11 min-w-0 items-center justify-start gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition hover:border-blue-300 hover:bg-blue-50 focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
           >
             <CalendarClock className="h-4 w-4 text-slate-400" />
-            <span className="truncate">{formatDateRangeLabel(dueRange)}</span>
+            <span className="text-xs font-black text-slate-400">기한</span>
+            <span className="min-w-0 flex-1 truncate text-left">{formatDateRangeLabel(dueRange)}</span>
           </button>
           <button
             type="button"

@@ -157,63 +157,63 @@ export function DateRangeModal({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-      <section className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:border dark:border-slate-700 dark:bg-slate-900">
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 px-8 dark:border-slate-700">
-          <h2 className="text-xl font-black text-slate-900">{title}</h2>
+      <section className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:border dark:border-slate-700 dark:bg-slate-900">
+        <header className="flex h-14 items-center justify-between border-b border-slate-200 px-6 dark:border-slate-700">
+          <h2 className="text-lg font-black text-slate-900 dark:text-slate-50">{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="grid h-9 w-9 place-items-center rounded-lg text-slate-300 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+            className="grid h-8 w-8 place-items-center rounded-lg text-slate-300 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
             aria-label="닫기"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
         </header>
 
-        <div className="overflow-y-auto px-8 py-6">
-          <div className="mb-6 rounded-md border-2 border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-950/30">
-            <div className="flex flex-wrap items-center justify-center gap-4 text-xl font-bold text-slate-600">
+        <div className="overflow-y-auto px-6 py-5">
+          <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/30">
+            <div className="flex flex-wrap items-center justify-center gap-3 text-base font-bold text-slate-600 dark:text-slate-300">
               <span>기준연도</span>
               <div className="inline-flex overflow-hidden rounded-md border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
-                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() - 1, cursor.getMonth(), 1))} className="grid h-11 w-11 place-items-center border-r border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
-                  <ChevronLeft className="h-5 w-5" />
+                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() - 1, cursor.getMonth(), 1))} className="grid h-9 w-9 place-items-center border-r border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
-                <div className="grid h-11 w-24 place-items-center text-slate-900">{cursor.getFullYear()}</div>
-                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() + 1, cursor.getMonth(), 1))} className="grid h-11 w-11 place-items-center border-l border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
-                  <ChevronRight className="h-5 w-5" />
+                <div className="grid h-9 w-20 place-items-center text-slate-900 dark:text-slate-50">{cursor.getFullYear()}</div>
+                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() + 1, cursor.getMonth(), 1))} className="grid h-9 w-9 place-items-center border-l border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
-              <span className="text-slate-500">{rangeLabel(draft)}</span>
+              <span className="text-sm font-black text-slate-500 dark:text-slate-400">{rangeLabel(draft)}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-7">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-7">
             {PRESETS.map((preset) => (
               <button
                 key={preset.label}
                 type="button"
                 onClick={() => applyPreset(preset)}
-                className="h-10 rounded border border-slate-300 bg-white text-sm font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40"
+                className="h-9 rounded-md border border-slate-300 bg-white text-sm font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40"
               >
                 {preset.label}
               </button>
             ))}
           </div>
 
-          <div className="mt-3 grid grid-cols-4 gap-3 md:grid-cols-12">
+          <div className="mt-2 grid grid-cols-4 gap-2 md:grid-cols-12">
             {Array.from({ length: 12 }, (_, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => applyMonth(index)}
-                className="h-10 rounded border border-slate-300 bg-white text-sm font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40"
+                className="h-9 rounded-md border border-slate-300 bg-white text-sm font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40"
               >
                 {index + 1}월
               </button>
             ))}
           </div>
 
-          <div className="mt-7 grid gap-8 lg:grid-cols-2">
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
             <MonthCalendar
               cursor={cursor}
               draft={draft}
@@ -229,21 +229,21 @@ export function DateRangeModal({
           </div>
         </div>
 
-        <footer className="flex justify-end gap-2 border-t border-slate-200 px-8 py-5 dark:border-slate-700">
+        <footer className="flex justify-end gap-2 border-t border-slate-200 px-6 py-4 dark:border-slate-700">
           <button
             type="button"
             onClick={() => onApply(draft)}
-            className="inline-flex h-11 items-center gap-2 rounded bg-blue-500 px-4 text-base font-black text-white transition hover:bg-blue-600"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-500 px-4 text-sm font-black text-white transition hover:bg-blue-600"
           >
-            <Check className="h-5 w-5" />
+            <Check className="h-4 w-4" />
             적용
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 items-center gap-2 rounded border border-slate-300 bg-white px-4 text-base font-black text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
             취소
           </button>
         </footer>
@@ -269,21 +269,21 @@ function MonthCalendar({
   const todayKey = toDateKey(new Date());
 
   return (
-    <div className="border-l border-slate-200 dark:border-slate-700">
-      <div className="flex h-14 items-center justify-between bg-slate-100 px-4 dark:bg-slate-800">
+    <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+      <div className="flex h-11 items-center justify-between bg-slate-100 px-3 dark:bg-slate-800">
         <button type="button" onClick={onPrev} className={cn("text-slate-400 hover:text-slate-700", !onPrev && "invisible")}>
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
-        <button type="button" className="inline-flex items-center gap-1 text-xl font-black text-slate-800">
+        <button type="button" className="inline-flex items-center gap-1 text-base font-black text-slate-800 dark:text-slate-50">
           {cursor.getMonth() + 1}월 {cursor.getFullYear()}
         </button>
         <button type="button" onClick={onNext} className={cn("text-slate-400 hover:text-slate-700", !onNext && "invisible")}>
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
       <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100 text-center dark:border-slate-700 dark:bg-slate-800">
         {WEEKDAYS.map((day) => (
-          <div key={day} className="py-3 text-base font-black text-slate-700">
+          <div key={day} className="py-2 text-sm font-black text-slate-700 dark:text-slate-200">
             {day}
           </div>
         ))}
@@ -299,7 +299,7 @@ function MonthCalendar({
               type="button"
               onClick={() => onSelect(cell.key)}
               className={cn(
-                "grid h-12 place-items-center text-lg font-semibold transition",
+                "grid h-10 place-items-center text-sm font-bold transition",
                 cell.inMonth ? "text-slate-800 dark:text-slate-100" : "text-slate-300 dark:text-slate-600",
                 inRange && "bg-blue-100 dark:bg-blue-950/55",
                 selected && "bg-blue-500 text-white dark:bg-blue-500 dark:text-white",
@@ -311,11 +311,11 @@ function MonthCalendar({
           );
         })}
       </div>
-      <div className="mt-4 flex justify-center">
+      <div className="flex justify-center border-t border-slate-100 py-3 dark:border-slate-800">
         <button
           type="button"
           onClick={() => onSelect(todayKey)}
-          className="rounded border border-slate-300 bg-white px-4 py-2 text-base font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
         >
           오늘
         </button>
