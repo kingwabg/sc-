@@ -192,6 +192,8 @@
 .resource-table-shell .rs-table {
   --rs-table-scrollbar-width: 5px;
   --rs-table-scrollbar-handle-width: 4px;
+  border: 0 !important;
+  border-radius: 0 !important;
 }
 
 .resource-table-shell .rs-table-scrollbar-horizontal {

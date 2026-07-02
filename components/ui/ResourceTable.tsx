@@ -110,7 +110,7 @@ export function ResourceTable<T extends Record<string, any>>({
   const hasExpansion = !!renderExpanded;
 
   return (
-    <div className="resource-table-shell">
+    <div className="resource-table-shell overflow-hidden rounded-2xl border border-slate-200 shadow-card dark:border-slate-800 dark:shadow-none">
       <Table
         data={pageRows as any}
         rowKey={rowKey as any}
