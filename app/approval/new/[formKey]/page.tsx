@@ -1542,7 +1542,7 @@ function StepIndicator({
   const currentIndex = steps.indexOf(current);
 
   return (
-    <div className="sticky top-[76px] z-30 border-b border-slate-200 bg-white px-6 shadow-sm">
+    <div className="sticky top-[60px] z-30 border-b border-slate-200 bg-white px-6 shadow-sm">
       <div className="flex h-12 items-center gap-8">
         {steps.map((s, i) => {
           const done = i < currentIndex;
