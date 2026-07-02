@@ -51,10 +51,11 @@ import { GRADE_ORDER } from "./_components/gradeForYear";
 const AVAILABLE_YEARS = [2026, 2025, 2024];
 const CATEGORIES: CareLogCategory[] = ["식사", "학습", "놀이", "투약", "관찰", "특별활동", "기타"];
 
-type TabKey = "basic" | "health" | "attendance" | "documents";
+type TabKey = "profile" | "card" | "health" | "attendance" | "documents";
 
 const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: "basic", label: "아동 카드", icon: IdCard },
+  { key: "profile", label: "기본정보", icon: User },
+  { key: "card", label: "아동카드", icon: IdCard },
   { key: "health", label: "건강", icon: Heart },
   { key: "attendance", label: "출석", icon: CalendarDays },
   { key: "documents", label: "문서", icon: FileText },
@@ -144,7 +145,7 @@ export default function ChildDetailPage() {
         kind: "child-card",
         title: `${updated.name} 아동카드`,
         snippet: `이름 ${updated.name} · 학년 ${updated.grade ?? "-"} · 학교 ${updated.school ?? "-"}`,
-        sourceUrl: `/children/${updated.id}?tab=basic`,
+        sourceUrl: `/children/${updated.id}?tab=card`,
         childId: updated.id,
         authorId: "u_current",
         authorName: "나",
@@ -153,7 +154,7 @@ export default function ChildDetailPage() {
     }
   }
 
-  const [activeTab, setActiveTab] = useState<TabKey>("basic");
+  const [activeTab, setActiveTab] = useState<TabKey>("profile");
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(null);
   const [showLogForm, setShowLogForm] = useState(false);
@@ -444,7 +445,8 @@ export default function ChildDetailPage() {
 
           {/* 탭 컨텐츠 */}
           <div className="min-w-0 space-y-4">
-            {activeTab === "basic" && (
+            {activeTab === "profile" && <BasicInfoTab child={child} />}
+            {activeTab === "card" && (
               <ChildCardTab
                 child={child}
                 childTone={childTone}
@@ -486,6 +488,47 @@ export default function ChildDetailPage() {
         />
       )}
     </AppShell>
+  );
+}
+
+// ─── Tab: 기본정보 ──────────────────────────────────────────────
+
+function BasicInfoTab({ child }: { child: Child }) {
+  const empty = "미입력";
+  const formatDate = (value?: string) => value || empty;
+  const childPhone = child.phone || empty;
+  const serviceType = child.serviceType || empty;
+  const medianIncome = typeof child.medianIncomePct === "number" ? `${child.medianIncomePct}%` : empty;
+  const guardianType = child.guardian.type || empty;
+  const guardianNotes = child.guardian.notes || empty;
+  const manager = child.writtenBy?.name || empty;
+  const kidsCallId = child.kidsCallId || empty;
+  const leftAt = child.leftAt || empty;
+
+  return (
+    <div className="space-y-4">
+      <section className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <User className="w-4 h-4 text-brand-600" />
+          <h2 className="text-[15px] font-bold text-slate-900 m-0">기본정보</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          <InfoItem label="휴대폰" value={childPhone} icon={Phone} muted={!child.phone} />
+          <InfoItem label="생년월일" value={formatDate(child.birthDate)} icon={CalendarDays} muted={!child.birthDate} />
+          <InfoItem label="입소일" value={formatDate(child.enrolledAt)} icon={CalendarDays} muted={!child.enrolledAt} />
+          <InfoItem label="이전입소일" value={formatDate(child.previousEnrolledAt)} icon={CalendarDays} muted={!child.previousEnrolledAt} />
+          <InfoItem label="퇴소일" value={leftAt} icon={CalendarDays} muted={!child.leftAt} />
+          <InfoItem label="이용유형" value={serviceType} icon={IdCard} muted={!child.serviceType} />
+          <InfoItem label="기준 중위소득" value={medianIncome} icon={TrendingUp} muted={typeof child.medianIncomePct !== "number"} />
+          <InfoItem label="담당자" value={manager} icon={User} muted={!child.writtenBy?.name} />
+          <InfoItem label="키즈콜ID" value={kidsCallId} icon={MessageCircle} muted={!child.kidsCallId} />
+          <InfoItem label="보호자 유형" value={guardianType} icon={Users} muted={!child.guardian.type} />
+          <InfoItem label="보호자 비고" value={guardianNotes} icon={FileText} muted={!child.guardian.notes} className="md:col-span-2 xl:col-span-2" />
+          <InfoItem label="주소" value={child.address || empty} icon={MapPin} muted={!child.address} className="md:col-span-2 xl:col-span-3" />
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -737,6 +780,32 @@ function BigField({
       >
         {Icon && <Icon className="w-4 h-4 text-slate-400 shrink-0" />}
         {children}
+      </div>
+    </div>
+  );
+}
+
+function InfoItem({
+  label,
+  value,
+  icon: Icon,
+  muted,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
+  muted?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3", className)}>
+      <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 mb-1.5">
+        {Icon && <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+        {label}
+      </div>
+      <div className={cn("text-[14px] font-semibold leading-relaxed break-words", muted ? "text-slate-400" : "text-slate-900")}>
+        {value}
       </div>
     </div>
   );
