@@ -1,5 +1,5 @@
 /**
- * lib/features/tenant/store.ts — Tenant mutation layer (server-only)
+ * lib/features/tenant/store.ts — Tenant mutation layer
  *
  * tryPrisma 패턴:
  *   - DATABASE_URL 없거나 Prisma 미연결 → in-memory MOCK_TENANTS mutation
@@ -9,7 +9,6 @@
  * 운영자 콘솔 CRUD의 백엔드 store.
  */
 
-import "server-only";
 import { MOCK_TENANTS } from "./data";
 import type { Tenant } from "./types";
 
