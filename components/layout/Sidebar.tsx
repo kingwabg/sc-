@@ -503,7 +503,7 @@ function NavGroup({
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
                   "flex items-center gap-2.5 h-9 pl-3 rounded-lg text-[13.5px] font-medium transition",
-                  editingFavorites ? (badge ? "pr-10" : "pr-3") : badge ? "pr-16" : "pr-10",
+                  editingFavorites ? (badge ? "pr-10" : "pr-3") : "pr-10",
                   isActive || childActive
                     ? "bg-brand-50 text-brand-700"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
@@ -521,12 +521,9 @@ function NavGroup({
                 )}
               </Link>
 
-              {badge ? (
+              {editingFavorites && badge ? (
                 <span
-                  className={cn(
-                    "pointer-events-none absolute top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center",
-                    editingFavorites ? "right-3" : "right-9",
-                  )}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center"
                 >
                   {badge}
                 </span>
@@ -560,13 +557,25 @@ function NavGroup({
               )}
 
               {!editingFavorites && (
-                <button
-                  onClick={() => onToggleFavorite(item.href)}
-                  className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition"
-                  title="즐겨찾기에 추가"
-                >
-                  <Star className={cn("w-3.5 h-3.5", favorites.includes(item.href) ? "fill-amber-400 text-amber-400" : "")} />
-                </button>
+                <div className="hidden md:grid absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 place-items-center">
+                  {badge ? (
+                    <span className="pointer-events-none min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center transition duration-150 group-hover:scale-75 group-hover:opacity-0">
+                      {badge}
+                    </span>
+                  ) : null}
+                  <button
+                    onClick={() => onToggleFavorite(item.href)}
+                    className="absolute inset-0 grid place-items-center rounded-md text-slate-400 opacity-0 transition duration-150 group-hover:opacity-100 hover:text-amber-500 hover:bg-amber-50"
+                    title={favorites.includes(item.href) ? "즐겨찾기 해제" : "즐겨찾기에 추가"}
+                  >
+                    <Star className={cn("w-3.5 h-3.5", favorites.includes(item.href) ? "fill-amber-400 text-amber-400" : "")} />
+                    {badge ? (
+                      <span className="pointer-events-none absolute -right-1 -top-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-4 text-center opacity-0 transition duration-150 group-hover:opacity-100">
+                        {badge}
+                      </span>
+                    ) : null}
+                  </button>
+                </div>
               )}
             </div>
           );
