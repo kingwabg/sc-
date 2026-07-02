@@ -56,13 +56,19 @@ const COLUMNS: Array<{
   description: string;
   icon: typeof Circle;
   accent: string;
+  surface: string;
+  over: string;
+  count: string;
 }> = [
   {
     id: "todo",
     title: "대기",
     description: "해야 할 일",
     icon: Circle,
-    accent: "bg-slate-100 text-slate-600",
+    accent: "bg-[#0f172a] text-white dark:bg-[#334155] dark:text-slate-100",
+    surface: "border-slate-200 bg-[#f1f5f9]/70 dark:border-slate-700/80 dark:bg-[#0b1220]/70",
+    over: "border-slate-400 bg-[#e2e8f0]/80 dark:border-slate-500 dark:bg-[#1e293b]/85",
+    count: "bg-[#0f172a] text-white dark:bg-[#334155]",
   },
   {
     id: "doing",
@@ -70,6 +76,9 @@ const COLUMNS: Array<{
     description: "오늘 처리 중",
     icon: Flame,
     accent: "bg-blue-100 text-blue-700",
+    surface: "border-blue-100 bg-blue-50/70 dark:border-blue-900/50 dark:bg-blue-950/25",
+    over: "border-blue-300 bg-blue-100/80 dark:border-blue-700 dark:bg-blue-950/45",
+    count: "bg-blue-950 text-white dark:bg-blue-500",
   },
   {
     id: "done",
@@ -77,6 +86,9 @@ const COLUMNS: Array<{
     description: "마무리됨",
     icon: CheckCircle2,
     accent: "bg-emerald-100 text-emerald-700",
+    surface: "border-emerald-100 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/25",
+    over: "border-emerald-300 bg-emerald-100/80 dark:border-emerald-700 dark:bg-emerald-950/45",
+    count: "bg-emerald-950 text-white dark:bg-emerald-500",
   },
 ];
 
@@ -284,7 +296,7 @@ export function TodoBoard() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:flex">
+          <div className="grid w-full grid-cols-2 gap-2 sm:w-[260px]">
             <Metric label="진행 전/중" value={openCount} />
             <Metric label="완료" value={doneCount} />
           </div>
@@ -358,9 +370,9 @@ export function TodoBoard() {
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+    <div className="grid h-[68px] min-w-0 place-items-center rounded-xl border border-slate-200 bg-[#f8fafc] px-3 text-center dark:border-slate-700 dark:bg-[#0b1220]/70">
       <div className="text-2xl font-black text-slate-950">{value}</div>
-      <div className="text-[11px] font-bold text-slate-500">{label}</div>
+      <div className="text-[11px] font-bold leading-4 text-slate-500">{label}</div>
     </div>
   );
 }
@@ -386,8 +398,9 @@ function TodoColumn({
     <section
       ref={setNodeRef}
       className={cn(
-        "min-h-[420px] rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition",
-        isOver && "border-blue-300 bg-blue-50/60",
+        "min-h-[420px] rounded-2xl border p-3 transition",
+        column.surface,
+        isOver && column.over,
       )}
     >
       <div className="mb-3 flex items-center justify-between px-1">
@@ -400,7 +413,7 @@ function TodoColumn({
             <p className="text-xs font-semibold text-slate-500">{column.description}</p>
           </div>
         </div>
-        <span className="rounded-full bg-white px-2 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
+        <span className={cn("rounded-full px-2 py-1 text-xs font-black shadow-sm", column.count)}>
           {tasks.length}
         </span>
       </div>
@@ -417,7 +430,7 @@ function TodoColumn({
       </SortableContext>
 
       {tasks.length === 0 && (
-        <div className="mt-4 grid min-h-40 place-items-center rounded-xl border border-dashed border-slate-200 bg-white/70 px-4 text-center">
+        <div className="mt-4 grid min-h-40 place-items-center rounded-xl border border-dashed border-slate-200 bg-white/70 px-4 text-center dark:border-slate-700 dark:bg-slate-950/35">
           <div>
             <ListChecks className="mx-auto h-6 w-6 text-slate-300" />
             <p className="mt-2 text-xs font-bold text-slate-400">여기로 끌어다 놓기</p>
