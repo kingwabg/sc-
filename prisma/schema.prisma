@@ -853,3 +853,55 @@ model Donation {
   @@index([tenantId, type])
   @@index([receiptNumber])
 }
+
+// ─── Staff Extended (P15 — 경력/자격/교육) ───────────────
+
+model StaffCareer {
+  id          String   @id @default(cuid())
+  staffId     String
+  staff       Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  startDate   DateTime
+  endDate     DateTime?
+  orgName     String
+  position    String?
+  jobDesc     String?
+  recognition String?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@index([staffId])
+  @@map("staff_careers")
+}
+
+model StaffCertification {
+  id          String    @id @default(cuid())
+  staffId     String
+  staff       Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  certType    String
+  certNo      String?
+  issueDate   DateTime
+  issuer      String?
+  expiryDate  DateTime?
+  recognition Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@index([staffId])
+  @@map("staff_certifications")
+}
+
+model StaffTraining {
+  id           String    @id @default(cuid())
+  staffId      String
+  staff        Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  trainingName String
+  startDate    DateTime
+  endDate      DateTime?
+  hours        Int?
+  institution  String?
+  certUrl      String?
+  type         String?
+  createdAt    DateTime  @default(now())
+
+  @@index([staffId])
+  @@map("staff_trainings")
+}
