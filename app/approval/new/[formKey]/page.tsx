@@ -719,6 +719,7 @@ function ApprovalLineModal({
   const [tab, setTab] = useState<"approval" | "reference" | "reader">("approval");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ApprovalPerson[]>(approvers);
+  const [agreementMode, setAgreementMode] = useState<"sequential" | "parallel">("sequential");
   const filteredCandidates = APPROVAL_CANDIDATES.filter((person) =>
     `${person.name} ${person.role} ${person.team}`.toLowerCase().includes(query.toLowerCase())
   );
@@ -733,7 +734,7 @@ function ApprovalLineModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4">
-      <div className="w-full max-w-[780px] overflow-hidden rounded-lg bg-white shadow-2xl">
+      <div className="w-full max-w-[920px] overflow-hidden rounded-lg bg-white shadow-2xl">
         <div className="flex h-14 items-center justify-between border-b border-slate-200 px-5">
           <h3 className="text-sm font-bold text-slate-900">결재 정보</h3>
           <button
@@ -768,7 +769,7 @@ function ApprovalLineModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-[270px_1fr] gap-3 p-5">
+        <div className="grid grid-cols-[290px_1fr] gap-3 p-5">
           <section className="border border-slate-200">
             <div className="grid grid-cols-2 border-b border-slate-200 text-center text-[11px] font-semibold">
               <button type="button" className="border-b-2 border-slate-900 py-2 text-slate-900">조직도</button>
@@ -813,25 +814,39 @@ function ApprovalLineModal({
           </section>
 
           <section className="border border-slate-200">
-            <div className="grid grid-cols-[70px_1fr_1fr_90px_34px] border-b border-slate-200 bg-slate-50 py-2 text-center text-[11px] font-semibold text-slate-600">
-              <span>타입</span>
-              <span>이름</span>
+            <div className="grid grid-cols-3 gap-2 border-b border-slate-200 bg-slate-50 p-3 text-[11px]">
+              <div className="rounded-md bg-white px-3 py-2 shadow-sm ring-1 ring-slate-100">
+                <div className="text-slate-400">전체 단계</div>
+                <div className="mt-1 font-bold text-slate-900">{selected.length + 1}단계</div>
+              </div>
+              <div className="rounded-md bg-white px-3 py-2 shadow-sm ring-1 ring-slate-100">
+                <div className="text-slate-400">승인자</div>
+                <div className="mt-1 font-bold text-brand-700">{selected.length}명</div>
+              </div>
+              <div className="rounded-md bg-white px-3 py-2 shadow-sm ring-1 ring-slate-100">
+                <div className="text-slate-400">합의방식</div>
+                <div className="mt-1 font-bold text-slate-900">
+                  {agreementMode === "sequential" ? "순차" : "병렬"}
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-[44px_70px_1fr_86px_96px_78px_34px] border-b border-slate-200 bg-white py-2 text-center text-[11px] font-semibold text-slate-600">
+              <span>순서</span>
+              <span>유형</span>
+              <span>결재자</span>
+              <span>직위</span>
               <span>부서</span>
               <span>상태</span>
-              <span>삭제</span>
-            </div>
-            <div className="border-b border-slate-200 bg-white px-3 py-1.5 text-center text-[11px] font-bold text-slate-700">
-              신청
-            </div>
-            <div className="grid grid-cols-[70px_1fr_1fr_90px_34px] items-center border-b border-slate-100 px-3 py-2 text-[12px]">
-              <span className="text-slate-500">기안</span>
-              <span className="font-semibold text-slate-900">왕준하</span>
-              <span className="text-slate-500">사회복지사</span>
-              <span className="text-center text-slate-400">고정</span>
               <span />
             </div>
-            <div className="border-b border-slate-200 bg-white px-3 py-1.5 text-center text-[11px] font-bold text-slate-700">
-              승인
+            <div className="grid grid-cols-[44px_70px_1fr_86px_96px_78px_34px] items-center border-b border-slate-100 px-3 py-2 text-[12px]">
+              <span className="text-center font-bold text-slate-500">1</span>
+              <span className="rounded border border-slate-200 bg-slate-50 py-1 text-center text-[11px] font-semibold text-slate-600">기안</span>
+              <span className="font-semibold text-slate-900">왕준하</span>
+              <span className="text-slate-500">팀장</span>
+              <span className="truncate text-slate-500">사회복지사</span>
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-center text-[11px] font-semibold text-slate-500">완료</span>
+              <span />
             </div>
             <div className="min-h-[150px]">
               {selected.length === 0 ? (
@@ -839,15 +854,21 @@ function ApprovalLineModal({
                   왼쪽 조직도에서 결재자를 선택하세요.
                 </div>
               ) : (
-                selected.map((person) => (
+                selected.map((person, index) => (
                   <div
                     key={person.id}
-                    className="grid grid-cols-[70px_1fr_1fr_90px_34px] items-center border-b border-slate-100 px-3 py-2 text-[12px]"
+                    className="grid grid-cols-[44px_70px_1fr_86px_96px_78px_34px] items-center border-b border-slate-100 px-3 py-2 text-[12px]"
                   >
-                    <span className="text-slate-500">승인</span>
+                    <span className="text-center font-bold text-slate-500">{index + 2}</span>
+                    <select className="h-7 rounded border border-slate-200 bg-white px-1 text-[11px] font-semibold text-slate-700 outline-none focus:border-brand-400">
+                      <option>결재</option>
+                      <option>합의</option>
+                      <option>검토</option>
+                    </select>
                     <span className="font-semibold text-slate-900">{person.name}</span>
-                    <span className="text-slate-500">{person.team}</span>
-                    <span className="text-center text-brand-600">대기</span>
+                    <span className="truncate text-slate-500">{person.role}</span>
+                    <span className="truncate text-slate-500">{person.team}</span>
+                    <span className="rounded-full bg-brand-50 px-2 py-1 text-center text-[11px] font-semibold text-brand-700">대기</span>
                     <button
                       type="button"
                       onClick={() => togglePerson(person)}
@@ -864,8 +885,28 @@ function ApprovalLineModal({
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-3">
-          <div className="text-[11px] text-slate-500">
-            합의방식: <span className="font-semibold text-brand-700">순차합의</span>
+          <div className="flex items-center gap-4 text-[11px] text-slate-500">
+            <span className="font-semibold text-slate-700">합의방식</span>
+            <label className="inline-flex items-center gap-1.5">
+              <input
+                type="radio"
+                name="agreementMode"
+                checked={agreementMode === "sequential"}
+                onChange={() => setAgreementMode("sequential")}
+                className="h-3 w-3 accent-brand-600"
+              />
+              순차합의
+            </label>
+            <label className="inline-flex items-center gap-1.5">
+              <input
+                type="radio"
+                name="agreementMode"
+                checked={agreementMode === "parallel"}
+                onChange={() => setAgreementMode("parallel")}
+                className="h-3 w-3 accent-brand-600"
+              />
+              병렬합의
+            </label>
           </div>
           <div className="flex gap-2">
             <button
