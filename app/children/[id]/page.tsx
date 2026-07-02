@@ -494,7 +494,7 @@ export default function ChildDetailPage() {
 // ─── Tab: 기본정보 ──────────────────────────────────────────────
 
 function BasicInfoTab({ child }: { child: Child }) {
-  const [activeInfoTab, setActiveInfoTab] = useState<"basic" | "usage" | "health" | "household" | "notes">("basic");
+  const [activeInfoTab, setActiveInfoTab] = useState<"basic" | "usage" | "health">("basic");
   const empty = "미입력";
   const formatDate = (value?: string) => value || empty;
   const childPhone = child.phone || empty;
@@ -518,8 +518,6 @@ function BasicInfoTab({ child }: { child: Child }) {
     { key: "basic" as const, label: "기본 인적사항" },
     { key: "usage" as const, label: "자격·이용" },
     { key: "health" as const, label: "건강·장애" },
-    { key: "household" as const, label: "가구·보호" },
-    { key: "notes" as const, label: "특이사항" },
   ];
 
   return (
@@ -597,6 +595,37 @@ function BasicInfoTab({ child }: { child: Child }) {
                 <InfoRow label="개인정보 동의" value={empty} muted />
                 <InfoRow label="퇴소일" value={leftAt} muted={!child.leftAt} />
               </InfoGroup>
+
+              <InfoGroup title="보호자 정보">
+                <InfoRow label="보호자 성명" value={child.guardian.name} />
+                <InfoRow label="관계" value={child.guardian.relation} />
+                <InfoRow label="보호자 유형" value={guardianType} muted={!child.guardian.type} />
+                <InfoRow label="연락처" value={child.guardian.phone} />
+                <InfoRow label="직업" value={child.guardian.job || empty} muted={!child.guardian.job} />
+                <InfoRow label="비고" value={guardianNotes} muted={!child.guardian.notes} />
+              </InfoGroup>
+
+              <InfoGroup title="주소 및 가구">
+                <InfoRow label="주소" value={child.address || empty} muted={!child.address} />
+                <InfoRow label="실거주지주소" value={child.address || empty} muted={!child.address} />
+                <InfoRow label="가족연고유무" value={empty} muted />
+                <InfoRow label="부양여부" value={empty} muted />
+                <InfoRow label="결연대상여부" value={empty} muted />
+              </InfoGroup>
+
+              <InfoGroup title="특이사항" className="xl:col-span-2">
+                <InfoRow label="조치사항" value={observations?.actionsTaken || empty} muted={!observations?.actionsTaken} />
+                <InfoRow label="아동 비고" value={observations?.notes || empty} muted={!observations?.notes} />
+                <InfoRow label="안전환경" value={observations?.safetyEnv || empty} muted={!observations?.safetyEnv} />
+                <InfoRow label="학교생활" value={observations?.schoolLife || empty} muted={!observations?.schoolLife} />
+                <InfoRow label="관찰 의견" value={observations?.counselorObs || empty} muted={!observations?.counselorObs} />
+                <InfoRow label="지도·판정" value={observations?.guidanceJudgement || empty} muted={!observations?.guidanceJudgement} />
+                <InfoRow label="급품 지급" value={observations?.goodsProvision || empty} muted={!observations?.goodsProvision} />
+              </InfoGroup>
+
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-[13px] text-slate-500 xl:col-span-2">
+                첨부파일 0개
+              </div>
             </div>
           )}
 
@@ -638,45 +667,6 @@ function BasicInfoTab({ child }: { child: Child }) {
                 <InfoRow label="두발형태" value={physical?.hairStyle || empty} muted={!physical?.hairStyle} />
                 <InfoRow label="182 신고유무" value={physical?.reported182 || empty} muted={!physical?.reported182} />
               </InfoGroup>
-            </div>
-          )}
-
-          {activeInfoTab === "household" && (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-8 gap-y-6">
-              <InfoGroup title="보호자 정보">
-                <InfoRow label="보호자 성명" value={child.guardian.name} />
-                <InfoRow label="관계" value={child.guardian.relation} />
-                <InfoRow label="보호자 유형" value={guardianType} muted={!child.guardian.type} />
-                <InfoRow label="연락처" value={child.guardian.phone} />
-                <InfoRow label="직업" value={child.guardian.job || empty} muted={!child.guardian.job} />
-                <InfoRow label="비고" value={guardianNotes} muted={!child.guardian.notes} />
-              </InfoGroup>
-
-              <InfoGroup title="주소 및 가구">
-                <InfoRow label="주소" value={child.address || empty} muted={!child.address} />
-                <InfoRow label="실거주지주소" value={child.address || empty} muted={!child.address} />
-                <InfoRow label="가족연고유무" value={empty} muted />
-                <InfoRow label="부양여부" value={empty} muted />
-                <InfoRow label="결연대상여부" value={empty} muted />
-              </InfoGroup>
-            </div>
-          )}
-
-          {activeInfoTab === "notes" && (
-            <div className="space-y-4">
-              <InfoGroup title="특이사항">
-                <InfoRow label="조치사항" value={observations?.actionsTaken || empty} muted={!observations?.actionsTaken} />
-                <InfoRow label="아동 비고" value={observations?.notes || empty} muted={!observations?.notes} />
-                <InfoRow label="안전환경" value={observations?.safetyEnv || empty} muted={!observations?.safetyEnv} />
-                <InfoRow label="학교생활" value={observations?.schoolLife || empty} muted={!observations?.schoolLife} />
-                <InfoRow label="관찰 의견" value={observations?.counselorObs || empty} muted={!observations?.counselorObs} />
-                <InfoRow label="지도·판정" value={observations?.guidanceJudgement || empty} muted={!observations?.guidanceJudgement} />
-                <InfoRow label="급품 지급" value={observations?.goodsProvision || empty} muted={!observations?.goodsProvision} />
-              </InfoGroup>
-
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-[13px] text-slate-500">
-                첨부파일 0개
-              </div>
             </div>
           )}
         </div>
