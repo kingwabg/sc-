@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LayoutGrid, Search, Sun, Moon, Bell, Settings, ChevronDown, Check, Building2 } from "lucide-react";
+import { LayoutGrid, Search, Sun, Moon, Bell, Settings, ChevronDown, Check, Building2, ArrowRight } from "lucide-react";
 import { useTenant } from "@/lib/tenant-context";
 import { TENANT_LIST, type Tenant } from "@/lib/tenants";
+import { TENANT_VISUAL } from "@/lib/features/tenants";
 import {
   THEME_MODE_EVENT,
   applyThemeMode,
@@ -124,77 +125,116 @@ export function TopHeader() {
         </Link>
         <div className="w-px h-5 bg-slate-200 mx-2" />
 
-        {/* Tenant switcher */}
-        <div ref={ref} className="relative flex items-center gap-1">
-          {/* 사업장 이름/아이콘 — 클릭하면 사업자 선택 페이지로 */}
-          <Link
-            href="/"
-            prefetch={false}
-            className={`flex items-center gap-2 py-1 pl-1 pr-2 rounded-full transition ${
-              tenant ? `${tenant.accent.bg} hover:brightness-95` : "hover:bg-slate-50"
-            }`}
-            title="사업자 선택 페이지로 이동"
+        <div ref={ref} className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="사이트 전환"
+            aria-expanded={open}
+            className={[
+              "group flex h-10 min-w-[176px] items-center gap-2 rounded-xl border px-2 text-left transition",
+              "border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/25",
+            ].join(" ")}
           >
             {tenant ? (
               <>
-                <span className={`w-[30px] h-[30px] rounded-full bg-gradient-to-br ${tenant.gradient} text-white grid place-items-center text-base`}>
-                  {tenant.emoji}
-                </span>
-                <span className={`text-[13px] font-semibold ${tenant.accent.text} hover:underline`}>
-                  {tenant.label}
+                <TenantIcon tenant={tenant} size="sm" shape="rounded" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-extrabold text-slate-900">{tenant.label}</span>
+                  <span className="block truncate text-[10px] font-bold text-slate-400">
+                    {tenant.type === "facility" ? "돌봄 시설" : "교육 기관"}
+                  </span>
                 </span>
               </>
             ) : (
               <>
-                <span className="w-[30px] h-[30px] rounded-full bg-slate-200 text-slate-600 grid place-items-center">
+                <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-slate-100 text-slate-600 ring-1 ring-slate-200">
                   <Building2 className="w-4 h-4" />
                 </span>
-                <span className="text-[13px] font-semibold text-slate-700 hover:underline">사이트 선택</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-extrabold text-slate-900">사이트 선택</span>
+                  <span className="block truncate text-[10px] font-bold text-slate-400">운영 공간</span>
+                </span>
               </>
             )}
-          </Link>
-          {/* 드롭다운 토글 */}
-          <button
-            onClick={() => setOpen((v) => !v)}
-            aria-label="사이트 목록 열기"
-            className={`w-7 h-7 rounded-md grid place-items-center transition ${
-              tenant ? `${tenant.accent.bg} hover:brightness-95 ${tenant.accent.text}` : "hover:bg-slate-50 text-slate-500"
-            }`}
-          >
-            <ChevronDown className={`w-3.5 h-3.5 transition ${open ? "rotate-180" : ""}`} />
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-slate-50 text-slate-500 transition group-hover:bg-slate-100">
+              <ChevronDown className={`h-3.5 w-3.5 transition ${open ? "rotate-180" : ""}`} />
+            </span>
           </button>
 
           {open && (
-            <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
-              <div className="px-3 py-2 text-[11px] font-semibold text-slate-400 border-b border-slate-100">
-                사이트 전환
+            <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/15">
+              <div className="border-b border-slate-100 px-4 py-3">
+                <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Workspace</div>
+                <div className="mt-1 text-sm font-extrabold text-slate-900">사이트 전환</div>
               </div>
-              <ul className="py-1">
+              <ul className="p-2">
                 {TENANT_LIST.map((t) => (
                   <li key={t.id}>
                     <button
                       onClick={() => onPickTenant(t)}
-                      className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-50 transition text-left"
+                      className={[
+                        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition",
+                        tenant?.id === t.id ? "bg-slate-50" : "hover:bg-slate-50",
+                      ].join(" ")}
                     >
-                      <span className={`w-9 h-9 rounded-lg bg-gradient-to-br ${t.gradient} text-white grid place-items-center text-base shrink-0`}>
-                        {t.emoji}
-                      </span>
+                      <TenantIcon tenant={t} size="md" shape="rounded" />
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-semibold text-slate-900">{t.label}</div>
-                        <div className="text-[11px] text-slate-500">{t.subtitle}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="truncate text-[13px] font-extrabold text-slate-900">{t.label}</div>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${t.accent.bg} ${t.accent.text}`}>
+                            {t.type === "facility" ? "시설" : "학원"}
+                          </span>
+                        </div>
+                        <div className="mt-0.5 truncate text-[11px] font-medium text-slate-500">{t.subtitle}</div>
                       </div>
                       {tenant?.id === t.id && (
-                        <Check className="w-4 h-4 text-brand-600 shrink-0" />
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600">
+                          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                        </span>
                       )}
                     </button>
                   </li>
                 ))}
               </ul>
+              <Link
+                href="/"
+                prefetch={false}
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-xs font-extrabold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
+              >
+                전체 사이트 선택 화면으로 이동
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           )}
         </div>
       </div>
     </header>
+  );
+}
+
+function TenantIcon({
+  tenant,
+  size,
+  shape,
+}: {
+  tenant: Tenant;
+  size: "sm" | "md";
+  shape: "circle" | "rounded";
+}) {
+  const Icon = TENANT_VISUAL[tenant.id].icon;
+  const sizeClass = size === "sm" ? "w-[30px] h-[30px]" : "w-9 h-9";
+  const iconSize = size === "sm" ? "w-4 h-4" : "w-5 h-5";
+  const shapeClass = shape === "circle" ? "rounded-full" : "rounded-lg";
+
+  return (
+    <span
+      className={`${sizeClass} ${shapeClass} ${TENANT_VISUAL[tenant.id].iconClassName} grid shrink-0 place-items-center ring-1`}
+    >
+      <Icon className={iconSize} strokeWidth={2.2} />
+    </span>
   );
 }
 
