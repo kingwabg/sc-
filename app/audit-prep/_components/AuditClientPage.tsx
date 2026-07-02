@@ -6,9 +6,11 @@
  */
 
 import { useState } from "react";
-import { FileText, Download, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { FileText, Download, ShieldCheck, ChevronDown, ChevronUp, Eye, EyeOff, X } from "lucide-react";
 import type { AuditSummary, ConflictItem, AuditNotice, EvalItem } from "@/lib/features/audit/types";
 import { SIGNAL_EMOJI, SIGNAL_COLOR, CONFLICT_LABEL, CARD_DESCRIPTIONS } from "@/lib/features/audit/labels";
+import { downloadHtmlAsFile } from "@/lib/features/hwp-export/client";
+import { readLS, writeLS } from "@/lib/store/_ls";
 
 // ─── Props ───────────────────────────────────────────────────
 interface Props {
@@ -142,16 +144,27 @@ function EmptyState() {
 export function AuditClientPage({ tenantName, summary, conflicts, checkedRange, notice }: Props) {
   const hasConflicts = conflicts.length > 0;
   const [noticeOpen, setNoticeOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
   const passCount = notice.evalItems.filter((e) => e.passed).length;
 
-  const handleHtmlDownload = () => {
-    const blob = new Blob([notice.previewHtml], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `평가통보서_${notice.rangeFrom}_${notice.rangeTo}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleHtmlDownload = async () => {
+    // 1회용 안내 팝업
+    const dismissed = readLS<boolean>("ox:hwp-hint-dismissed", false);
+    if (!dismissed) {
+      setHintOpen(true);
+      return;
+    }
+
+    // API에서 HTML fetch 후 다운로드
+    const res = await fetch(`/api/audit-notice/${notice.id}/html`);
+    if (!res.ok) return;
+    const html = await res.text();
+    downloadHtmlAsFile(`평가통보서_${notice.rangeFrom}_${notice.rangeTo}.html`, html);
+  };
+
+  const dismissHint = () => {
+    writeLS("ox:hwp-hint-dismissed", true);
+    setHintOpen(false);
   };
 
   return (
@@ -318,14 +331,19 @@ export function AuditClientPage({ tenantName, summary, conflicts, checkedRange, 
 
         {/* ── 다운로드 버튼 ─────────────────────────────── */}
         <div className="flex gap-3 flex-wrap">
-          {/* HTML — 활성 */}
-          <button
-            onClick={handleHtmlDownload}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
-          >
-            <Download className="w-4 h-4" />
-            📥 HTML 다운로드
-          </button>
+          {/* HTML / HWP — Phase 1 */}
+          <div className="relative inline-flex flex-col gap-1">
+            <button
+              onClick={handleHtmlDownload}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              📥 한글(HWP)로 저장
+            </button>
+            <span className="text-xs text-slate-400 text-center">
+              다운로드 후 한글에서 열어 .hwp 저장
+            </span>
+          </div>
           {/* HWP — P9에서 구현 */}
           <button
             disabled
@@ -345,6 +363,42 @@ export function AuditClientPage({ tenantName, summary, conflicts, checkedRange, 
             📥 PDF 다운로드
           </button>
         </div>
+
+        {/* ── 첫 다운로드 안내 모달 ─────────────────────── */}
+        {hintOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-card max-w-sm w-full mx-4 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <h3 className="text-sm font-semibold text-slate-700">한글(HWP)로 저장하는 방법</h3>
+                <button
+                  onClick={dismissHint}
+                  className="text-slate-400 hover:text-slate-600 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="px-5 py-4 space-y-3">
+                <p className="text-sm text-slate-600">
+                  다운로드된 HTML 파일을{" "}
+                  <strong className="text-slate-800">한글(HWP)</strong>에서 열어주세요.
+                </p>
+                <div className="bg-slate-50 rounded-xl px-4 py-3 space-y-1.5">
+                  <p className="text-xs text-slate-500 font-medium">한글에서:</p>
+                  <p className="text-xs text-slate-500">1. 파일 → 열기 → 다운로드한 HTML 파일 선택</p>
+                  <p className="text-xs text-slate-500">2. 파일 → 다른 이름으로 저장</p>
+                  <p className="text-xs text-slate-500">3. 파일 형식: <strong>HWP 문서(*.hwp)</strong> 선택</p>
+                  <p className="text-xs text-slate-500">4. 저장</p>
+                </div>
+                <button
+                  onClick={dismissHint}
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                >
+                  알겠습니다
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
