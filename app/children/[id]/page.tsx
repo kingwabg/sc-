@@ -513,7 +513,13 @@ function BasicInfoTab({ child }: { child: Child }) {
   const allergies = child.health.allergies.length > 0 ? child.health.allergies.join(", ") : empty;
   const medications = child.health.medications.length > 0 ? child.health.medications.join(", ") : empty;
   const physical = child.physical;
-  const observations = child.observations;
+  const basicMissing = [
+    !child.phone && "휴대폰",
+    !child.emergencyContact && "긴급연락처",
+    "개인정보 동의",
+    !child.leftAt && "퇴소일",
+  ].filter(Boolean).join(" · ");
+  const householdMissing = ["가족연고유무", "부양여부", "결연대상여부"].join(" · ");
   const infoTabs = [
     { key: "basic" as const, label: "기본 인적사항" },
     { key: "usage" as const, label: "자격·이용" },
@@ -568,14 +574,16 @@ function BasicInfoTab({ child }: { child: Child }) {
                 <InfoRow label="생년월일" value={formatDate(child.birthDate)} muted={!child.birthDate} />
                 <InfoRow label="성별" value={genderLabel} />
                 <InfoRow label="연령" value={ageLabel} />
+                <InfoRow label="학교명" value={child.school || empty} muted={!child.school} />
+                <InfoRow label="학년" value={child.grade || empty} muted={!child.grade} />
               </InfoGroup>
 
               <InfoGroup title="연락 및 접수">
-                <InfoRow label="휴대폰" value={childPhone} muted={!child.phone} />
-                <InfoRow label="긴급연락처" value={emergency} muted={!child.emergencyContact} />
+                {child.phone && <InfoRow label="휴대폰" value={childPhone} />}
+                {child.emergencyContact && <InfoRow label="긴급연락처" value={emergency} />}
                 <InfoRow label="접수일자" value={formatDate(child.enrolledAt)} muted={!child.enrolledAt} />
-                <InfoRow label="개인정보 동의" value={empty} muted />
-                <InfoRow label="퇴소일" value={leftAt} muted={!child.leftAt} />
+                {child.leftAt && <InfoRow label="퇴소일" value={leftAt} />}
+                {basicMissing && <InfoRow label="미입력" value={basicMissing} muted />}
               </InfoGroup>
 
               <InfoGroup title="보호자 정보">
@@ -590,24 +598,10 @@ function BasicInfoTab({ child }: { child: Child }) {
               <InfoGroup title="주소 및 가구">
                 <InfoRow label="주소" value={child.address || empty} muted={!child.address} />
                 <InfoRow label="실거주지주소" value={child.address || empty} muted={!child.address} />
-                <InfoRow label="가족연고유무" value={empty} muted />
-                <InfoRow label="부양여부" value={empty} muted />
-                <InfoRow label="결연대상여부" value={empty} muted />
+                <InfoRow label="미입력" value={householdMissing} muted />
               </InfoGroup>
 
-              <InfoGroup title="특이사항" className="xl:col-span-2">
-                <InfoRow label="조치사항" value={observations?.actionsTaken || empty} muted={!observations?.actionsTaken} />
-                <InfoRow label="아동 비고" value={observations?.notes || empty} muted={!observations?.notes} />
-                <InfoRow label="안전환경" value={observations?.safetyEnv || empty} muted={!observations?.safetyEnv} />
-                <InfoRow label="학교생활" value={observations?.schoolLife || empty} muted={!observations?.schoolLife} />
-                <InfoRow label="관찰 의견" value={observations?.counselorObs || empty} muted={!observations?.counselorObs} />
-                <InfoRow label="지도·판정" value={observations?.guidanceJudgement || empty} muted={!observations?.guidanceJudgement} />
-                <InfoRow label="급품 지급" value={observations?.goodsProvision || empty} muted={!observations?.goodsProvision} />
-              </InfoGroup>
-
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-[13px] text-slate-500 xl:col-span-2">
-                첨부파일 0개
-              </div>
+              <NotesField className="xl:col-span-2" />
             </div>
           )}
 
@@ -620,9 +614,7 @@ function BasicInfoTab({ child }: { child: Child }) {
                 <InfoRow label="키즈콜ID" value={kidsCallId} muted={!child.kidsCallId} />
               </InfoGroup>
 
-              <InfoGroup title="학교 및 담당">
-                <InfoRow label="학교명" value={child.school || empty} muted={!child.school} />
-                <InfoRow label="학년" value={child.grade || empty} muted={!child.grade} />
+              <InfoGroup title="담당 정보">
                 <InfoRow label="담당자" value={manager} muted={!child.writtenBy?.name} />
                 <InfoRow label="담당자 소속" value={child.writtenBy?.org || empty} muted={!child.writtenBy?.org} />
                 <InfoRow label="작성일" value={formatDate(child.writtenBy?.writtenAt)} muted={!child.writtenBy?.writtenAt} />
@@ -636,8 +628,7 @@ function BasicInfoTab({ child }: { child: Child }) {
                 <InfoRow label="알레르기" value={allergies} muted={child.health.allergies.length === 0} />
                 <InfoRow label="복용약" value={medications} muted={child.health.medications.length === 0} />
                 <InfoRow label="건강상태" value={child.health.notes || empty} muted={!child.health.notes} />
-                <InfoRow label="종합장애정도" value={empty} muted />
-                <InfoRow label="주장애유형" value={empty} muted />
+                <InfoRow label="미입력" value="종합장애정도 · 주장애유형" muted />
               </InfoGroup>
 
               <InfoGroup title="신체 정보">
@@ -909,32 +900,6 @@ function BigField({
   );
 }
 
-function SummaryPill({
-  label,
-  value,
-  icon: Icon,
-  muted,
-}: {
-  label: string;
-  value: React.ReactNode;
-  icon: React.ComponentType<{ className?: string }>;
-  muted?: boolean;
-}) {
-  return (
-    <div className="py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500">
-          <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          {label}
-        </div>
-        <div className={cn("text-[14px] font-bold tabular-nums", muted ? "text-slate-400" : "text-slate-900")}>
-          {value}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function InfoGroup({
   title,
   children,
@@ -950,6 +915,18 @@ function InfoGroup({
       <div className="divide-y divide-slate-100 border-y border-slate-100">
         {children}
       </div>
+    </div>
+  );
+}
+
+function NotesField({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <h3 className="mb-2 text-[12px] font-bold text-slate-500">특이사항</h3>
+      <textarea
+        placeholder="특이사항을 입력하세요"
+        className="min-h-[132px] w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-[14px] font-semibold leading-relaxed text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-50"
+      />
     </div>
   );
 }
