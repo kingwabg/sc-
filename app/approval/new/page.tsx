@@ -1,6 +1,6 @@
 /**
  * 새 결재 작성 — 양식 선택 페이지
- * 양식 카드를 보여주고 클릭 시 /approval/new/[formKey] 로 이동
+ * 카테고리 트리에서 양식을 선택하고 /approval/new/[formKey] 로 이동
  */
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
