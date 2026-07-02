@@ -13,11 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  Info,
   List,
-  Route,
-  FileText,
-  Link2,
 } from "lucide-react";
 import { getFormByKey, type FormField } from "@/lib/features/approval-form";
 import { cn } from "@/lib/utils";
@@ -279,27 +275,22 @@ function DocumentFormTemplate({
 
   return (
     <div className="bg-white">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/70 px-5 py-2.5 text-[12px] text-slate-600">
-        <div className="inline-flex overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <button className="inline-flex h-8 items-center gap-1.5 border-r border-slate-200 px-3 font-bold text-brand-700">
-            <FileText className="h-3.5 w-3.5" />
+      <div className="flex items-center justify-between border-b border-slate-200 px-6 py-2 text-[12px] text-slate-500">
+        <div className="flex items-center gap-5">
+          <button className="border-b-2 border-slate-900 pb-1 font-bold text-slate-900">
             문서 정보
           </button>
-          <button className="inline-flex h-8 items-center gap-1.5 border-r border-slate-200 px-3 hover:bg-slate-50 hover:text-slate-900">
-            <Route className="h-3.5 w-3.5" />
+          <button className="pb-1 transition hover:text-slate-900">
             결재 정보
           </button>
-          <button className="inline-flex h-8 items-center gap-1.5 px-3 hover:bg-slate-50 hover:text-slate-900">
-            <Link2 className="h-3.5 w-3.5" />
+          <button className="pb-1 transition hover:text-slate-900">
             첨부·연결
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <select className="h-8 rounded border border-slate-300 bg-white px-2 text-[11px] text-slate-700">
-            <option>자동저장안함</option>
-            <option>자동저장 5분</option>
-          </select>
-          <button className="inline-flex items-center gap-1 hover:text-slate-900">
+          <span className="text-[11px] text-slate-400">자동저장 꺼짐</span>
+          <span className="h-3 w-px bg-slate-200" />
+          <button className="inline-flex items-center gap-1 text-[11px] hover:text-slate-900">
             <List className="h-3.5 w-3.5" />
             목록
           </button>
@@ -725,53 +716,37 @@ function PreviewModal({
 // ─── Step Indicator ────────────────────────────────────────
 function StepIndicator({ steps, current }: { steps: readonly string[]; current: string }) {
   const currentIndex = steps.indexOf(current);
-  const progressLabel = `${current} 중`;
 
   return (
-    <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 via-white to-slate-50 px-6 py-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-xs font-black text-brand-700">{progressLabel}</div>
-        <div className="text-[11px] font-semibold text-slate-400">
-          {currentIndex + 1} / {steps.length}
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
+    <div className="border-b border-slate-200 bg-white px-6">
+      <div className="flex h-12 items-center gap-8">
         {steps.map((s, i) => {
           const done = i < currentIndex;
           const active = i === currentIndex;
           return (
-            <div key={s} className="flex min-w-0 flex-1 items-center gap-2">
-              <div
+            <div key={s} className="flex h-full items-center gap-3">
+              <span
                 className={cn(
-                  "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-black transition",
-                  done && "bg-emerald-100 text-emerald-700",
-                  active && "animate-pulse bg-brand-600 text-white shadow-sm ring-4 ring-brand-100",
+                  "grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold",
+                  done && "bg-slate-900 text-white",
+                  active && "bg-brand-600 text-white",
                   !done && !active && "bg-slate-100 text-slate-400",
                 )}
               >
                 {done ? "✓" : i + 1}
-              </div>
+              </span>
               <span
                 className={cn(
-                  "truncate text-xs font-bold",
-                  active ? "text-brand-700" : done ? "text-slate-700" : "text-slate-400",
+                  "relative flex h-full items-center text-[12px] font-bold",
+                  active ? "text-slate-900" : done ? "text-slate-600" : "text-slate-400",
+                  active &&
+                    "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-brand-600",
                 )}
               >
                 {s}
               </span>
               {i < steps.length - 1 && (
-                <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className={cn(
-                      "absolute inset-y-0 left-0 rounded-full",
-                      i < currentIndex
-                        ? "w-full bg-emerald-300"
-                        : active
-                          ? "w-2/3 animate-pulse bg-brand-400"
-                          : "w-0 bg-slate-200",
-                    )}
-                  />
-                </div>
+                <span className="h-px w-10 bg-slate-200" />
               )}
             </div>
           );
