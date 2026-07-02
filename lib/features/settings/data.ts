@@ -60,7 +60,16 @@ export const SETTING_GROUPS: SettingGroup[] = [
         children: [
           { id: "service-info", label: "서비스 정보" },
           { id: "business", label: "사업자 정보", description: "회사명, 대표자, 사업자등록번호" },
-          { id: "branding", label: "브랜드 설정", description: "로고, 컬러, 도메인" },
+        ],
+      },
+      {
+        id: "service-app",
+        label: "서비스 App 관리",
+        expandable: true,
+        children: [
+          { id: "work-portal", label: "업무 포털", description: "돌봄 업무 앱과 메뉴 구성" },
+          { id: "company-portal", label: "전사 포털", description: "전사 관리 앱과 메뉴 구성" },
+          { id: "service-apps", label: "서비스앱", description: "사용 앱 활성화 및 권한" },
         ],
       },
       {
@@ -68,9 +77,10 @@ export const SETTING_GROUPS: SettingGroup[] = [
         label: "운영 관리",
         expandable: true,
         children: [
-          { id: "members", label: "구성원 관리" },
-          { id: "roles", label: "역할/권한" },
-          { id: "groups", label: "부서/그룹" },
+          { id: "electronic-alert", label: "전자 알림" },
+          { id: "popup-notice", label: "팝업 공지" },
+          { id: "profile-org", label: "프로필/조직도 항목" },
+          { id: "logo-theme", label: "로고 및 테마" },
         ],
       },
     ],

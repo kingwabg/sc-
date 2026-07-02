@@ -51,7 +51,7 @@ export default function SettingsPage() {
   const [scope, setScope] = useState<"My" | "Management">("Management");
   const [activeGroupId, setActiveGroupId] = useState<string>("general");
   const [activeItemId, setActiveItemId] = useState<string>("service");
-  const [activeSubId, setActiveSubId] = useState<string>("business");
+  const [activeSubId, setActiveSubId] = useState<string>("service-info");
 
   // URL hash 동기화 (선택 사항)
   useEffect(() => {
@@ -415,6 +415,27 @@ function FormForSub({
   onChange: (s: TenantSettings) => void;
 }) {
   // 서브별 다른 폼 (데모)
+  if (subId === "service-info") {
+    return (
+      <div className="space-y-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <InfoCard label="사이트명" value="지역아동센터" />
+          <InfoCard label="사이트 아이디" value="17000004442" />
+          <InfoCard label="기본 도메인" value="sc23.office.local" />
+          <InfoCard label="서비스 상태" value="사용중" tone="emerald" />
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+          <div className="mb-3 text-[13px] font-bold text-slate-900">서비스 사용 현황</div>
+          <div className="space-y-3">
+            <UsageBar label="사용기간" value="~2099.12.31" percent={72} />
+            <UsageBar label="멤버" value="4명 사용중" percent={46} />
+            <UsageBar label="용량" value="4.2GB 사용중" percent={52} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (subId === "business") {
     return (
       <div className="space-y-4">
@@ -468,7 +489,49 @@ function FormForSub({
     );
   }
 
-  if (subId === "branding") {
+  if (subId === "work-portal" || subId === "company-portal" || subId === "service-apps") {
+    const isWorkPortal = subId === "work-portal";
+    const isCompanyPortal = subId === "company-portal";
+    return (
+      <div className="space-y-4">
+        <FormRow label="표시 이름">
+          <input
+            className={inputClass}
+            defaultValue={isWorkPortal ? "업무 포털" : isCompanyPortal ? "전사 포털" : "서비스앱"}
+          />
+        </FormRow>
+        <FormRow label="사용 여부">
+          <RadioGroup options={["사용", "미사용"]} />
+        </FormRow>
+        <FormRow label="기본 진입 메뉴">
+          <select className={inputClass}>
+            {(isWorkPortal
+              ? ["홈", "아동관리", "종사자관리", "결재", "보고"]
+              : isCompanyPortal
+                ? ["회계 대시보드", "수입 관리", "지출 관리", "인사관리"]
+                : ["업무 포털", "전사 포털", "전자결재"]
+            ).map((label) => (
+              <option key={label}>{label}</option>
+            ))}
+          </select>
+        </FormRow>
+        <FormRow label="앱 설명">
+          <textarea
+            className={inputClass + " h-24 resize-none"}
+            defaultValue={
+              isWorkPortal
+                ? "센터의 일상 업무, 돌봄 운영, 결재, 보고 기능을 제공합니다."
+                : isCompanyPortal
+                  ? "회계, 인사, 조직 설정 등 전사 관리 기능을 제공합니다."
+                  : "센터에서 사용할 서비스 앱의 노출과 접근 권한을 관리합니다."
+            }
+          />
+        </FormRow>
+      </div>
+    );
+  }
+
+  if (subId === "logo-theme") {
     return (
       <div className="space-y-4">
         <FormRow label="회사 로고">
@@ -482,37 +545,60 @@ function FormForSub({
         <FormRow label="브랜드 컬러">
           <input type="color" defaultValue="#4f46e5" className="h-10 w-20 rounded" />
         </FormRow>
-        <FormRow label="커스텀 도메인">
-          <input className={inputClass} placeholder="office.example.com" />
+        <FormRow label="상단 브랜드명">
+          <input className={inputClass} defaultValue="Office" />
+        </FormRow>
+        <FormRow label="테마 기본값">
+          <RadioGroup options={["라이트", "다크", "시스템"]} />
         </FormRow>
       </div>
     );
   }
 
-  if (subId === "members") {
+  if (subId === "electronic-alert") {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-slate-900 m-0">구성원 목록 (16명)</h3>
-          <button className="h-9 px-3 bg-brand-600 text-white rounded-[10px] text-sm font-semibold">
-            + 초대
-          </button>
-        </div>
-        <div className="border border-slate-200 rounded-lg divide-y divide-slate-100">
-          {["김민수", "박은수", "김선영", "이정훈"].map((n) => (
-            <div key={n} className="flex items-center gap-3 px-4 py-3">
-              <div className="w-8 h-8 rounded-full bg-slate-200 grid place-items-center font-semibold text-xs">
-                {n[0]}
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-medium">{n}</div>
-                <div className="text-[11px] text-slate-500">{n}@office.com</div>
-              </div>
-              <span className="text-[11px] px-2 py-0.5 rounded bg-slate-100 text-slate-600">구성원</span>
-              <button className="text-[12px] text-slate-500 hover:text-slate-900">관리</button>
-            </div>
-          ))}
-        </div>
+        <FormRow label="알림 채널">
+          <RadioGroup options={["메일", "메신저", "브라우저"]} />
+        </FormRow>
+        <FormRow label="결재 알림">
+          <RadioGroup options={["사용", "미사용"]} />
+        </FormRow>
+        <FormRow label="보고 알림">
+          <RadioGroup options={["사용", "미사용"]} />
+        </FormRow>
+      </div>
+    );
+  }
+
+  if (subId === "popup-notice") {
+    return (
+      <div className="space-y-4">
+        <FormRow label="팝업 사용">
+          <RadioGroup options={["사용", "미사용"]} />
+        </FormRow>
+        <FormRow label="공지 제목">
+          <input className={inputClass} placeholder="공지 제목을 입력하세요" />
+        </FormRow>
+        <FormRow label="공지 내용">
+          <textarea className={inputClass + " h-28 resize-none"} placeholder="팝업 공지 내용을 입력하세요" />
+        </FormRow>
+      </div>
+    );
+  }
+
+  if (subId === "profile-org") {
+    return (
+      <div className="space-y-4">
+        <FormRow label="프로필 표시 항목">
+          <CheckList items={["이름", "직위", "부서", "연락처", "이메일"]} />
+        </FormRow>
+        <FormRow label="조직도 표시 항목">
+          <CheckList items={["조직명", "직책", "근무상태", "내선번호"]} />
+        </FormRow>
+        <FormRow label="공개 범위">
+          <RadioGroup options={["전체 공개", "관리자만", "비공개"]} />
+        </FormRow>
       </div>
     );
   }
@@ -532,6 +618,60 @@ function FormForSub({
       <FormRow label="활성화">
         <RadioGroup options={["활성", "비활성"]} />
       </FormRow>
+    </div>
+  );
+}
+
+function InfoCard({
+  label,
+  value,
+  tone = "slate",
+}: {
+  label: string;
+  value: string;
+  tone?: "slate" | "emerald";
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <div className="text-[12px] font-semibold text-slate-400">{label}</div>
+      <div className={cn("mt-2 text-lg font-extrabold", tone === "emerald" ? "text-emerald-600" : "text-slate-900")}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function UsageBar({
+  label,
+  value,
+  percent,
+}: {
+  label: string;
+  value: string;
+  percent: number;
+}) {
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-[12px]">
+        <span className="font-semibold text-slate-600">{label}</span>
+        <span className="font-bold text-slate-900">{value}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+        <div className="h-full rounded-full bg-gradient-to-r from-teal-400 to-emerald-400" style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function CheckList({ items }: { items: string[] }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 pt-1">
+      {items.map((item) => (
+        <label key={item} className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[13px] text-slate-700">
+          <input type="checkbox" defaultChecked className="h-4 w-4 rounded accent-brand-600" />
+          {item}
+        </label>
+      ))}
     </div>
   );
 }
