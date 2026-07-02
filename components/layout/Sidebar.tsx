@@ -110,7 +110,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/role-test": { label: "역할 테스트",  href: "/role-test", icon: Bug },
   "/todo":    { label: "할 일",        href: "/todo",     icon: ClipboardList },
   "/facility/inspection": { label: "시설 안전점검", href: "/facility/inspection", icon: ClipboardCheck },
-  "/meetings": { label: "회의록", href: "/meetings", icon: MessagesSquare },
+  "/meetings": { label: "보고", href: "/meetings", icon: MessagesSquare },
   "/donations": { label: "후원금 대장", href: "/donations", icon: Gift },
   "/documents/expiry": { label: "문서 만료 알림", href: "/documents/expiry", icon: CalendarClock },
   "/preview/care-log": { label: "문서 미리보기 (데모)", href: "/preview/care-log", icon: Eye },
