@@ -460,13 +460,20 @@ function NavGroup({
   onToggleFavorite: (href: string) => void;
   favorites: string[];
 }) {
+  const [groupOpen, setGroupOpen] = useState(true);
+  const [closedItems, setClosedItems] = useState<Set<string>>(() => new Set());
+
   return (
     <div className="mb-3">
-      <h3 className="mb-1 flex items-center justify-between px-3 text-[11px] font-bold tracking-wide text-slate-400">
+      <button
+        type="button"
+        onClick={() => setGroupOpen((open) => !open)}
+        className="mb-1 flex h-6 w-full items-center justify-between rounded-md px-3 text-[11px] font-bold tracking-wide text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+      >
         <span>{label}</span>
-        <ChevronDown className="h-3 w-3 text-slate-300" />
-      </h3>
-      <nav className="space-y-1">
+        <ChevronDown className={cn("h-3 w-3 text-slate-300 transition-transform", groupOpen ? "rotate-0" : "-rotate-90")} />
+      </button>
+      {groupOpen && <nav className="space-y-1">
         {items.map((item) => {
           const isActive =
             item.href === "/"
@@ -480,7 +487,7 @@ function NavGroup({
                 (c) => pathname === c.href || pathname.startsWith(c.href + "/"),
               )
             : false;
-          const expanded = hasChildren;
+          const expanded = hasChildren && !closedItems.has(item.href);
           const badge = badges[item.href];
 
           return (
@@ -492,7 +499,11 @@ function NavGroup({
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
                   "flex h-8 items-center gap-2 rounded-md pl-3 text-[13px] font-bold transition",
-                  editingFavorites ? (badge ? "pr-16" : "pr-10") : badge ? "pr-10" : "pr-3",
+                  editingFavorites
+                    ? (badge ? "pr-16" : "pr-10")
+                    : hasChildren || badge
+                      ? "pr-10"
+                      : "pr-3",
                   isActive || childActive ? "text-slate-950" : "text-slate-700 hover:bg-slate-50 hover:text-slate-950",
                 )}
               >
@@ -506,12 +517,31 @@ function NavGroup({
                 {item.external && (
                   <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 )}
-                {hasChildren ? (
-                  <ChevronDown className="h-3 w-3 shrink-0 text-slate-300" />
-                ) : isActive ? (
+                {!hasChildren && isActive ? (
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
                 ) : null}
               </Link>
+
+              {hasChildren ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClosedItems((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(item.href)) {
+                        next.delete(item.href);
+                      } else {
+                        next.add(item.href);
+                      }
+                      return next;
+                    });
+                  }}
+                  className="absolute right-2 top-1 grid h-6 w-6 place-items-center rounded-md text-slate-300 transition hover:bg-slate-100 hover:text-slate-600"
+                  title={expanded ? `${item.label} 접기` : `${item.label} 펼치기`}
+                >
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", expanded ? "rotate-0" : "-rotate-90")} />
+                </button>
+              ) : null}
 
               {badge ? (
                 <span
@@ -563,7 +593,7 @@ function NavGroup({
             </div>
           );
         })}
-      </nav>
+      </nav>}
     </div>
   );
 }
