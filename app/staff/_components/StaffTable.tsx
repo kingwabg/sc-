@@ -10,6 +10,7 @@
  */
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { IconButton, Dropdown, Whisper } from "rsuite";
 import {
   Phone,
@@ -60,6 +61,8 @@ type Props = {
 };
 
 export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: Props) {
+  const router = useRouter();
+
   const rows: StaffRow[] = useMemo(
     () =>
       staff.map((s) => {
@@ -364,6 +367,7 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
       columns={columns}
       expandedRowHeight={160}
       renderExpanded={(row) => <StaffExpandedPanel row={row} />}
+      onRowClick={(row) => router.push(`/staff/${row.id}`)}
     />
   );
 }

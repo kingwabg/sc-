@@ -68,6 +68,7 @@ export type ResourceTableProps<T> = {
   renderExpanded?: (row: T) => React.ReactNode;
   expandedRowHeight?: number;
   locale?: { emptyMessage?: string; loading?: string };
+  onRowClick?: (row: T) => void;
   /** 하단 바 커스터마이즈. 미지정 시 기본 카운트+페이지네이션 */
   bottomBar?: (ctx: BottomBarContext) => React.ReactNode;
 };
@@ -91,6 +92,7 @@ export function ResourceTable<T extends Record<string, any>>({
   renderExpanded,
   expandedRowHeight = 180,
   locale,
+  onRowClick,
   bottomBar,
 }: ResourceTableProps<T>) {
   const [page, setPage] = useState(1);
@@ -144,6 +146,8 @@ export function ResourceTable<T extends Record<string, any>>({
             : undefined
         }
         rowExpandedHeight={expandedRowHeight}
+        rowClassName={onRowClick ? "cursor-pointer" : undefined}
+        onRowClick={onRowClick ? (rowData?: T) => rowData && onRowClick(rowData) : undefined}
         locale={{
           emptyMessage: locale?.emptyMessage ?? "검색 결과가 없습니다",
           loading: locale?.loading ?? "불러오는 중…",
