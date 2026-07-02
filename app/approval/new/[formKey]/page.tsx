@@ -427,12 +427,12 @@ function DocumentFormTemplate({
     <div className="bg-white">
       <div className="grid grid-cols-1 gap-8 px-6 py-8 xl:grid-cols-[minmax(720px,920px)_220px]">
         <section className="max-w-[920px]">
-          <h2 className="mb-8 text-center text-[28px] font-black tracking-tight text-black">
-            {form.label}
-          </h2>
+          <div className="relative mb-5 min-h-[124px]">
+            <h2 className="absolute left-1/2 top-0 m-0 -translate-x-1/2 text-center text-[28px] font-black tracking-tight text-black">
+              {form.label}
+            </h2>
 
-          <div className="mb-5 flex items-end justify-between gap-8">
-            <table className={cn("w-[280px] border-collapse text-black", getDocFontClass(tableSettings.fontSize))}>
+            <table className={cn("absolute left-0 top-10 w-[280px] border-collapse text-black", getDocFontClass(tableSettings.fontSize))}>
               <tbody>
                 <DocRow label="기안자" value="왕준하" settings={tableSettings} />
                 <DocRow label="소속" value="사회복지사" settings={tableSettings} />
@@ -441,11 +441,13 @@ function DocumentFormTemplate({
               </tbody>
             </table>
 
-            <ApprovalStamp
-              approvers={approvers}
-              borderColor={borderColor}
-              labelBg={getDocLabelBg(tableSettings.labelTone)}
-            />
+            <div className="absolute right-0 top-0">
+              <ApprovalStamp
+                approvers={approvers}
+                borderColor={borderColor}
+                labelBg={getDocLabelBg(tableSettings.labelTone)}
+              />
+            </div>
           </div>
 
           <table className={cn("w-full border-collapse text-black", getDocFontClass(tableSettings.fontSize))}>
