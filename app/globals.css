@@ -178,6 +178,18 @@
   font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
 }
 
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(70%);
+  }
+  100% {
+    transform: translateX(230%);
+  }
+}
+
 /* 인쇄 시 화면용 UI 숨김 (탭 셀렉터, 인쇄 버튼 등) */
 @media print {
   .no-print { display: none !important; }
