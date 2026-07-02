@@ -189,13 +189,18 @@
   color: #cbd5e1 !important;
 }
 
-.resource-table-shell .rs-table-body-wheel-area {
-  box-sizing: content-box;
-  padding-bottom: 12px;
+.resource-table-shell .rs-table {
+  --rs-table-scrollbar-width: 5px;
+  --rs-table-scrollbar-handle-width: 4px;
 }
 
 .resource-table-shell .rs-table-scrollbar-horizontal {
   background-color: #f8fafc !important;
+  opacity: 0.55;
+}
+
+.resource-table-shell .rs-table-scrollbar-horizontal:hover {
+  transform: none !important;
 }
 
 .dark .resource-table-shell .rs-table-row,
