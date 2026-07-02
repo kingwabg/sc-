@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { LayoutGrid, Search, Sun, Moon, Bell, Settings, ChevronDown, Check, Building2 } from "lucide-react";
 import { useTenant } from "@/lib/tenant-context";
 import { TENANT_LIST, type Tenant } from "@/lib/tenants";
+import { TENANT_VISUAL } from "@/lib/features/tenants";
 import {
   THEME_MODE_EVENT,
   applyThemeMode,
@@ -137,9 +138,7 @@ export function TopHeader() {
           >
             {tenant ? (
               <>
-                <span className={`w-[30px] h-[30px] rounded-full bg-gradient-to-br ${tenant.gradient} text-white grid place-items-center text-base`}>
-                  {tenant.emoji}
-                </span>
+                <TenantIcon tenant={tenant} size="sm" shape="circle" />
                 <span className={`text-[13px] font-semibold ${tenant.accent.text} hover:underline`}>
                   {tenant.label}
                 </span>
@@ -176,9 +175,7 @@ export function TopHeader() {
                       onClick={() => onPickTenant(t)}
                       className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-50 transition text-left"
                     >
-                      <span className={`w-9 h-9 rounded-lg bg-gradient-to-br ${t.gradient} text-white grid place-items-center text-base shrink-0`}>
-                        {t.emoji}
-                      </span>
+                      <TenantIcon tenant={t} size="md" shape="rounded" />
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-slate-900">{t.label}</div>
                         <div className="text-[11px] text-slate-500">{t.subtitle}</div>
@@ -195,6 +192,29 @@ export function TopHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+function TenantIcon({
+  tenant,
+  size,
+  shape,
+}: {
+  tenant: Tenant;
+  size: "sm" | "md";
+  shape: "circle" | "rounded";
+}) {
+  const Icon = TENANT_VISUAL[tenant.id].icon;
+  const sizeClass = size === "sm" ? "w-[30px] h-[30px]" : "w-9 h-9";
+  const iconSize = size === "sm" ? "w-4 h-4" : "w-5 h-5";
+  const shapeClass = shape === "circle" ? "rounded-full" : "rounded-xl";
+
+  return (
+    <span
+      className={`${sizeClass} ${shapeClass} ${TENANT_VISUAL[tenant.id].iconClassName} grid shrink-0 place-items-center ring-1`}
+    >
+      <Icon className={iconSize} strokeWidth={2.2} />
+    </span>
   );
 }
 
