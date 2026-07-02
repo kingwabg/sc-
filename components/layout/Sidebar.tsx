@@ -117,6 +117,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
 
 // 운영관리 그룹의 하위 메뉴 (연간 → 월간 → 일지 흐름)
 const OPERATIONS_CHILDREN = ["/annual-plan", "/monthly-plan", "/daily-log"];
+const HIDDEN_MENU_HREFS = new Set(["/attendance/members", "/exec", "/volunteers"]);
 
 // ─── 고정 그룹 ──────────────────────────────────────────────
 const FIXED_GROUPS: { label: string; items: string[] }[] = [
@@ -130,7 +131,7 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "운영관리",
-    items: ["/programs", "/attendance/members", ...OPERATIONS_CHILDREN, "/donations"],
+    items: ["/programs", ...OPERATIONS_CHILDREN, "/donations"],
   },
   {
     label: "평가",
@@ -138,11 +139,11 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "관리",
-    items: ["/admin", "/exec"],
+    items: ["/admin"],
   },
   {
     label: "지원",
-    items: ["/board", "/volunteers", "/org", "/leave", "/todo", "/role-test", "/settings"],
+    items: ["/board", "/org", "/leave", "/todo", "/role-test", "/settings"],
   },
 ];
 
@@ -259,7 +260,7 @@ export function Sidebar() {
         </div>
         {favorites.length > 0 && (
           <nav className="space-y-0.5">
-            {favorites.map((href) => {
+            {favorites.filter((href) => !HIDDEN_MENU_HREFS.has(href)).map((href) => {
               const item = ALL_MENU_ITEMS[href];
               if (!item) return null;
               // 역할 필터
@@ -303,6 +304,7 @@ export function Sidebar() {
         {FIXED_GROUPS.map((group) => {
           const items = group.items
             .filter((href) => !favorites.includes(href))
+            .filter((href) => !HIDDEN_MENU_HREFS.has(href))
             .map((href) => ALL_MENU_ITEMS[href])
             .filter(Boolean)
             .filter((item) => {
@@ -353,10 +355,11 @@ function CollapsedSidebar({
 
   // 펼쳤을 때와 같은 순서로 보여줄 메뉴 (역할 필터 적용)
   const orderedHrefs = [
-    ...favorites,
+    ...favorites.filter((h) => !HIDDEN_MENU_HREFS.has(h)),
     ...FIXED_GROUPS.flatMap((g) =>
       g.items
         .filter((h) => !favorites.includes(h))
+        .filter((h) => !HIDDEN_MENU_HREFS.has(h))
         .filter((h) => {
           const item = ALL_MENU_ITEMS[h];
           if (!item?.minRole) return true;
