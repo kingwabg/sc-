@@ -1536,23 +1536,45 @@ function StepIndicator({
   onStepClick: (step: Step) => void;
 }) {
   const currentIndex = steps.indexOf(current);
+  const progressPercent = steps.length > 1 ? (currentIndex / (steps.length - 1)) * 100 : 0;
 
   return (
     <div className="border-b border-slate-200 bg-white px-6">
-      <div className="flex h-12 items-center gap-8">
+      <div className="relative flex h-14 items-center">
+        <div className="absolute left-2 right-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-slate-100" />
+        <div
+          className="absolute left-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-brand-500 transition-all duration-500 ease-out"
+          style={{ width: `calc((100% - 1rem) * ${progressPercent / 100})` }}
+        />
+        <div className="relative z-10 grid w-full grid-cols-3">
         {steps.map((s, i) => {
           const done = i < currentIndex;
           const active = i === currentIndex;
           return (
-            <div key={s} className="flex h-full items-center gap-3">
+            <div
+              key={s}
+              className={cn(
+                "flex h-full items-center",
+                i === 0 && "justify-start",
+                i === 1 && "justify-center",
+                i === 2 && "justify-end",
+              )}
+            >
               <button
                 type="button"
                 onClick={() => onStepClick(s)}
-                className="group flex h-full items-center gap-3"
+                className={cn(
+                  "group flex h-9 items-center gap-2 rounded-full border px-2.5 transition-all duration-300",
+                  active
+                    ? "border-brand-200 bg-white shadow-sm shadow-brand-100"
+                    : "border-transparent bg-white/80 hover:border-slate-200 hover:bg-white hover:shadow-sm",
+                )}
               >
                 <span
                   className={cn(
-                    "grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold transition",
+                    "relative grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold transition-all duration-300",
+                    active &&
+                      "after:absolute after:inset-[-5px] after:rounded-full after:border after:border-brand-300 after:opacity-70 after:animate-pulse",
                     done && "bg-slate-900 text-white group-hover:bg-slate-700",
                     active && "bg-brand-600 text-white",
                     !done && !active && "bg-slate-100 text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-600",
@@ -1562,7 +1584,7 @@ function StepIndicator({
                 </span>
                 <span
                   className={cn(
-                    "relative flex h-full items-center text-[12px] font-bold transition",
+                    "relative flex h-full items-center text-[12px] font-bold transition-all duration-300",
                     active ? "text-slate-900" : done ? "text-slate-600" : "text-slate-400",
                     !active && "group-hover:text-slate-900",
                     active &&
@@ -1572,12 +1594,10 @@ function StepIndicator({
                   {s}
                 </span>
               </button>
-              {i < steps.length - 1 && (
-                <span className="h-px w-10 bg-slate-200" />
-              )}
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
