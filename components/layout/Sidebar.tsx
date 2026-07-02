@@ -110,14 +110,23 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/role-test": { label: "역할 테스트",  href: "/role-test", icon: Bug },
   "/todo":    { label: "할 일",        href: "/todo",     icon: ClipboardList },
   "/facility/inspection": { label: "시설 안전점검", href: "/facility/inspection", icon: ClipboardCheck },
-  "/meetings": { label: "보고", href: "/meetings", icon: MessagesSquare },
+  "/meetings": { label: "회의록", href: "/meetings", icon: MessagesSquare },
+  "/reports": {
+    label: "보고",
+    href: "/reports",
+    icon: FileText,
+    children: [
+      { label: "회의록", href: "/meetings", icon: MessagesSquare },
+      { label: "연간계획", href: "/annual-plan", icon: BookOpen },
+      { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
+      { label: "운영일지", href: "/daily-log", icon: NotebookPen },
+    ],
+  },
   "/donations": { label: "후원금 대장", href: "/donations", icon: Gift },
   "/documents/expiry": { label: "문서 만료 알림", href: "/documents/expiry", icon: CalendarClock },
   "/preview/care-log": { label: "문서 미리보기 (데모)", href: "/preview/care-log", icon: Eye },
 };
 
-// 운영관리 그룹의 하위 메뉴 (연간 → 월간 → 일지 흐름)
-const OPERATIONS_CHILDREN = ["/annual-plan", "/monthly-plan", "/daily-log"];
 const HIDDEN_MENU_HREFS = new Set(["/attendance/members", "/exec", "/volunteers"]);
 
 // ─── 고정 그룹 ──────────────────────────────────────────────
@@ -128,11 +137,11 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "돌봄운영",
-    items: ["/children", "/staff", "/facility/inspection", "/meetings", "/documents"],
+    items: ["/children", "/staff", "/facility/inspection", "/meetings", "/reports", "/documents"],
   },
   {
     label: "운영관리",
-    items: ["/programs", ...OPERATIONS_CHILDREN, "/donations"],
+    items: ["/donations"],
   },
   {
     label: "평가",
