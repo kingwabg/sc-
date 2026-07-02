@@ -545,7 +545,6 @@ function BasicInfoTab({ child }: { child: Child }) {
             <InfoGroup title="개인 정보">
               <InfoRow label="휴대폰" value={childPhone} muted={!child.phone} />
               <InfoRow label="생년월일" value={formatDate(child.birthDate)} muted={!child.birthDate} />
-              <InfoRow label="이전입소일" value={formatDate(child.previousEnrolledAt)} muted={!child.previousEnrolledAt} />
               <InfoRow label="퇴소일" value={leftAt} muted={!child.leftAt} />
             </InfoGroup>
 
