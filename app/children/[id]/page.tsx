@@ -506,29 +506,64 @@ function BasicInfoTab({ child }: { child: Child }) {
   const leftAt = child.leftAt || empty;
 
   return (
-    <div className="space-y-4">
-      <section className="bg-white border border-slate-200 rounded-2xl shadow-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <User className="w-4 h-4 text-brand-600" />
-          <h2 className="text-[15px] font-bold text-slate-900 m-0">기본정보</h2>
+    <section className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 grid place-items-center">
+            <User className="w-4 h-4" />
+          </span>
+          <div>
+            <h2 className="text-[15px] font-bold text-slate-900 m-0">기본정보</h2>
+            <p className="text-[12px] text-slate-500 mt-0.5">이용·보호자·관리 정보</p>
+          </div>
         </div>
+        <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700">
+          {child.status === "active" ? "재원" : "휴원"}
+        </span>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          <InfoItem label="휴대폰" value={childPhone} icon={Phone} muted={!child.phone} />
-          <InfoItem label="생년월일" value={formatDate(child.birthDate)} icon={CalendarDays} muted={!child.birthDate} />
-          <InfoItem label="입소일" value={formatDate(child.enrolledAt)} icon={CalendarDays} muted={!child.enrolledAt} />
-          <InfoItem label="이전입소일" value={formatDate(child.previousEnrolledAt)} icon={CalendarDays} muted={!child.previousEnrolledAt} />
-          <InfoItem label="퇴소일" value={leftAt} icon={CalendarDays} muted={!child.leftAt} />
-          <InfoItem label="이용유형" value={serviceType} icon={IdCard} muted={!child.serviceType} />
-          <InfoItem label="기준 중위소득" value={medianIncome} icon={TrendingUp} muted={typeof child.medianIncomePct !== "number"} />
-          <InfoItem label="담당자" value={manager} icon={User} muted={!child.writtenBy?.name} />
-          <InfoItem label="키즈콜ID" value={kidsCallId} icon={MessageCircle} muted={!child.kidsCallId} />
-          <InfoItem label="보호자 유형" value={guardianType} icon={Users} muted={!child.guardian.type} />
-          <InfoItem label="보호자 비고" value={guardianNotes} icon={FileText} muted={!child.guardian.notes} className="md:col-span-2 xl:col-span-2" />
-          <InfoItem label="주소" value={child.address || empty} icon={MapPin} muted={!child.address} className="md:col-span-2 xl:col-span-3" />
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+        <aside className="border-b border-slate-100 bg-slate-50/70 p-5 lg:border-b-0 lg:border-r">
+          <div className="space-y-3">
+            <SummaryPill label="입소일" value={formatDate(child.enrolledAt)} icon={CalendarDays} muted={!child.enrolledAt} />
+            <SummaryPill label="이용유형" value={serviceType} icon={IdCard} muted={!child.serviceType} />
+            <SummaryPill label="기준 중위소득" value={medianIncome} icon={TrendingUp} muted={typeof child.medianIncomePct !== "number"} />
+          </div>
+          <div className="mt-5 rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500">
+              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+              주소
+            </div>
+            <div className={cn("mt-1.5 text-[14px] font-semibold leading-relaxed", child.address ? "text-slate-900" : "text-slate-400")}>
+              {child.address || empty}
+            </div>
+          </div>
+        </aside>
+
+        <div className="p-5">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-8 gap-y-6">
+            <InfoGroup title="개인 정보">
+              <InfoRow label="휴대폰" value={childPhone} muted={!child.phone} />
+              <InfoRow label="생년월일" value={formatDate(child.birthDate)} muted={!child.birthDate} />
+              <InfoRow label="이전입소일" value={formatDate(child.previousEnrolledAt)} muted={!child.previousEnrolledAt} />
+              <InfoRow label="퇴소일" value={leftAt} muted={!child.leftAt} />
+            </InfoGroup>
+
+            <InfoGroup title="보호자 추가 정보">
+              <InfoRow label="보호자 유형" value={guardianType} muted={!child.guardian.type} />
+              <InfoRow label="보호자 비고" value={guardianNotes} muted={!child.guardian.notes} />
+            </InfoGroup>
+
+            <InfoGroup title="관리 정보" className="xl:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                <InfoRow label="담당자" value={manager} muted={!child.writtenBy?.name} />
+                <InfoRow label="키즈콜ID" value={kidsCallId} muted={!child.kidsCallId} />
+              </div>
+            </InfoGroup>
+          </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -785,26 +820,64 @@ function BigField({
   );
 }
 
-function InfoItem({
+function SummaryPill({
   label,
   value,
   icon: Icon,
   muted,
-  className,
 }: {
   label: string;
   value: React.ReactNode;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string }>;
   muted?: boolean;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500">
+          <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          {label}
+        </div>
+        <div className={cn("text-[14px] font-bold tabular-nums", muted ? "text-slate-400" : "text-slate-900")}>
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoGroup({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3", className)}>
-      <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 mb-1.5">
-        {Icon && <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
-        {label}
+    <div className={className}>
+      <h3 className="mb-2 text-[12px] font-bold text-slate-500">{title}</h3>
+      <div className="divide-y divide-slate-100 border-y border-slate-100">
+        {children}
       </div>
-      <div className={cn("text-[14px] font-semibold leading-relaxed break-words", muted ? "text-slate-400" : "text-slate-900")}>
+    </div>
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+  muted,
+}: {
+  label: string;
+  value: React.ReactNode;
+  muted?: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-[96px_1fr] items-start gap-4 py-3 text-[14px]">
+      <div className="text-slate-500">{label}</div>
+      <div className={cn("font-semibold leading-relaxed break-words", muted ? "text-slate-400" : "text-slate-900")}>
         {value}
       </div>
     </div>
