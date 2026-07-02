@@ -427,8 +427,8 @@ function DocumentFormTemplate({
     <div className="bg-white">
       <div className="grid grid-cols-1 gap-8 px-6 py-8 xl:grid-cols-[minmax(720px,920px)_220px]">
         <section className="max-w-[920px]">
-          <div className="mb-5 grid min-h-[228px] grid-cols-[280px_minmax(0,1fr)_auto] items-start gap-8">
-            <table className={cn("mt-[108px] w-[280px] border-collapse text-black", getDocFontClass(tableSettings.fontSize))}>
+          <div className="mb-5 grid min-h-[228px] grid-cols-[220px_minmax(0,1fr)_auto] items-start gap-8">
+            <table className={cn("mt-[108px] w-[220px] border-collapse text-black", getDocFontClass(tableSettings.fontSize))}>
               <tbody>
                 <DocRow label="기안자" value="왕준하" settings={tableSettings} />
                 <DocRow label="소속" value="사회복지사" settings={tableSettings} />
