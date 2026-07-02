@@ -137,7 +137,7 @@ const FIXED_GROUPS: { label: string; items: string[] }[] = [
   },
   {
     label: "돌봄운영",
-    items: ["/children", "/staff", "/facility/inspection", "/meetings", "/reports", "/documents"],
+    items: ["/children", "/staff", "/facility/inspection", "/reports", "/documents"],
   },
   {
     label: "운영관리",
