@@ -4,7 +4,6 @@ import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ApprovalSidebar } from "@/app/approval/_components/ApprovalSidebar";
-import { RichEditor } from "@/components/editor/RichEditor";
 import {
   FileCheck2,
   ChevronRight,
@@ -15,8 +14,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Users,
-  Paperclip,
-  PaperclipIcon,
   X,
   Plus,
   UserPlus,
@@ -24,9 +21,8 @@ import {
   List,
 } from "lucide-react";
 import { getFormByKey, type FormField } from "@/lib/features/approval-form";
-import { getDefaultApprovalLine, type ApprovalLineStepData } from "@/lib/features/approval-line";
+import { getDefaultApprovalLine } from "@/lib/features/approval-line";
 import { cn } from "@/lib/utils";
-import type { ApprovalView } from "@/lib/types/approval";
 import { POSITION_LABELS } from "@/lib/features/staff";
 
 // ─── Props ─────────────────────────────────────────────────
@@ -240,152 +236,51 @@ function Step1Fields({
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveFile: (i: number) => void;
 }) {
-  if (form.key === "leave") {
-    return (
-      <LeaveDocumentTemplate
-        form={form}
-        values={values}
-        files={files}
-        onFieldChange={onFieldChange}
-        onFileChange={onFileChange}
-        onRemoveFile={onRemoveFile}
-      />
-    );
-  }
-
-  // Split fields into full and half width
-  const rows: (FormField | FormField[])[] = [];
-  let i = 0;
-  while (i < form.fields.length) {
-    const f = form.fields[i];
-    if (f.half && i + 1 < form.fields.length) {
-      const next = form.fields[i + 1];
-      if (next.half) {
-        rows.push([f, next]);
-        i += 2;
-        continue;
-      }
-    }
-    rows.push(f);
-    i++;
-  }
-
   return (
-    <div className="divide-y divide-slate-100">
-      {/* 양식명 헤더 */}
-      <div className="text-center py-6">
-        <h2 className="text-2xl font-bold text-slate-900">{form.label}</h2>
-      </div>
-
-      {/* 양식 필드 테이블 */}
-      <table className="w-full text-sm border-collapse">
-        <tbody>
-          {rows.map((row, ri) => {
-            if (Array.isArray(row)) {
-              const [left, right] = row as [import("@/lib/features/approval-form").FormField, import("@/lib/features/approval-form").FormField];
-              return (
-                <tr key={ri}>
-                  <FieldCell field={left} value={values[left.key] ?? ""} onChange={(v) => onFieldChange(left.key, v)} />
-                  <FieldCell field={right} value={values[right.key] ?? ""} onChange={(v) => onFieldChange(right.key, v)} />
-                </tr>
-              );
-            }
-            const single = row as import("@/lib/features/approval-form").FormField;
-            return (
-              <tr key={ri}>
-                <FieldCell field={single} value={values[single.key] ?? ""} onChange={(v) => onFieldChange(single.key, v)} />
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {/* 본문 에디터 */}
-      {form.hasEditor && (
-        <div className="px-5 py-4 bg-slate-50/30">
-          <div className="text-[11px] font-semibold text-slate-600 mb-2">상세 내용</div>
-          <RichEditor
-            value={overview}
-            onChange={onOverviewChange}
-            placeholder="결재 사유와 상세 내용을 입력하세요..."
-            minHeight={200}
-          />
-        </div>
-      )}
-
-      {/* 파일첨부 */}
-      {form.hasAttachment && (
-        <div className="px-5 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Paperclip className="w-3.5 h-3.5 text-slate-500" />
-              <span className="text-[11px] font-semibold text-slate-600">파일첨부</span>
-              <span className="text-[10px] text-slate-400">({files.length})</span>
-            </div>
-            <label className="h-7 px-2.5 inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-300 rounded text-[11px] font-semibold text-slate-700 cursor-pointer transition">
-              <PaperclipIcon className="w-3 h-3" />
-              파일 추가
-              <input type="file" multiple onChange={onFileChange} className="hidden" />
-            </label>
-          </div>
-          {files.length > 0 ? (
-            <ul className="space-y-1">
-              {files.map((f, i) => (
-                <li key={i} className="flex items-center gap-2 px-2.5 py-1.5 bg-white border border-slate-200 rounded text-[11px]">
-                  <Paperclip className="w-3 h-3 text-slate-400 shrink-0" />
-                  <span className="flex-1 truncate font-semibold text-slate-700">{f.name}</span>
-                  <span className="text-slate-400">{(f.size / 1024).toFixed(1)}KB</span>
-                  <button onClick={() => onRemoveFile(i)} className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-red-500">
-                    <X className="w-3 h-3" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="text-[11px] text-slate-400 border border-dashed border-slate-200 rounded px-3 py-2 text-center">
-              첨부된 파일이 없습니다
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 제목 */}
-      <div className="px-5 py-4">
-        <div className="text-[11px] font-semibold text-slate-500 mb-1.5">
-          제목 <span className="text-red-500">*</span>
-        </div>
-        <input
-          value={values._title ?? ""}
-          onChange={(e) => onFieldChange("_title", e.target.value)}
-          placeholder={form.titlePlaceholder}
-          className="w-full h-10 px-3 border border-slate-300 rounded-md text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none"
-        />
-      </div>
-    </div>
+    <DocumentFormTemplate
+      form={form}
+      values={values}
+      overview={overview}
+      files={files}
+      onFieldChange={onFieldChange}
+      onOverviewChange={onOverviewChange}
+      onFileChange={onFileChange}
+      onRemoveFile={onRemoveFile}
+    />
   );
 }
 
-// ─── Leave Template: document-like form ─────────────────────
-function LeaveDocumentTemplate({
+// ─── Document Template: document-like form ──────────────────
+function DocumentFormTemplate({
   form,
   values,
+  overview,
   files,
   onFieldChange,
+  onOverviewChange,
   onFileChange,
   onRemoveFile,
 }: {
   form: NonNullable<ReturnType<typeof getFormByKey>>;
   values: Record<string, string>;
+  overview: string;
   files: File[];
   onFieldChange: (key: string, value: string) => void;
+  onOverviewChange: (v: string) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveFile: (i: number) => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
-  const leaveType = form.fields.find((field) => field.key === "leave_type");
-  const startDate = form.fields.find((field) => field.key === "start_date");
-  const endDate = form.fields.find((field) => field.key === "end_date");
-  const reason = form.fields.find((field) => field.key === "reason");
+  const isLeaveForm = form.key === "leave";
+  const leaveFields = {
+    leaveType: form.fields.find((field) => field.key === "leave_type"),
+    startDate: form.fields.find((field) => field.key === "start_date"),
+    endDate: form.fields.find((field) => field.key === "end_date"),
+    reason: form.fields.find((field) => field.key === "reason"),
+  };
+  const regularFields = isLeaveForm
+    ? form.fields.filter((field) => !["leave_type", "start_date", "end_date", "reason"].includes(field.key))
+    : form.fields;
 
   return (
     <div className="bg-white">
@@ -427,7 +322,7 @@ function LeaveDocumentTemplate({
       <div className="grid grid-cols-1 gap-8 px-6 py-8 xl:grid-cols-[minmax(720px,920px)_220px]">
         <section className="max-w-[920px]">
           <h2 className="mb-8 text-center text-[28px] font-black tracking-tight text-black">
-            휴가신청서
+            {form.label}
           </h2>
 
           <div className="mb-5 flex items-end justify-between gap-8">
@@ -440,85 +335,52 @@ function LeaveDocumentTemplate({
               </tbody>
             </table>
 
-            <table className="w-[96px] border-collapse text-center text-[11px] text-black">
-              <tbody>
-                <tr>
-                  <th rowSpan={4} className="w-7 border border-black bg-slate-100 p-1 font-bold [writing-mode:vertical-rl]">
-                    신청
-                  </th>
-                  <th className="h-7 border border-black bg-slate-50 font-medium">팀장</th>
-                </tr>
-                <tr>
-                  <td className="h-16 border border-black text-[10px]">왕준하</td>
-                </tr>
-                <tr>
-                  <td className="h-7 border border-black" />
-                </tr>
-                <tr>
-                  <td className="h-7 border border-black" />
-                </tr>
-              </tbody>
-            </table>
+            <ApprovalStamp />
           </div>
 
           <table className="w-full border-collapse text-[12px] text-black">
             <tbody>
-              {leaveType && (
-                <tr>
-                  <DocLabel required>휴가 종류</DocLabel>
-                  <td className="border border-black px-2 py-1">
-                    <select
-                      value={values.leave_type ?? ""}
-                      onChange={(event) => onFieldChange("leave_type", event.target.value)}
-                      className="h-7 w-[180px] border border-slate-300 bg-white px-2 text-[12px] outline-none focus:border-black"
-                    >
-                      <option value="">선택</option>
-                      {leaveType.options?.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
+              <tr>
+                <DocLabel required>제목</DocLabel>
+                <td className="border border-black px-2 py-1">
+                  <input
+                    value={values._title ?? ""}
+                    onChange={(event) => onFieldChange("_title", event.target.value)}
+                    placeholder={form.titlePlaceholder}
+                    className="h-7 w-full border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+                  />
+                </td>
+              </tr>
+
+              {isLeaveForm && leaveFields.leaveType && (
+                <DocumentFieldRow field={leaveFields.leaveType} value={values.leave_type ?? ""} onChange={(value) => onFieldChange("leave_type", value)} />
               )}
-              {(startDate || endDate) && (
-                <tr>
-                  <DocLabel required>휴가 기간</DocLabel>
-                  <td className="border border-black px-2 py-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <input
-                        type="date"
-                        value={values.start_date ?? ""}
-                        onChange={(event) => onFieldChange("start_date", event.target.value)}
-                        className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
-                      />
-                      <span>~</span>
-                      <input
-                        type="date"
-                        value={values.end_date ?? ""}
-                        onChange={(event) => onFieldChange("end_date", event.target.value)}
-                        className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
-                      />
-                      <span className="ml-2 font-bold">사용일수:</span>
-                      <input
-                        value={values.leave_days ?? ""}
-                        onChange={(event) => onFieldChange("leave_days", event.target.value)}
-                        className="h-7 w-[64px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
-                      />
-                      <span>일</span>
-                    </div>
-                  </td>
-                </tr>
+              {isLeaveForm && (leaveFields.startDate || leaveFields.endDate) && (
+                <LeavePeriodRow values={values} onFieldChange={onFieldChange} />
               )}
-              {reason && (
+              {isLeaveForm && leaveFields.reason && (
+                <DocumentFieldRow field={leaveFields.reason} value={values.reason ?? ""} onChange={(value) => onFieldChange("reason", value)} tall />
+              )}
+
+              {regularFields.map((field) => (
+                <DocumentFieldRow
+                  key={field.key}
+                  field={field}
+                  value={values[field.key] ?? ""}
+                  onChange={(value) => onFieldChange(field.key, value)}
+                  tall={field.type === "textarea"}
+                />
+              ))}
+
+              {form.hasEditor && (
                 <tr>
-                  <DocLabel required>휴가 사유</DocLabel>
+                  <DocLabel required>상세 내용</DocLabel>
                   <td className="border border-black p-1">
                     <textarea
-                      value={values.reason ?? ""}
-                      onChange={(event) => onFieldChange("reason", event.target.value)}
-                      className="min-h-[104px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] outline-none focus:border-black"
+                      value={overview}
+                      onChange={(event) => onOverviewChange(event.target.value)}
+                      placeholder="결재 사유와 상세 내용을 입력하세요"
+                      className="min-h-[120px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] outline-none focus:border-black"
                     />
                   </td>
                 </tr>
@@ -526,11 +388,17 @@ function LeaveDocumentTemplate({
             </tbody>
           </table>
 
-          <div className="mt-4 space-y-1 text-[11px] font-semibold leading-relaxed text-black">
-            <p>[당일 반차 신청시] 시작일은 오전/오후 체크</p>
-            <p>[예비군/민방위 신청시] 통지서 스캔하여 파일 첨부</p>
-            <p>[경조휴가 신청시] 증빙서류 스캔하여 파일 첨부 (예: 청첩장 등본 등)</p>
-          </div>
+          {isLeaveForm ? (
+            <div className="mt-4 space-y-1 text-[11px] font-semibold leading-relaxed text-black">
+              <p>[당일 반차 신청시] 시작일은 오전/오후 체크</p>
+              <p>[예비군/민방위 신청시] 통지서 스캔하여 파일 첨부</p>
+              <p>[경조휴가 신청시] 증빙서류 스캔하여 파일 첨부 (예: 청첩장 등본 등)</p>
+            </div>
+          ) : (
+            <div className="mt-4 text-[11px] font-semibold leading-relaxed text-black">
+              <p>[작성 안내] 필수 항목을 확인한 뒤 결재선을 지정해 상신하세요.</p>
+            </div>
+          )}
 
           <div className="mt-20 grid grid-cols-[90px_1fr] items-center gap-4 text-[12px]">
             <div className="font-bold text-black">파일첨부</div>
@@ -592,6 +460,133 @@ function LeaveDocumentTemplate({
   );
 }
 
+function ApprovalStamp() {
+  return (
+    <table className="w-[96px] border-collapse text-center text-[11px] text-black">
+      <tbody>
+        <tr>
+          <th rowSpan={2} className="w-7 border border-black bg-slate-100 p-1 font-bold [writing-mode:vertical-rl]">
+            신청
+          </th>
+          <th className="h-7 border border-black bg-slate-50 font-medium">팀장</th>
+        </tr>
+        <tr>
+          <td className="h-16 border border-black text-[10px]">왕준하</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+function LeavePeriodRow({
+  values,
+  onFieldChange,
+}: {
+  values: Record<string, string>;
+  onFieldChange: (key: string, value: string) => void;
+}) {
+  return (
+    <tr>
+      <DocLabel required>휴가 기간</DocLabel>
+      <td className="border border-black px-2 py-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <input
+            type="date"
+            value={values.start_date ?? ""}
+            onChange={(event) => onFieldChange("start_date", event.target.value)}
+            className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+          />
+          <span>~</span>
+          <input
+            type="date"
+            value={values.end_date ?? ""}
+            onChange={(event) => onFieldChange("end_date", event.target.value)}
+            className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+          />
+          <span className="ml-2 font-bold">사용일수:</span>
+          <input
+            value={values.leave_days ?? ""}
+            onChange={(event) => onFieldChange("leave_days", event.target.value)}
+            className="h-7 w-[64px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+          />
+          <span>일</span>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function DocumentFieldRow({
+  field,
+  value,
+  onChange,
+  tall,
+}: {
+  field: FormField;
+  value: string;
+  onChange: (value: string) => void;
+  tall?: boolean;
+}) {
+  return (
+    <tr>
+      <DocLabel required={field.required}>{field.label}</DocLabel>
+      <td className="border border-black p-1">
+        <DocumentFieldInput field={field} value={value} onChange={onChange} tall={tall} />
+      </td>
+    </tr>
+  );
+}
+
+function DocumentFieldInput({
+  field,
+  value,
+  onChange,
+  tall,
+}: {
+  field: FormField;
+  value: string;
+  onChange: (value: string) => void;
+  tall?: boolean;
+}) {
+  if (field.type === "select") {
+    return (
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-7 w-[180px] border border-slate-300 bg-white px-2 text-[12px] outline-none focus:border-black"
+      >
+        <option value="">선택</option>
+        {field.options?.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (field.type === "textarea" || tall) {
+    return (
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={field.placeholder}
+        className="min-h-[96px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] outline-none focus:border-black"
+      />
+    );
+  }
+
+  return (
+    <input
+      type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={field.placeholder}
+      className="h-7 w-full border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+    />
+  );
+}
+
 function DocRow({ label, value }: { label: string; value: string }) {
   return (
     <tr>
@@ -615,64 +610,6 @@ function DocLabel({
       {required && <span className="mr-1 text-red-600">*</span>}
       {children}
     </th>
-  );
-}
-
-// ─── Field Cell ────────────────────────────────────────────
-function FieldCell({
-  field,
-  value,
-  onChange,
-}: {
-  field: FormField;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <>
-      <th className="w-[130px] px-4 py-2.5 text-[11px] font-semibold text-slate-600 bg-slate-50/60 border-b border-r border-slate-100 text-left align-middle">
-        {field.label}
-        {field.required && <span className="text-red-400 ml-0.5">*</span>}
-      </th>
-      <td className="px-3 py-1.5 border-b border-slate-100">
-        {field.type === "select" ? (
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full h-9 px-2.5 text-[13px] bg-transparent outline-none rounded-md border border-slate-200 hover:bg-slate-50 focus:border-brand-500 focus:ring-1 focus:ring-brand-200 transition"
-          >
-            <option value="">선택하세요</option>
-            {field.options?.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-        ) : field.type === "textarea" ? (
-          <textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={field.placeholder}
-            rows={3}
-            className="w-full px-2.5 py-1.5 text-[13px] bg-transparent outline-none rounded-md border border-slate-200 hover:bg-slate-50 focus:border-brand-500 focus:ring-1 focus:ring-brand-200 transition resize-none"
-          />
-        ) : field.type === "number" ? (
-          <input
-            type="number"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={field.placeholder}
-            className="w-full h-9 px-2.5 text-[13px] bg-transparent outline-none rounded-md border border-slate-200 hover:bg-slate-50 focus:border-brand-500 focus:ring-1 focus:ring-brand-200 transition"
-          />
-        ) : (
-          <input
-            type={field.type === "date" ? "date" : "text"}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={field.placeholder}
-            className="w-full h-9 px-2.5 text-[13px] bg-transparent outline-none rounded-md border border-slate-200 hover:bg-slate-50 focus:border-brand-500 focus:ring-1 focus:ring-brand-200 transition"
-          />
-        )}
-      </td>
-    </>
   );
 }
 
