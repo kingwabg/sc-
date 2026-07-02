@@ -51,7 +51,7 @@ export function StaffListToolbar({
           placeholder="이름 또는 연락처 검색"
         />
       </InputGroup>
-      <div className="inline-flex bg-white border border-slate-200 rounded-[10px] p-0.5 shadow-sm text-xs">
+      <div className="inline-flex bg-white border border-slate-200 rounded-[10px] p-0.5 shadow-sm text-xs dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
         {chips.map((o) => (
           <button
             key={o.v}

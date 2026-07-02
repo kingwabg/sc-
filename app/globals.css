@@ -159,6 +159,66 @@
   border-color: #3b82f6 !important;
 }
 
+.dark .rs-input-group,
+.dark .rs-input,
+.dark .rs-input-group-addon {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .rs-input::placeholder {
+  color: #64748b !important;
+}
+
+.dark .rs-btn-default,
+.dark .rs-btn-subtle {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+.dark .rs-btn-default:hover,
+.dark .rs-btn-subtle:hover {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.dark .resource-table-shell .rs-table {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+
+.dark .resource-table-shell .rs-table-row,
+.dark .resource-table-shell .rs-table-row-header,
+.dark .resource-table-shell .rs-table-cell,
+.dark .resource-table-shell .rs-table-cell-content {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+
+.dark .resource-table-shell .rs-table-row:hover .rs-table-cell,
+.dark .resource-table-shell .rs-table-row:hover .rs-table-cell-content {
+  background-color: #111827 !important;
+}
+
+.dark .resource-table-shell .rs-table-cell-header,
+.dark .resource-table-shell .rs-table-cell-header .rs-table-cell-content {
+  background-color: #111827 !important;
+  color: #94a3b8 !important;
+}
+
+.dark .resource-table-shell .rs-table-cell,
+.dark .resource-table-shell .rs-table-row-header,
+.dark .resource-table-shell .rs-table-scrollbar-horizontal {
+  border-color: #1e293b !important;
+}
+
+.dark .resource-table-shell .rs-table-scrollbar-horizontal,
+.dark .resource-table-shell .rs-table-scrollbar-horizontal .rs-table-scrollbar-handle {
+  background-color: #334155 !important;
+}
+
 .dark * {
   scrollbar-color: #334155 transparent;
 }
