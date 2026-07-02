@@ -102,7 +102,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
   "/org": { label: "조직도", href: "/org", icon: Users },
   "/monthly-plan": { label: "월간계획", href: "/monthly-plan", icon: CalendarRange },
   "/annual-plan": { label: "연간계획", href: "/annual-plan", icon: BookOpen },
-  "/programs":   { label: "프로그램 (계획/일지/평가)", href: "/annual-plan", icon: NotebookPen },
+  "/programs":   { label: "프로그램", href: "/annual-plan", icon: NotebookPen },
   "/audit-prep": { label: "평가 대비 모드", href: "/audit-prep", icon: ShieldCheck },
   "/admin":   { label: "관리자",         href: "/admin",   icon: ShieldAlert, minRole: "admin" },
   "/exec":    { label: "임원 대시보드",  href: "/exec",    icon: Crown,       minRole: "owner" },
@@ -492,6 +492,7 @@ function NavGroup({
               )
             : false;
           const expanded = hasChildren && childActive;
+          const badge = badges[item.href];
 
           return (
             <div key={item.label} className="group relative">
@@ -502,7 +503,7 @@ function NavGroup({
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
                   "flex items-center gap-2.5 h-9 pl-3 rounded-lg text-[13.5px] font-medium transition",
-                  editingFavorites ? "pr-3" : "pr-10",
+                  editingFavorites ? (badge ? "pr-10" : "pr-3") : badge ? "pr-16" : "pr-10",
                   isActive || childActive
                     ? "bg-brand-50 text-brand-700"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
@@ -518,12 +519,18 @@ function NavGroup({
                 {item.external && (
                   <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 )}
-                {badges[item.href] ? (
-                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center">
-                    {badges[item.href]}
-                  </span>
-                ) : null}
               </Link>
+
+              {badge ? (
+                <span
+                  className={cn(
+                    "pointer-events-none absolute top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1.5 rounded-full bg-red-100 text-red-600 text-[11px] font-bold grid place-items-center",
+                    editingFavorites ? "right-3" : "right-9",
+                  )}
+                >
+                  {badge}
+                </span>
+              ) : null}
 
               {/* 하위 메뉴 — children이 있고, 그 중 하나가 active면 펼침 */}
               {hasChildren && expanded && (
