@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ApprovalSidebar } from "@/app/approval/_components/ApprovalSidebar";
@@ -28,12 +28,19 @@ type RightPanelTab = "approval" | "document" | "table";
 type TableDensity = "compact" | "regular" | "relaxed";
 type TableLabelTone = "gray" | "white" | "blue";
 type TableBorderTone = "black" | "soft";
+type TableTextAlign = "left" | "center" | "right";
+type TableFontSize = "small" | "regular" | "large";
+type TableInputHeight = "compact" | "regular" | "large";
 
 interface DocumentTableSettings {
   labelWidth: number;
   density: TableDensity;
   labelTone: TableLabelTone;
   borderTone: TableBorderTone;
+  labelAlign: TableTextAlign;
+  fontSize: TableFontSize;
+  inputHeight: TableInputHeight;
+  showRequiredMarker: boolean;
   showInputGuide: boolean;
 }
 
@@ -49,6 +56,10 @@ const DEFAULT_TABLE_SETTINGS: DocumentTableSettings = {
   density: "regular",
   labelTone: "gray",
   borderTone: "black",
+  labelAlign: "center",
+  fontSize: "regular",
+  inputHeight: "regular",
+  showRequiredMarker: true,
   showInputGuide: true,
 };
 
@@ -319,7 +330,7 @@ function DocumentFormTemplate({
           </h2>
 
           <div className="mb-5 flex items-end justify-between gap-8">
-            <table className="w-[280px] border-collapse text-[12px] text-black">
+            <table className={cn("w-[280px] border-collapse text-black", getDocFontClass(tableSettings.fontSize))}>
               <tbody>
                 <DocRow label="기안자" value="왕준하" settings={tableSettings} />
                 <DocRow label="소속" value="사회복지사" settings={tableSettings} />
@@ -335,7 +346,7 @@ function DocumentFormTemplate({
             />
           </div>
 
-          <table className="w-full border-collapse text-[12px] text-black">
+          <table className={cn("w-full border-collapse text-black", getDocFontClass(tableSettings.fontSize))}>
             <tbody>
               <tr>
                 <DocLabel required settings={tableSettings}>제목</DocLabel>
@@ -344,7 +355,7 @@ function DocumentFormTemplate({
                     value={values._title ?? ""}
                     onChange={(event) => onFieldChange("_title", event.target.value)}
                     placeholder={form.titlePlaceholder}
-                    className={getDocInputClass(tableSettings.showInputGuide)}
+                    className={getDocInputClass(tableSettings)}
                   />
                 </td>
               </tr>
@@ -379,7 +390,8 @@ function DocumentFormTemplate({
                       onChange={(event) => onOverviewChange(event.target.value)}
                       placeholder="결재 사유와 상세 내용을 입력하세요"
                       className={cn(
-                        "min-h-[120px] w-full resize-none px-2 py-2 text-[12px] outline-none focus:border-black",
+                        "min-h-[120px] w-full resize-none px-2 py-2 outline-none focus:border-black",
+                        getDocFontClass(tableSettings.fontSize),
                         tableSettings.showInputGuide ? "border border-slate-300" : "border border-transparent bg-transparent"
                       )}
                     />
@@ -838,7 +850,7 @@ function TableCustomPanel({
   onSettingsChange: (settings: Partial<DocumentTableSettings>) => void;
 }) {
   return (
-    <div className="space-y-4 p-3">
+    <div className="max-h-[calc(100vh-150px)] space-y-4 overflow-y-auto p-3">
       <div>
         <div className="mb-2 flex items-center justify-between">
           <span className="font-semibold text-slate-700">라벨 폭</span>
@@ -870,6 +882,75 @@ function TableCustomPanel({
               className={cn(
                 "h-7 rounded text-[11px] font-semibold transition",
                 settings.density === value ? "bg-white text-brand-700 shadow-sm" : "text-slate-500"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 font-semibold text-slate-700">입력칸 높이</div>
+        <div className="grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">
+          {[
+            ["compact", "낮게"],
+            ["regular", "보통"],
+            ["large", "높게"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSettingsChange({ inputHeight: value as TableInputHeight })}
+              className={cn(
+                "h-7 rounded text-[11px] font-semibold transition",
+                settings.inputHeight === value ? "bg-white text-brand-700 shadow-sm" : "text-slate-500"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 font-semibold text-slate-700">글자 크기</div>
+        <div className="grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">
+          {[
+            ["small", "작게"],
+            ["regular", "보통"],
+            ["large", "크게"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSettingsChange({ fontSize: value as TableFontSize })}
+              className={cn(
+                "h-7 rounded text-[11px] font-semibold transition",
+                settings.fontSize === value ? "bg-white text-brand-700 shadow-sm" : "text-slate-500"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 font-semibold text-slate-700">라벨 정렬</div>
+        <div className="grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">
+          {[
+            ["left", "왼쪽"],
+            ["center", "중앙"],
+            ["right", "오른쪽"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSettingsChange({ labelAlign: value as TableTextAlign })}
+              className={cn(
+                "h-7 rounded text-[11px] font-semibold transition",
+                settings.labelAlign === value ? "bg-white text-brand-700 shadow-sm" : "text-slate-500"
               )}
             >
               {label}
@@ -932,6 +1013,16 @@ function TableCustomPanel({
           className="h-4 w-4 accent-brand-600"
         />
       </label>
+
+      <label className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2">
+        <span className="font-semibold text-slate-700">필수표시</span>
+        <input
+          type="checkbox"
+          checked={settings.showRequiredMarker}
+          onChange={(event) => onSettingsChange({ showRequiredMarker: event.target.checked })}
+          className="h-4 w-4 accent-brand-600"
+        />
+      </label>
     </div>
   );
 }
@@ -990,6 +1081,16 @@ function LeavePeriodRow({
   settings: DocumentTableSettings;
 }) {
   const borderColor = settings.borderTone === "black" ? "#000000" : "#64748b";
+  const startDate = values.start_date ?? "";
+  const endDate = values.end_date ?? "";
+
+  useEffect(() => {
+    const nextBusinessDays = getBusinessDays(startDate, endDate);
+    const nextValue = nextBusinessDays > 0 ? String(nextBusinessDays) : "";
+    if ((values.leave_days ?? "") !== nextValue) {
+      onFieldChange("leave_days", nextValue);
+    }
+  }, [startDate, endDate, values.leave_days, onFieldChange]);
 
   return (
     <tr>
@@ -998,22 +1099,22 @@ function LeavePeriodRow({
         <div className="grid grid-cols-[150px_12px_150px_auto_64px_20px] items-center gap-1.5">
           <input
             type="date"
-            value={values.start_date ?? ""}
+            value={startDate}
             onChange={(event) => onFieldChange("start_date", event.target.value)}
-            className={getDocInputClass(settings.showInputGuide)}
+            className={getDocInputClass(settings)}
           />
           <span className="text-center">~</span>
           <input
             type="date"
-            value={values.end_date ?? ""}
+            value={endDate}
             onChange={(event) => onFieldChange("end_date", event.target.value)}
-            className={getDocInputClass(settings.showInputGuide)}
+            className={getDocInputClass(settings)}
           />
           <span className="pl-2 font-bold">사용일수:</span>
           <input
             value={values.leave_days ?? ""}
-            onChange={(event) => onFieldChange("leave_days", event.target.value)}
-            className={getDocInputClass(settings.showInputGuide)}
+            readOnly
+            className={cn(getDocInputClass(settings), "bg-slate-50 text-center font-semibold")}
           />
           <span>일</span>
         </div>
@@ -1065,7 +1166,7 @@ function DocumentFieldInput({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={cn(getDocInputClass(settings.showInputGuide), "w-[180px] bg-white")}
+        className={cn(getDocInputClass(settings), "w-[180px] bg-white")}
       >
         <option value="">선택</option>
         {field.options?.map((option) => (
@@ -1084,7 +1185,8 @@ function DocumentFieldInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={field.placeholder}
         className={cn(
-          "block min-h-[96px] w-full resize-none px-2 py-2 text-[12px] leading-5 outline-none focus:border-black",
+          "block min-h-[96px] w-full resize-none px-2 py-2 leading-5 outline-none focus:border-black",
+          getDocFontClass(settings.fontSize),
           settings.showInputGuide ? "border border-slate-300" : "border border-transparent bg-transparent"
         )}
       />
@@ -1097,25 +1199,62 @@ function DocumentFieldInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={field.placeholder}
-      className={getDocInputClass(settings.showInputGuide)}
+      className={getDocInputClass(settings)}
     />
   );
 }
 
 const DOC_INPUT_CLASS =
-  "block h-7 w-full border border-slate-300 px-2 text-[12px] leading-7 outline-none focus:border-black";
+  "block w-full border border-slate-300 px-2 outline-none focus:border-black";
 
-function getDocInputClass(showInputGuide: boolean) {
+function getDocInputClass(settings: DocumentTableSettings) {
   return cn(
     DOC_INPUT_CLASS,
-    !showInputGuide && "border-transparent bg-transparent focus:border-black"
+    getDocInputHeightClass(settings.inputHeight),
+    getDocFontClass(settings.fontSize),
+    !settings.showInputGuide && "border-transparent bg-transparent focus:border-black"
   );
+}
+
+function getBusinessDays(startDateValue: string, endDateValue: string) {
+  if (!startDateValue || !endDateValue) return 0;
+  const startDate = new Date(`${startDateValue}T00:00:00`);
+  const endDate = new Date(`${endDateValue}T00:00:00`);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return 0;
+  if (startDate > endDate) return 0;
+
+  let days = 0;
+  const currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    const day = currentDate.getDay();
+    if (day !== 0 && day !== 6) days += 1;
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return days;
 }
 
 function getDocCellPadding(density: TableDensity) {
   if (density === "compact") return "p-1";
   if (density === "relaxed") return "p-2.5";
   return "p-1.5";
+}
+
+function getDocInputHeightClass(inputHeight: TableInputHeight) {
+  if (inputHeight === "compact") return "h-6 leading-6";
+  if (inputHeight === "large") return "h-8 leading-8";
+  return "h-7 leading-7";
+}
+
+function getDocFontClass(fontSize: TableFontSize) {
+  if (fontSize === "small") return "text-[11px]";
+  if (fontSize === "large") return "text-[13px]";
+  return "text-[12px]";
+}
+
+function getDocAlignClass(align: TableTextAlign) {
+  if (align === "left") return "text-left";
+  if (align === "right") return "text-right";
+  return "text-center";
 }
 
 function getDocLabelBg(tone: TableLabelTone) {
@@ -1139,7 +1278,7 @@ function DocRow({
     <tr>
       <th
         style={{ width: settings.labelWidth, borderColor, backgroundColor: getDocLabelBg(settings.labelTone) }}
-        className={cn("border px-2 text-center font-bold", getDocCellPadding(settings.density))}
+        className={cn("border px-2 font-bold", getDocCellPadding(settings.density), getDocAlignClass(settings.labelAlign))}
       >
         {label}
       </th>
@@ -1162,9 +1301,9 @@ function DocLabel({
   return (
     <th
       style={{ width: settings.labelWidth, borderColor, backgroundColor: getDocLabelBg(settings.labelTone) }}
-      className={cn("border px-2 text-center font-bold", getDocCellPadding(settings.density))}
+      className={cn("border px-2 font-bold", getDocCellPadding(settings.density), getDocAlignClass(settings.labelAlign))}
     >
-      {required && <span className="mr-1 text-red-600">*</span>}
+      {required && settings.showRequiredMarker && <span className="mr-1 text-red-600">*</span>}
       {children}
     </th>
   );
