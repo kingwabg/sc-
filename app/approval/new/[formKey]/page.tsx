@@ -37,6 +37,13 @@ interface DocumentTableSettings {
   showInputGuide: boolean;
 }
 
+interface ApprovalPerson {
+  id: string;
+  name: string;
+  role: string;
+  team: string;
+}
+
 const DEFAULT_TABLE_SETTINGS: DocumentTableSettings = {
   labelWidth: 110,
   density: "regular",
@@ -44,6 +51,13 @@ const DEFAULT_TABLE_SETTINGS: DocumentTableSettings = {
   borderTone: "black",
   showInputGuide: true,
 };
+
+const APPROVAL_CANDIDATES: ApprovalPerson[] = [
+  { id: "a01", name: "왕준하", role: "팀장", team: "사회복지사" },
+  { id: "a02", name: "황인주", role: "사회복지사", team: "사회복지사 2" },
+  { id: "a03", name: "박수연", role: "지원교사", team: "센터장 1" },
+  { id: "a04", name: "김선영", role: "행정", team: "운영관리" },
+];
 
 // ─── Page ─────────────────────────────────────────────────
 export default function ApprovalFormWizardPage({ params }: Props) {
@@ -283,6 +297,7 @@ function DocumentFormTemplate({
   const today = new Date().toISOString().slice(0, 10);
   const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>("approval");
   const [tableSettings, setTableSettings] = useState<DocumentTableSettings>(DEFAULT_TABLE_SETTINGS);
+  const [approvers, setApprovers] = useState<ApprovalPerson[]>([]);
   const isLeaveForm = form.key === "leave";
   const leaveFields = {
     leaveType: form.fields.find((field) => field.key === "leave_type"),
@@ -313,7 +328,11 @@ function DocumentFormTemplate({
               </tbody>
             </table>
 
-            <ApprovalStamp borderColor={borderColor} labelBg={getDocLabelBg(tableSettings.labelTone)} />
+            <ApprovalStamp
+              approvers={approvers}
+              borderColor={borderColor}
+              labelBg={getDocLabelBg(tableSettings.labelTone)}
+            />
           </div>
 
           <table className="w-full border-collapse text-[12px] text-black">
@@ -417,9 +436,11 @@ function DocumentFormTemplate({
 
         <DocumentRightPanel
           activeTab={rightPanelTab}
+          approvers={approvers}
           form={form}
           settings={tableSettings}
           today={today}
+          onApproversChange={setApprovers}
           onTabChange={setRightPanelTab}
           onSettingsChange={(nextSettings) =>
             setTableSettings((current) => ({ ...current, ...nextSettings }))
@@ -432,16 +453,20 @@ function DocumentFormTemplate({
 
 function DocumentRightPanel({
   activeTab,
+  approvers,
   form,
   settings,
   today,
+  onApproversChange,
   onTabChange,
   onSettingsChange,
 }: {
   activeTab: RightPanelTab;
+  approvers: ApprovalPerson[];
   form: NonNullable<ReturnType<typeof getFormByKey>>;
   settings: DocumentTableSettings;
   today: string;
+  onApproversChange: (approvers: ApprovalPerson[]) => void;
   onTabChange: (tab: RightPanelTab) => void;
   onSettingsChange: (settings: Partial<DocumentTableSettings>) => void;
 }) {
@@ -472,7 +497,9 @@ function DocumentRightPanel({
           ))}
         </div>
 
-        {activeTab === "approval" && <ApprovalLinePanel />}
+        {activeTab === "approval" && (
+          <ApprovalLinePanel approvers={approvers} onApproversChange={onApproversChange} />
+        )}
         {activeTab === "document" && <DocumentInfoPanel form={form} today={today} />}
         {activeTab === "table" && (
           <TableCustomPanel settings={settings} onSettingsChange={onSettingsChange} />
@@ -482,30 +509,264 @@ function DocumentRightPanel({
   );
 }
 
-function ApprovalLinePanel() {
+function ApprovalLinePanel({
+  approvers,
+  onApproversChange,
+}: {
+  approvers: ApprovalPerson[];
+  onApproversChange: (approvers: ApprovalPerson[]) => void;
+}) {
+  const [showModal, setShowModal] = useState(false);
+
   return (
-    <div className="space-y-3 p-3">
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-        <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
-          신청
-        </div>
-        <div className="flex gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-600">
-            왕
+    <>
+      <div className="space-y-3 p-3">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            신청
           </div>
-          <div>
-            <div className="font-bold text-slate-900">왕준하 팀장</div>
-            <div className="mt-1 text-slate-500">사회복지사</div>
-            <div className="text-slate-500">기안</div>
+          <div className="flex gap-2">
+            <div className="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-600">
+              왕
+            </div>
+            <div>
+              <div className="font-bold text-slate-900">왕준하 팀장</div>
+              <div className="mt-1 text-slate-500">사회복지사</div>
+              <div className="text-slate-500">기안</div>
+            </div>
+          </div>
+        </div>
+
+        {approvers.length > 0 && (
+          <div className="space-y-2">
+            {approvers.map((approver, index) => (
+              <div key={approver.id} className="rounded-md border border-slate-200 bg-white p-3">
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                  승인 {index + 1}
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 font-bold text-slate-600">
+                    {approver.name.slice(0, 1)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-slate-900">{approver.name} {approver.role}</div>
+                    <div className="mt-1 truncate text-slate-500">{approver.team}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onApproversChange(approvers.filter((item) => item.id !== approver.id))}
+                    className="text-slate-300 hover:text-red-500"
+                    aria-label={`${approver.name} 결재자 제거`}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          className="h-8 w-full rounded-md border border-brand-500 text-[11px] font-semibold text-brand-700 hover:bg-brand-50"
+        >
+          + 결재자 추가
+        </button>
+      </div>
+
+      {showModal && (
+        <ApprovalLineModal
+          approvers={approvers}
+          onClose={() => setShowModal(false)}
+          onConfirm={(nextApprovers) => {
+            onApproversChange(nextApprovers);
+            setShowModal(false);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function ApprovalLineModal({
+  approvers,
+  onClose,
+  onConfirm,
+}: {
+  approvers: ApprovalPerson[];
+  onClose: () => void;
+  onConfirm: (approvers: ApprovalPerson[]) => void;
+}) {
+  const [tab, setTab] = useState<"approval" | "reference" | "reader">("approval");
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<ApprovalPerson[]>(approvers);
+  const filteredCandidates = APPROVAL_CANDIDATES.filter((person) =>
+    `${person.name} ${person.role} ${person.team}`.toLowerCase().includes(query.toLowerCase())
+  );
+
+  function togglePerson(person: ApprovalPerson) {
+    setSelected((current) =>
+      current.some((item) => item.id === person.id)
+        ? current.filter((item) => item.id !== person.id)
+        : [...current, person]
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4">
+      <div className="w-full max-w-[780px] overflow-hidden rounded-lg bg-white shadow-2xl">
+        <div className="flex h-14 items-center justify-between border-b border-slate-200 px-5">
+          <h3 className="text-sm font-bold text-slate-900">결재 정보</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-8 w-8 place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="닫기"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-5 pt-4">
+          <div className="flex gap-5 border-b border-slate-200 text-[12px]">
+            {[
+              ["approval", "결재선"],
+              ["reference", "참조자"],
+              ["reader", "열람자"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTab(value as "approval" | "reference" | "reader")}
+                className={cn(
+                  "border-b-2 pb-2 font-semibold",
+                  tab === value ? "border-slate-950 text-slate-950" : "border-transparent text-slate-400"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[270px_1fr] gap-3 p-5">
+          <section className="border border-slate-200">
+            <div className="grid grid-cols-2 border-b border-slate-200 text-center text-[11px] font-semibold">
+              <button type="button" className="border-b-2 border-slate-900 py-2 text-slate-900">조직도</button>
+              <button type="button" className="py-2 text-slate-400">나의 결재선</button>
+            </div>
+            <div className="p-3">
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="이름, 직위, 부서 검색"
+                className="h-8 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-[12px] outline-none focus:border-brand-400"
+              />
+            </div>
+            <div className="max-h-[230px] space-y-1 overflow-y-auto px-3 pb-3 text-[12px]">
+              <div className="py-1 font-bold text-slate-800">⌄ 서창지역아동센터 4</div>
+              <div className="pl-4 text-slate-500">› 센터장 1</div>
+              <div className="pl-4 font-semibold text-slate-700">⌄ 사회복지사 2</div>
+              {filteredCandidates.map((person) => {
+                const isSelected = selected.some((item) => item.id === person.id);
+
+                return (
+                  <button
+                    key={person.id}
+                    type="button"
+                    onClick={() => togglePerson(person)}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-md px-2 py-2 text-left transition",
+                      isSelected ? "bg-brand-50 text-brand-700" : "hover:bg-slate-50"
+                    )}
+                  >
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-slate-200 font-bold">
+                      {person.name.slice(0, 1)}
+                    </span>
+                    <span>
+                      <span className="block font-bold">{person.name} {person.role}</span>
+                      <span className="text-[11px] text-slate-400">{person.team}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="border border-slate-200">
+            <div className="grid grid-cols-[70px_1fr_1fr_90px_34px] border-b border-slate-200 bg-slate-50 py-2 text-center text-[11px] font-semibold text-slate-600">
+              <span>타입</span>
+              <span>이름</span>
+              <span>부서</span>
+              <span>상태</span>
+              <span>삭제</span>
+            </div>
+            <div className="border-b border-slate-200 bg-white px-3 py-1.5 text-center text-[11px] font-bold text-slate-700">
+              신청
+            </div>
+            <div className="grid grid-cols-[70px_1fr_1fr_90px_34px] items-center border-b border-slate-100 px-3 py-2 text-[12px]">
+              <span className="text-slate-500">기안</span>
+              <span className="font-semibold text-slate-900">왕준하</span>
+              <span className="text-slate-500">사회복지사</span>
+              <span className="text-center text-slate-400">고정</span>
+              <span />
+            </div>
+            <div className="border-b border-slate-200 bg-white px-3 py-1.5 text-center text-[11px] font-bold text-slate-700">
+              승인
+            </div>
+            <div className="min-h-[150px]">
+              {selected.length === 0 ? (
+                <div className="px-4 py-10 text-center text-[12px] text-slate-400">
+                  왼쪽 조직도에서 결재자를 선택하세요.
+                </div>
+              ) : (
+                selected.map((person) => (
+                  <div
+                    key={person.id}
+                    className="grid grid-cols-[70px_1fr_1fr_90px_34px] items-center border-b border-slate-100 px-3 py-2 text-[12px]"
+                  >
+                    <span className="text-slate-500">승인</span>
+                    <span className="font-semibold text-slate-900">{person.name}</span>
+                    <span className="text-slate-500">{person.team}</span>
+                    <span className="text-center text-brand-600">대기</span>
+                    <button
+                      type="button"
+                      onClick={() => togglePerson(person)}
+                      className="text-slate-300 hover:text-red-500"
+                      aria-label={`${person.name} 제거`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-3">
+          <div className="text-[11px] text-slate-500">
+            합의방식: <span className="font-semibold text-brand-700">순차합의</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onConfirm(selected)}
+              className="h-9 rounded-md bg-brand-600 px-4 text-[12px] font-bold text-white hover:bg-brand-700"
+            >
+              확인
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-9 rounded-md border border-slate-200 bg-white px-4 text-[12px] font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              취소
+            </button>
           </div>
         </div>
       </div>
-      <button
-        type="button"
-        className="h-8 w-full rounded-md border border-slate-200 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
-      >
-        + 결재자 추가
-      </button>
     </div>
   );
 }
@@ -676,14 +937,18 @@ function TableCustomPanel({
 }
 
 function ApprovalStamp({
+  approvers,
   borderColor,
   labelBg,
 }: {
+  approvers: ApprovalPerson[];
   borderColor: string;
   labelBg: string;
 }) {
+  const stampPeople = approvers.length > 0 ? approvers : [{ id: "default", name: "왕준하", role: "팀장", team: "사회복지사" }];
+
   return (
-    <table className="w-[96px] border-collapse text-center text-[11px] text-black">
+    <table className="border-collapse text-center text-[11px] text-black">
       <tbody>
         <tr>
           <th
@@ -693,15 +958,22 @@ function ApprovalStamp({
           >
             신청
           </th>
-          <th
-            style={{ borderColor }}
-            className="h-7 border bg-slate-50 font-medium"
-          >
-            팀장
-          </th>
+          {stampPeople.map((person) => (
+            <th
+              key={person.id}
+              style={{ borderColor }}
+              className="h-7 w-[64px] border bg-slate-50 font-medium"
+            >
+              {person.role}
+            </th>
+          ))}
         </tr>
         <tr>
-          <td style={{ borderColor }} className="h-16 border text-[10px]">왕준하</td>
+          {stampPeople.map((person) => (
+            <td key={person.id} style={{ borderColor }} className="h-16 border text-[10px]">
+              {person.name}
+            </td>
+          ))}
         </tr>
       </tbody>
     </table>
@@ -890,7 +1162,7 @@ function DocLabel({
   return (
     <th
       style={{ width: settings.labelWidth, borderColor, backgroundColor: getDocLabelBg(settings.labelTone) }}
-      className={cn("border px-2 text-left font-bold", getDocCellPadding(settings.density))}
+      className={cn("border px-2 text-center font-bold", getDocCellPadding(settings.density))}
     >
       {required && <span className="mr-1 text-red-600">*</span>}
       {children}
