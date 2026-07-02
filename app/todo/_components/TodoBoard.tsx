@@ -379,6 +379,7 @@ export function TodoBoard() {
         open={dateModalOpen}
         value={dueRange}
         title="기한 선택"
+        size="sm"
         onClose={() => setDateModalOpen(false)}
         onApply={(next) => {
           setDueRange(next);
