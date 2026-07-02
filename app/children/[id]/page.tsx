@@ -562,19 +562,19 @@ function BasicInfoTab({ child }: { child: Child }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr]">
-        <aside className="border-b border-slate-100 bg-slate-50/70 p-5 lg:border-b-0 lg:border-r">
-          <div className="space-y-3">
+        <aside className="border-b border-slate-100 bg-slate-50/60 px-5 py-4 lg:border-b-0 lg:border-r">
+          <div className="divide-y divide-slate-100">
             <SummaryPill label="입소일" value={formatDate(child.enrolledAt)} icon={CalendarDays} muted={!child.enrolledAt} />
             <SummaryPill label="이용유형" value={serviceType} icon={IdCard} muted={!child.serviceType} />
             <SummaryPill label="기준 중위소득" value={medianIncome} icon={TrendingUp} muted={typeof child.medianIncomePct !== "number"} />
-          </div>
-          <div className="mt-5 rounded-xl border border-slate-200 bg-white px-4 py-3">
-            <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500">
-              <MapPin className="w-3.5 h-3.5 text-slate-400" />
-              주소
-            </div>
-            <div className={cn("mt-1.5 text-[14px] font-semibold leading-relaxed", child.address ? "text-slate-900" : "text-slate-400")}>
-              {child.address || empty}
+            <div className="py-3">
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                주소
+              </div>
+              <div className={cn("mt-1.5 text-[14px] font-semibold leading-relaxed", child.address ? "text-slate-900" : "text-slate-400")}>
+                {child.address || empty}
+              </div>
             </div>
           </div>
         </aside>
@@ -950,7 +950,7 @@ function SummaryPill({
   muted?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+    <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-500">
           <Icon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
