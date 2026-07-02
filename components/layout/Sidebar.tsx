@@ -96,7 +96,7 @@ const ALL_MENU_ITEMS: Record<string, NavItem> = {
     ],
   },
   "/daily-log": { label: "운영일지", href: "/daily-log", icon: NotebookPen },
-  "/staff": { label: "종사자관리", href: "/staff/list", icon: UserCog },
+  "/staff": { label: "종사자관리", href: "/staff", icon: UserCog },
   "/board": { label: "게시판", href: "/board", icon: MessageSquare },
   "/volunteers": { label: "봉사자 관리", href: "/volunteers", icon: Users },
   "/leave": { label: "휴가 관리", href: "/leave", icon: Palmtree },
