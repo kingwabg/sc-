@@ -24,6 +24,26 @@ interface Props {
 
 const STEPS = ["양식 선택", "신청서 작성", "미리보기"] as const;
 type Step = (typeof STEPS)[number];
+type RightPanelTab = "approval" | "document" | "table";
+type TableDensity = "compact" | "regular" | "relaxed";
+type TableLabelTone = "gray" | "white" | "blue";
+type TableBorderTone = "black" | "soft";
+
+interface DocumentTableSettings {
+  labelWidth: number;
+  density: TableDensity;
+  labelTone: TableLabelTone;
+  borderTone: TableBorderTone;
+  showInputGuide: boolean;
+}
+
+const DEFAULT_TABLE_SETTINGS: DocumentTableSettings = {
+  labelWidth: 110,
+  density: "regular",
+  labelTone: "gray",
+  borderTone: "black",
+  showInputGuide: true,
+};
 
 // ─── Page ─────────────────────────────────────────────────
 export default function ApprovalFormWizardPage({ params }: Props) {
@@ -261,6 +281,8 @@ function DocumentFormTemplate({
   onRemoveFile: (i: number) => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
+  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>("approval");
+  const [tableSettings, setTableSettings] = useState<DocumentTableSettings>(DEFAULT_TABLE_SETTINGS);
   const isLeaveForm = form.key === "leave";
   const leaveFields = {
     leaveType: form.fields.find((field) => field.key === "leave_type"),
@@ -271,6 +293,7 @@ function DocumentFormTemplate({
   const regularFields = isLeaveForm
     ? form.fields.filter((field) => !["leave_type", "start_date", "end_date", "reason"].includes(field.key))
     : form.fields;
+  const borderColor = tableSettings.borderTone === "black" ? "#000000" : "#64748b";
 
   return (
     <div className="bg-white">
@@ -283,38 +306,38 @@ function DocumentFormTemplate({
           <div className="mb-5 flex items-end justify-between gap-8">
             <table className="w-[280px] border-collapse text-[12px] text-black">
               <tbody>
-                <DocRow label="기안자" value="왕준하" />
-                <DocRow label="소속" value="사회복지사" />
-                <DocRow label="기안일" value={today} />
-                <DocRow label="문서번호" value="" />
+                <DocRow label="기안자" value="왕준하" settings={tableSettings} />
+                <DocRow label="소속" value="사회복지사" settings={tableSettings} />
+                <DocRow label="기안일" value={today} settings={tableSettings} />
+                <DocRow label="문서번호" value="" settings={tableSettings} />
               </tbody>
             </table>
 
-            <ApprovalStamp />
+            <ApprovalStamp borderColor={borderColor} labelBg={getDocLabelBg(tableSettings.labelTone)} />
           </div>
 
           <table className="w-full border-collapse text-[12px] text-black">
             <tbody>
               <tr>
-                <DocLabel required>제목</DocLabel>
-                <td className="border border-black p-1.5">
+                <DocLabel required settings={tableSettings}>제목</DocLabel>
+                <td style={{ borderColor }} className={cn("border", getDocCellPadding(tableSettings.density))}>
                   <input
                     value={values._title ?? ""}
                     onChange={(event) => onFieldChange("_title", event.target.value)}
                     placeholder={form.titlePlaceholder}
-                    className={DOC_INPUT_CLASS}
+                    className={getDocInputClass(tableSettings.showInputGuide)}
                   />
                 </td>
               </tr>
 
               {isLeaveForm && leaveFields.leaveType && (
-                <DocumentFieldRow field={leaveFields.leaveType} value={values.leave_type ?? ""} onChange={(value) => onFieldChange("leave_type", value)} />
+                <DocumentFieldRow field={leaveFields.leaveType} value={values.leave_type ?? ""} onChange={(value) => onFieldChange("leave_type", value)} settings={tableSettings} />
               )}
               {isLeaveForm && (leaveFields.startDate || leaveFields.endDate) && (
-                <LeavePeriodRow values={values} onFieldChange={onFieldChange} />
+                <LeavePeriodRow values={values} onFieldChange={onFieldChange} settings={tableSettings} />
               )}
               {isLeaveForm && leaveFields.reason && (
-                <DocumentFieldRow field={leaveFields.reason} value={values.reason ?? ""} onChange={(value) => onFieldChange("reason", value)} tall />
+                <DocumentFieldRow field={leaveFields.reason} value={values.reason ?? ""} onChange={(value) => onFieldChange("reason", value)} settings={tableSettings} tall />
               )}
 
               {regularFields.map((field) => (
@@ -323,19 +346,23 @@ function DocumentFormTemplate({
                   field={field}
                   value={values[field.key] ?? ""}
                   onChange={(value) => onFieldChange(field.key, value)}
+                  settings={tableSettings}
                   tall={field.type === "textarea"}
                 />
               ))}
 
               {form.hasEditor && (
                 <tr>
-                  <DocLabel required>상세 내용</DocLabel>
-                  <td className="border border-black p-1">
+                  <DocLabel required settings={tableSettings}>상세 내용</DocLabel>
+                  <td style={{ borderColor }} className={cn("border", getDocCellPadding(tableSettings.density))}>
                     <textarea
                       value={overview}
                       onChange={(event) => onOverviewChange(event.target.value)}
                       placeholder="결재 사유와 상세 내용을 입력하세요"
-                      className="min-h-[120px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] outline-none focus:border-black"
+                      className={cn(
+                        "min-h-[120px] w-full resize-none px-2 py-2 text-[12px] outline-none focus:border-black",
+                        tableSettings.showInputGuide ? "border border-slate-300" : "border border-transparent bg-transparent"
+                      )}
                     />
                   </td>
                 </tr>
@@ -388,45 +415,293 @@ function DocumentFormTemplate({
           </div>
         </section>
 
-        <aside className="hidden xl:block">
-          <div className="rounded border border-slate-200 bg-slate-50 text-[11px] text-slate-700">
-            <div className="flex items-center justify-between border-b border-slate-300 px-3 py-2">
-              <button className="text-slate-400">‹</button>
-              <div className="flex gap-4 font-bold">
-                <span>결재선</span>
-                <span className="text-slate-500">문서정보</span>
-              </div>
-              <button className="text-slate-400">›</button>
-            </div>
-            <div className="flex gap-2 p-3">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-slate-200 text-slate-400">
-                ●
-              </div>
-              <div>
-                <div className="font-bold text-slate-900">왕준하 팀장</div>
-                <div className="mt-1 text-slate-500">사회복지사</div>
-                <div className="text-slate-500">기안</div>
-              </div>
-            </div>
-          </div>
-        </aside>
+        <DocumentRightPanel
+          activeTab={rightPanelTab}
+          form={form}
+          settings={tableSettings}
+          today={today}
+          onTabChange={setRightPanelTab}
+          onSettingsChange={(nextSettings) =>
+            setTableSettings((current) => ({ ...current, ...nextSettings }))
+          }
+        />
       </div>
     </div>
   );
 }
 
-function ApprovalStamp() {
+function DocumentRightPanel({
+  activeTab,
+  form,
+  settings,
+  today,
+  onTabChange,
+  onSettingsChange,
+}: {
+  activeTab: RightPanelTab;
+  form: NonNullable<ReturnType<typeof getFormByKey>>;
+  settings: DocumentTableSettings;
+  today: string;
+  onTabChange: (tab: RightPanelTab) => void;
+  onSettingsChange: (settings: Partial<DocumentTableSettings>) => void;
+}) {
+  const tabs: Array<{ key: RightPanelTab; label: string }> = [
+    { key: "approval", label: "결재선" },
+    { key: "document", label: "문서정보" },
+    { key: "table", label: "표 커스텀" },
+  ];
+
+  return (
+    <aside className="hidden xl:block">
+      <div className="sticky top-20 overflow-hidden rounded-lg border border-slate-200 bg-white text-[11px] text-slate-700 shadow-sm">
+        <div className="flex items-center border-b border-slate-200 px-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => onTabChange(tab.key)}
+              className={cn(
+                "h-10 flex-1 border-b-2 px-1 text-center font-semibold transition",
+                activeTab === tab.key
+                  ? "border-slate-900 text-slate-950"
+                  : "border-transparent text-slate-400 hover:text-slate-700"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "approval" && <ApprovalLinePanel />}
+        {activeTab === "document" && <DocumentInfoPanel form={form} today={today} />}
+        {activeTab === "table" && (
+          <TableCustomPanel settings={settings} onSettingsChange={onSettingsChange} />
+        )}
+      </div>
+    </aside>
+  );
+}
+
+function ApprovalLinePanel() {
+  return (
+    <div className="space-y-3 p-3">
+      <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+          신청
+        </div>
+        <div className="flex gap-2">
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-brand-600">
+            왕
+          </div>
+          <div>
+            <div className="font-bold text-slate-900">왕준하 팀장</div>
+            <div className="mt-1 text-slate-500">사회복지사</div>
+            <div className="text-slate-500">기안</div>
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        className="h-8 w-full rounded-md border border-slate-200 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
+      >
+        + 결재자 추가
+      </button>
+    </div>
+  );
+}
+
+function DocumentInfoPanel({
+  form,
+  today,
+}: {
+  form: NonNullable<ReturnType<typeof getFormByKey>>;
+  today: string;
+}) {
+  return (
+    <div className="space-y-3 p-3">
+      <InfoRow label="문서양식" value={form.label} />
+      <InfoRow label="기안일" value={today} />
+      <InfoRow label="문서번호" value="자동 채번" />
+      <div>
+        <div className="mb-1 text-slate-500">공개여부</div>
+        <div className="flex gap-3">
+          <label className="inline-flex items-center gap-1">
+            <input type="radio" name="documentVisibility" className="h-3 w-3" />
+            공개
+          </label>
+          <label className="inline-flex items-center gap-1">
+            <input type="radio" name="documentVisibility" defaultChecked className="h-3 w-3" />
+            비공개
+          </label>
+        </div>
+      </div>
+      <div>
+        <div className="mb-1 text-slate-500">보존연한</div>
+        <select className="h-8 w-full rounded border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-brand-400">
+          <option>5년</option>
+          <option>3년</option>
+          <option>10년</option>
+          <option>영구</option>
+        </select>
+      </div>
+      <div>
+        <div className="mb-1 text-slate-500">문서함</div>
+        <select className="h-8 w-full rounded border border-slate-200 bg-white px-2 text-[11px] outline-none focus:border-brand-400">
+          <option>미지정</option>
+          <option>개인 문서함</option>
+          <option>부서 문서함</option>
+        </select>
+      </div>
+      <label className="flex items-start gap-2 rounded-md bg-slate-50 p-2 text-slate-500">
+        <input type="checkbox" className="mt-0.5 h-3 w-3" />
+        <span>긴급문서로 표시</span>
+      </label>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="mb-1 text-slate-500">{label}</div>
+      <div className="font-semibold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function TableCustomPanel({
+  settings,
+  onSettingsChange,
+}: {
+  settings: DocumentTableSettings;
+  onSettingsChange: (settings: Partial<DocumentTableSettings>) => void;
+}) {
+  return (
+    <div className="space-y-4 p-3">
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-semibold text-slate-700">라벨 폭</span>
+          <span className="text-slate-400">{settings.labelWidth}px</span>
+        </div>
+        <input
+          type="range"
+          min={90}
+          max={150}
+          step={10}
+          value={settings.labelWidth}
+          onChange={(event) => onSettingsChange({ labelWidth: Number(event.target.value) })}
+          className="w-full accent-brand-600"
+        />
+      </div>
+
+      <div>
+        <div className="mb-2 font-semibold text-slate-700">행 높이</div>
+        <div className="grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">
+          {[
+            ["compact", "좁게"],
+            ["regular", "보통"],
+            ["relaxed", "넓게"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSettingsChange({ density: value as TableDensity })}
+              className={cn(
+                "h-7 rounded text-[11px] font-semibold transition",
+                settings.density === value ? "bg-white text-brand-700 shadow-sm" : "text-slate-500"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 font-semibold text-slate-700">라벨 배경</div>
+        <div className="grid grid-cols-3 gap-1 rounded-md bg-slate-100 p-1">
+          {[
+            ["gray", "회색"],
+            ["white", "흰색"],
+            ["blue", "파랑"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSettingsChange({ labelTone: value as TableLabelTone })}
+              className={cn(
+                "h-7 rounded text-[11px] font-semibold transition",
+                settings.labelTone === value ? "bg-white text-brand-700 shadow-sm" : "text-slate-500"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 font-semibold text-slate-700">테두리</div>
+        <div className="grid grid-cols-2 gap-1 rounded-md bg-slate-100 p-1">
+          {[
+            ["black", "선명"],
+            ["soft", "부드럽게"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onSettingsChange({ borderTone: value as TableBorderTone })}
+              className={cn(
+                "h-7 rounded text-[11px] font-semibold transition",
+                settings.borderTone === value ? "bg-white text-brand-700 shadow-sm" : "text-slate-500"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2">
+        <span className="font-semibold text-slate-700">입력선 표시</span>
+        <input
+          type="checkbox"
+          checked={settings.showInputGuide}
+          onChange={(event) => onSettingsChange({ showInputGuide: event.target.checked })}
+          className="h-4 w-4 accent-brand-600"
+        />
+      </label>
+    </div>
+  );
+}
+
+function ApprovalStamp({
+  borderColor,
+  labelBg,
+}: {
+  borderColor: string;
+  labelBg: string;
+}) {
   return (
     <table className="w-[96px] border-collapse text-center text-[11px] text-black">
       <tbody>
         <tr>
-          <th rowSpan={2} className="w-7 border border-black bg-slate-100 p-1 font-bold [writing-mode:vertical-rl]">
+          <th
+            rowSpan={2}
+            style={{ borderColor, backgroundColor: labelBg }}
+            className="w-7 border p-1 font-bold [writing-mode:vertical-rl]"
+          >
             신청
           </th>
-          <th className="h-7 border border-black bg-slate-50 font-medium">팀장</th>
+          <th
+            style={{ borderColor }}
+            className="h-7 border bg-slate-50 font-medium"
+          >
+            팀장
+          </th>
         </tr>
         <tr>
-          <td className="h-16 border border-black text-[10px]">왕준하</td>
+          <td style={{ borderColor }} className="h-16 border text-[10px]">왕준하</td>
         </tr>
       </tbody>
     </table>
@@ -436,33 +711,37 @@ function ApprovalStamp() {
 function LeavePeriodRow({
   values,
   onFieldChange,
+  settings,
 }: {
   values: Record<string, string>;
   onFieldChange: (key: string, value: string) => void;
+  settings: DocumentTableSettings;
 }) {
+  const borderColor = settings.borderTone === "black" ? "#000000" : "#64748b";
+
   return (
     <tr>
-      <DocLabel required>휴가 기간</DocLabel>
-      <td className="border border-black p-1.5">
+      <DocLabel required settings={settings}>휴가 기간</DocLabel>
+      <td style={{ borderColor }} className={cn("border", getDocCellPadding(settings.density))}>
         <div className="grid grid-cols-[150px_12px_150px_auto_64px_20px] items-center gap-1.5">
           <input
             type="date"
             value={values.start_date ?? ""}
             onChange={(event) => onFieldChange("start_date", event.target.value)}
-            className={DOC_INPUT_CLASS}
+            className={getDocInputClass(settings.showInputGuide)}
           />
           <span className="text-center">~</span>
           <input
             type="date"
             value={values.end_date ?? ""}
             onChange={(event) => onFieldChange("end_date", event.target.value)}
-            className={DOC_INPUT_CLASS}
+            className={getDocInputClass(settings.showInputGuide)}
           />
           <span className="pl-2 font-bold">사용일수:</span>
           <input
             value={values.leave_days ?? ""}
             onChange={(event) => onFieldChange("leave_days", event.target.value)}
-            className={DOC_INPUT_CLASS}
+            className={getDocInputClass(settings.showInputGuide)}
           />
           <span>일</span>
         </div>
@@ -475,18 +754,22 @@ function DocumentFieldRow({
   field,
   value,
   onChange,
+  settings,
   tall,
 }: {
   field: FormField;
   value: string;
   onChange: (value: string) => void;
+  settings: DocumentTableSettings;
   tall?: boolean;
 }) {
+  const borderColor = settings.borderTone === "black" ? "#000000" : "#64748b";
+
   return (
     <tr>
-      <DocLabel required={field.required}>{field.label}</DocLabel>
-      <td className="border border-black p-1.5">
-        <DocumentFieldInput field={field} value={value} onChange={onChange} tall={tall} />
+      <DocLabel required={field.required} settings={settings}>{field.label}</DocLabel>
+      <td style={{ borderColor }} className={cn("border", getDocCellPadding(settings.density))}>
+        <DocumentFieldInput field={field} value={value} onChange={onChange} settings={settings} tall={tall} />
       </td>
     </tr>
   );
@@ -496,11 +779,13 @@ function DocumentFieldInput({
   field,
   value,
   onChange,
+  settings,
   tall,
 }: {
   field: FormField;
   value: string;
   onChange: (value: string) => void;
+  settings: DocumentTableSettings;
   tall?: boolean;
 }) {
   if (field.type === "select") {
@@ -508,7 +793,7 @@ function DocumentFieldInput({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={cn(DOC_INPUT_CLASS, "w-[180px] bg-white")}
+        className={cn(getDocInputClass(settings.showInputGuide), "w-[180px] bg-white")}
       >
         <option value="">선택</option>
         {field.options?.map((option) => (
@@ -526,7 +811,10 @@ function DocumentFieldInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={field.placeholder}
-        className="block min-h-[96px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] leading-5 outline-none focus:border-black"
+        className={cn(
+          "block min-h-[96px] w-full resize-none px-2 py-2 text-[12px] leading-5 outline-none focus:border-black",
+          settings.showInputGuide ? "border border-slate-300" : "border border-transparent bg-transparent"
+        )}
       />
     );
   }
@@ -537,7 +825,7 @@ function DocumentFieldInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={field.placeholder}
-      className={DOC_INPUT_CLASS}
+      className={getDocInputClass(settings.showInputGuide)}
     />
   );
 }
@@ -545,13 +833,45 @@ function DocumentFieldInput({
 const DOC_INPUT_CLASS =
   "block h-7 w-full border border-slate-300 px-2 text-[12px] leading-7 outline-none focus:border-black";
 
-function DocRow({ label, value }: { label: string; value: string }) {
+function getDocInputClass(showInputGuide: boolean) {
+  return cn(
+    DOC_INPUT_CLASS,
+    !showInputGuide && "border-transparent bg-transparent focus:border-black"
+  );
+}
+
+function getDocCellPadding(density: TableDensity) {
+  if (density === "compact") return "p-1";
+  if (density === "relaxed") return "p-2.5";
+  return "p-1.5";
+}
+
+function getDocLabelBg(tone: TableLabelTone) {
+  if (tone === "white") return "#ffffff";
+  if (tone === "blue") return "#eff6ff";
+  return "#f1f5f9";
+}
+
+function DocRow({
+  label,
+  value,
+  settings,
+}: {
+  label: string;
+  value: string;
+  settings: DocumentTableSettings;
+}) {
+  const borderColor = settings.borderTone === "black" ? "#000000" : "#64748b";
+
   return (
     <tr>
-      <th className="w-20 border border-black bg-slate-100 px-2 py-1.5 text-center font-bold">
+      <th
+        style={{ width: settings.labelWidth, borderColor, backgroundColor: getDocLabelBg(settings.labelTone) }}
+        className={cn("border px-2 text-center font-bold", getDocCellPadding(settings.density))}
+      >
         {label}
       </th>
-      <td className="border border-black px-2 py-1.5">{value}</td>
+      <td style={{ borderColor }} className={cn("border px-2", getDocCellPadding(settings.density))}>{value}</td>
     </tr>
   );
 }
@@ -559,12 +879,19 @@ function DocRow({ label, value }: { label: string; value: string }) {
 function DocLabel({
   children,
   required,
+  settings,
 }: {
   children: React.ReactNode;
   required?: boolean;
+  settings: DocumentTableSettings;
 }) {
+  const borderColor = settings.borderTone === "black" ? "#000000" : "#64748b";
+
   return (
-    <th className="w-[110px] border border-black bg-slate-100 px-2 py-2 text-left font-bold">
+    <th
+      style={{ width: settings.labelWidth, borderColor, backgroundColor: getDocLabelBg(settings.labelTone) }}
+      className={cn("border px-2 text-left font-bold", getDocCellPadding(settings.density))}
+    >
       {required && <span className="mr-1 text-red-600">*</span>}
       {children}
     </th>
