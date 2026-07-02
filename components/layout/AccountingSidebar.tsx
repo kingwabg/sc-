@@ -56,21 +56,7 @@ export function AccountingSidebar() {
 
   return (
     <aside className="fixed top-[60px] left-0 bottom-0 w-[220px] border-r border-slate-200 bg-white flex flex-col py-3">
-      <div className="px-4 pb-4">
-        <div className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-950 text-white shadow-md shadow-slate-950/15">
-            <Calculator className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-black text-slate-950">회계포털</div>
-            <div className="text-[11px] font-semibold text-slate-500">수입 · 지출 · 결산</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-3 border-t border-slate-100" />
-
-      <nav className="sidebar-scroll flex-1 overflow-y-auto px-2 py-3">
+      <nav className="sidebar-scroll flex-1 overflow-y-auto px-2 py-1">
         {ACCOUNTING_GROUPS.map((group) => {
           const isGroupActive = group.items.some((item) => isActivePath(pathname, item.href));
           return (
