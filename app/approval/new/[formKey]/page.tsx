@@ -437,7 +437,7 @@ function DocumentFormTemplate({
               </tbody>
             </table>
 
-            <div className="flex min-h-[92px] items-start justify-center pt-[108px]">
+            <div className="flex min-h-[92px] items-start justify-center pt-[144px]">
               <h2 className="m-0 text-center text-[28px] font-black tracking-tight text-black">
                 {form.label}
               </h2>
