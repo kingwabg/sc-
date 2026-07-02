@@ -5,7 +5,13 @@ import { CustomProvider } from "rsuite";
 import koKR from "rsuite/locales/ko_KR";
 import { TopHeader } from "./TopHeader";
 import { Sidebar } from "./Sidebar";
-import { getSidebarCollapsed } from "@/lib/store";
+import {
+  THEME_MODE_EVENT,
+  applyThemeMode,
+  getSidebarCollapsed,
+  getThemeMode,
+  type ThemeMode,
+} from "@/lib/store";
 import { ToastProvider } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +31,7 @@ export function AppShell({
   mainClassName?: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
     const sync = () => setCollapsed(getSidebarCollapsed());
@@ -37,8 +44,28 @@ export function AppShell({
     };
   }, []);
 
+  useEffect(() => {
+    const sync = () => {
+      const mode = getThemeMode();
+      applyThemeMode(mode);
+      setThemeModeState(mode);
+    };
+    const onThemeChange = (event: Event) => {
+      const next = event instanceof CustomEvent ? event.detail : getThemeMode();
+      setThemeModeState(next === "dark" ? "dark" : "light");
+    };
+
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener(THEME_MODE_EVENT, onThemeChange);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener(THEME_MODE_EVENT, onThemeChange);
+    };
+  }, []);
+
   return (
-    <CustomProvider locale={koKR}>
+    <CustomProvider locale={koKR} theme={themeMode}>
       <ToastProvider>
         <TopHeader />
         <div className="pt-[60px] min-h-screen flex">

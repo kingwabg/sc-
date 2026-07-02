@@ -1,8 +1,31 @@
 /**
- * UI 상태 저장소 (사이드바 접힘, 즐겨찾기, 배지 카운트, 외부 메일 계정)
+ * UI 상태 저장소 (테마, 사이드바 접힘, 즐겨찾기, 배지 카운트, 외부 메일 계정)
  */
 import type { MailAccount, MailProvider } from "../types/mail";
 import { readLS, writeLS } from "./_ls";
+
+// ─── Theme Mode ──────────────────────────────────────────
+export type ThemeMode = "light" | "dark";
+
+const THEME_MODE_KEY = "officex:theme-mode";
+export const THEME_MODE_EVENT = "officex:theme-mode";
+
+export function getThemeMode(): ThemeMode {
+  return readLS<ThemeMode>(THEME_MODE_KEY, "light");
+}
+
+export function applyThemeMode(mode: ThemeMode): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("dark", mode === "dark");
+  document.documentElement.style.colorScheme = mode;
+}
+
+export function setThemeMode(mode: ThemeMode): void {
+  writeLS(THEME_MODE_KEY, mode);
+  applyThemeMode(mode);
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent<ThemeMode>(THEME_MODE_EVENT, { detail: mode }));
+}
 
 // ─── Sidebar Collapsed ───────────────────────────────────
 const SIDEBAR_COLLAPSED_KEY = "officex:sidebar-collapsed";
