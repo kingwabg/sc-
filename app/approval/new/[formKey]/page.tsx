@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ApprovalSidebar } from "@/app/approval/_components/ApprovalSidebar";
 import {
-  FileCheck2,
   ChevronRight,
   ChevronLeft,
   Eye,
@@ -13,24 +12,22 @@ import {
   Send,
   CheckCircle2,
   AlertCircle,
-  Users,
   X,
-  Plus,
-  UserPlus,
   Info,
   List,
+  Route,
+  FileText,
+  Link2,
 } from "lucide-react";
 import { getFormByKey, type FormField } from "@/lib/features/approval-form";
-import { getDefaultApprovalLine } from "@/lib/features/approval-line";
 import { cn } from "@/lib/utils";
-import { POSITION_LABELS } from "@/lib/features/staff";
 
 // ─── Props ─────────────────────────────────────────────────
 interface Props {
   params: Promise<{ formKey: string }>;
 }
 
-const STEPS = ["양식 작성", "결재선", "미리보기"] as const;
+const STEPS = ["양식 선택", "신청서 작성", "미리보기"] as const;
 type Step = (typeof STEPS)[number];
 
 // ─── Page ─────────────────────────────────────────────────
@@ -69,7 +66,8 @@ function WizardShell({
   formKey: Parameters<typeof getFormByKey>[0];
   form: NonNullable<ReturnType<typeof getFormByKey>>;
 }) {
-  const [step, setStep] = useState<Step>("양식 작성");
+  const router = useRouter();
+  const [step, setStep] = useState<Step>("신청서 작성");
   const [values, setValues] = useState<Record<string, string>>({});
   const [overview, setOverview] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -92,7 +90,7 @@ function WizardShell({
   }
 
   const canGoNext =
-    step === "양식 작성"
+    step === "신청서 작성"
       ? form.fields.filter((f) => f.required).every((f) => values[f.key]?.trim())
       : true;
 
@@ -122,7 +120,7 @@ function WizardShell({
 
       {/* ── 본문 ── */}
       <div className="min-h-[480px]">
-        {step === "양식 작성" && (
+        {step === "신청서 작성" && (
           <Step1Fields
             form={form}
             values={values}
@@ -133,9 +131,6 @@ function WizardShell({
             onFileChange={handleFileChange}
             onRemoveFile={removeFile}
           />
-        )}
-        {step === "결재선" && (
-          <Step2ApprovalLine formKey={formKey} />
         )}
         {step === "미리보기" && (
           <Step3Preview
@@ -152,15 +147,15 @@ function WizardShell({
       <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/40">
         <button
           onClick={() => {
-            const idx = STEPS.indexOf(step);
-            if (idx > 0) setStep(STEPS[idx - 1]);
+            if (step === "신청서 작성") {
+              router.push("/approval/new");
+              return;
+            }
+            setStep("신청서 작성");
           }}
-          disabled={currentStepIndex === 0}
           className={cn(
             "h-9 px-4 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold transition",
-            currentStepIndex === 0
-              ? "bg-slate-100 text-slate-300 cursor-not-allowed"
-              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+            "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
           )}
         >
           <ChevronLeft className="w-4 h-4" />
@@ -183,11 +178,11 @@ function WizardShell({
           </button>
           {currentStepIndex < STEPS.length - 1 ? (
             <button
-              onClick={() => setStep(STEPS[currentStepIndex + 1])}
+              onClick={() => setStep("미리보기")}
               disabled={!canGoNext}
               className="h-9 px-4 inline-flex items-center gap-1.5 bg-brand-600 text-white rounded-lg text-sm font-bold hover:bg-brand-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              다음
+              {step === "신청서 작성" ? "다음" : "신청서 작성"}
               <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
@@ -284,27 +279,19 @@ function DocumentFormTemplate({
 
   return (
     <div className="bg-white">
-      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-2 text-[11px] text-slate-600">
-        <div className="flex flex-wrap items-center gap-3">
-          <button className="inline-flex items-center gap-1 hover:text-slate-900">
-            <FileCheck2 className="h-3.5 w-3.5" />
-            결재요청
+      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/70 px-5 py-2.5 text-[12px] text-slate-600">
+        <div className="inline-flex overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <button className="inline-flex h-8 items-center gap-1.5 border-r border-slate-200 px-3 font-bold text-brand-700">
+            <FileText className="h-3.5 w-3.5" />
+            문서 정보
           </button>
-          <button className="inline-flex items-center gap-1 hover:text-slate-900">
-            <Save className="h-3.5 w-3.5" />
-            임시저장
-          </button>
-          <button className="inline-flex items-center gap-1 hover:text-slate-900">
-            <Eye className="h-3.5 w-3.5" />
-            미리보기
-          </button>
-          <button className="inline-flex items-center gap-1 hover:text-slate-900">
-            <X className="h-3.5 w-3.5" />
-            취소
-          </button>
-          <button className="inline-flex items-center gap-1 hover:text-slate-900">
-            <Info className="h-3.5 w-3.5" />
+          <button className="inline-flex h-8 items-center gap-1.5 border-r border-slate-200 px-3 hover:bg-slate-50 hover:text-slate-900">
+            <Route className="h-3.5 w-3.5" />
             결재 정보
+          </button>
+          <button className="inline-flex h-8 items-center gap-1.5 px-3 hover:bg-slate-50 hover:text-slate-900">
+            <Link2 className="h-3.5 w-3.5" />
+            첨부·연결
           </button>
         </div>
         <div className="flex items-center gap-2">
@@ -613,76 +600,6 @@ function DocLabel({
   );
 }
 
-// ─── Step 2: Approval Line ──────────────────────────────────
-function Step2ApprovalLine({ formKey }: { formKey: string }) {
-  const line = getDefaultApprovalLine("t_acme", formKey as Parameters<typeof getDefaultApprovalLine>[1]);
-
-  return (
-    <div className="p-6 space-y-6">
-      {/* 안내 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-        <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-        <div className="text-xs text-blue-800 leading-relaxed">
-          <b>자동 제안된 결재선</b>입니다. 필요 시 단계를 추가/삭제/순서 변경할 수 있습니다.
-        </div>
-      </div>
-
-      {/* 결재선 */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Users className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-bold text-slate-800">결재선</span>
-          <span className="text-[11px] text-slate-400">({line.steps.length}단계)</span>
-        </div>
-
-        <ol className="space-y-2">
-          {line.steps.map((s) => (
-            <li key={s.step} className="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
-              {/* 순서 */}
-              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 grid place-items-center text-xs font-bold shrink-0">
-                {s.step}
-              </div>
-              {/* 정보 */}
-              <div className="flex-1 min-w-0">
-                <div className="font-bold text-slate-900 text-sm">{s.name}</div>
-                <div className="text-xs text-slate-500">{POSITION_LABELS[s.position as keyof typeof POSITION_LABELS] ?? s.position}</div>
-              </div>
-              {/* 유형 */}
-              <span className={cn(
-                "text-[10px] px-2 py-0.5 rounded-full font-semibold",
-                s.type === "결재" ? "bg-brand-50 text-brand-700" :
-                s.type === "협조" ? "bg-violet-50 text-violet-700" :
-                s.type === "참조" ? "bg-slate-100 text-slate-600" :
-                "bg-emerald-50 text-emerald-700"
-              )}>
-                {s.type}
-              </span>
-              {/* 상태 */}
-              <span className="text-[10px] text-slate-400">대기</span>
-              {/* 삭제 */}
-              <button className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-red-500 transition">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </li>
-          ))}
-        </ol>
-
-        {/* 결재선 추가 */}
-        <button className="mt-3 w-full h-9 border-2 border-dashed border-slate-300 rounded-xl text-xs text-slate-500 hover:border-brand-400 hover:text-brand-600 transition flex items-center justify-center gap-1.5">
-          <Plus className="w-3.5 h-3.5" />
-          결재선 추가
-        </button>
-
-        {/* 참석자/참조자 추가 */}
-        <button className="mt-2 w-full h-9 border border-slate-200 rounded-xl text-xs text-slate-500 hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
-          <UserPlus className="w-3.5 h-3.5" />
-          참조자/협조자 추가
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ─── Step 3: Preview ────────────────────────────────────────
 function Step3Preview({
   form,
@@ -808,40 +725,58 @@ function PreviewModal({
 // ─── Step Indicator ────────────────────────────────────────
 function StepIndicator({ steps, current }: { steps: readonly string[]; current: string }) {
   const currentIndex = steps.indexOf(current);
+  const progressLabel = `${current} 중`;
+
   return (
-    <div className="border-b border-slate-200 px-6 py-3 flex items-center gap-1">
-      {steps.map((s, i) => (
-        <div key={s} className="flex items-center gap-1">
-          <div
-            className={cn(
-              "w-6 h-6 rounded-full grid place-items-center text-[10px] font-bold",
-              i < currentIndex
-                ? "bg-emerald-100 text-emerald-700"
-                : i === currentIndex
-                  ? "bg-brand-100 text-brand-700 ring-2 ring-brand-300"
-                  : "bg-slate-100 text-slate-400"
-            )}
-          >
-            {i < currentIndex ? "✓" : i + 1}
-          </div>
-          <span
-            className={cn(
-              "text-xs font-semibold",
-              i === currentIndex ? "text-brand-700" : "text-slate-400"
-            )}
-          >
-            {s}
-          </span>
-          {i < steps.length - 1 && (
-            <div
-              className={cn(
-                "w-8 h-px mx-1",
-                i < currentIndex ? "bg-emerald-300" : "bg-slate-200"
-              )}
-            />
-          )}
+    <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 via-white to-slate-50 px-6 py-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-xs font-black text-brand-700">{progressLabel}</div>
+        <div className="text-[11px] font-semibold text-slate-400">
+          {currentIndex + 1} / {steps.length}
         </div>
-      ))}
+      </div>
+      <div className="flex items-center gap-2">
+        {steps.map((s, i) => {
+          const done = i < currentIndex;
+          const active = i === currentIndex;
+          return (
+            <div key={s} className="flex min-w-0 flex-1 items-center gap-2">
+              <div
+                className={cn(
+                  "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-black transition",
+                  done && "bg-emerald-100 text-emerald-700",
+                  active && "animate-pulse bg-brand-600 text-white shadow-sm ring-4 ring-brand-100",
+                  !done && !active && "bg-slate-100 text-slate-400",
+                )}
+              >
+                {done ? "✓" : i + 1}
+              </div>
+              <span
+                className={cn(
+                  "truncate text-xs font-bold",
+                  active ? "text-brand-700" : done ? "text-slate-700" : "text-slate-400",
+                )}
+              >
+                {s}
+              </span>
+              {i < steps.length - 1 && (
+                <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className={cn(
+                      "absolute inset-y-0 left-0 rounded-full",
+                      i < currentIndex
+                        ? "w-full bg-emerald-300"
+                        : active
+                          ? "w-2/3 animate-pulse bg-brand-400"
+                          : "w-0 bg-slate-200",
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
