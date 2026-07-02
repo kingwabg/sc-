@@ -320,12 +320,12 @@ function DocumentFormTemplate({
             <tbody>
               <tr>
                 <DocLabel required>제목</DocLabel>
-                <td className="border border-black px-2 py-1">
+                <td className="border border-black p-1.5">
                   <input
                     value={values._title ?? ""}
                     onChange={(event) => onFieldChange("_title", event.target.value)}
                     placeholder={form.titlePlaceholder}
-                    className="h-7 w-full border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+                    className={DOC_INPUT_CLASS}
                   />
                 </td>
               </tr>
@@ -466,26 +466,26 @@ function LeavePeriodRow({
   return (
     <tr>
       <DocLabel required>휴가 기간</DocLabel>
-      <td className="border border-black px-2 py-1">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <td className="border border-black p-1.5">
+        <div className="grid grid-cols-[150px_12px_150px_auto_64px_20px] items-center gap-1.5">
           <input
             type="date"
             value={values.start_date ?? ""}
             onChange={(event) => onFieldChange("start_date", event.target.value)}
-            className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+            className={DOC_INPUT_CLASS}
           />
-          <span>~</span>
+          <span className="text-center">~</span>
           <input
             type="date"
             value={values.end_date ?? ""}
             onChange={(event) => onFieldChange("end_date", event.target.value)}
-            className="h-7 w-[150px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+            className={DOC_INPUT_CLASS}
           />
-          <span className="ml-2 font-bold">사용일수:</span>
+          <span className="pl-2 font-bold">사용일수:</span>
           <input
             value={values.leave_days ?? ""}
             onChange={(event) => onFieldChange("leave_days", event.target.value)}
-            className="h-7 w-[64px] border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+            className={DOC_INPUT_CLASS}
           />
           <span>일</span>
         </div>
@@ -508,7 +508,7 @@ function DocumentFieldRow({
   return (
     <tr>
       <DocLabel required={field.required}>{field.label}</DocLabel>
-      <td className="border border-black p-1">
+      <td className="border border-black p-1.5">
         <DocumentFieldInput field={field} value={value} onChange={onChange} tall={tall} />
       </td>
     </tr>
@@ -531,7 +531,7 @@ function DocumentFieldInput({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-7 w-[180px] border border-slate-300 bg-white px-2 text-[12px] outline-none focus:border-black"
+        className={cn(DOC_INPUT_CLASS, "w-[180px] bg-white")}
       >
         <option value="">선택</option>
         {field.options?.map((option) => (
@@ -549,7 +549,7 @@ function DocumentFieldInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={field.placeholder}
-        className="min-h-[96px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] outline-none focus:border-black"
+        className="block min-h-[96px] w-full resize-none border border-slate-300 px-2 py-2 text-[12px] leading-5 outline-none focus:border-black"
       />
     );
   }
@@ -560,10 +560,13 @@ function DocumentFieldInput({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={field.placeholder}
-      className="h-7 w-full border border-slate-300 px-2 text-[12px] outline-none focus:border-black"
+      className={DOC_INPUT_CLASS}
     />
   );
 }
+
+const DOC_INPUT_CLASS =
+  "block h-7 w-full border border-slate-300 px-2 text-[12px] leading-7 outline-none focus:border-black";
 
 function DocRow({ label, value }: { label: string; value: string }) {
   return (
