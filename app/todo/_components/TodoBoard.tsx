@@ -34,6 +34,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getTodos as getSidebarTodos } from "@/lib/features/sidebar-todo";
+import {
+  DateRangeModal,
+  formatDateRangeLabel,
+  todayRange,
+  type DateRangeValue,
+} from "@/components/schedule/DateRangeModal";
 
 type TodoStatus = "todo" | "doing" | "done";
 type TodoPriority = "low" | "normal" | "high";
@@ -168,7 +174,8 @@ export function TodoBoard() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<TodoPriority>("normal");
-  const [due, setDue] = useState("오늘");
+  const [dueRange, setDueRange] = useState<DateRangeValue>(() => todayRange());
+  const [dateModalOpen, setDateModalOpen] = useState(false);
 
   useEffect(() => {
     setTasks(readBoardTasks());
@@ -212,14 +219,14 @@ export function TodoBoard() {
       note: "",
       status: "todo",
       priority,
-      due: due.trim(),
+      due: formatDateRangeLabel(dueRange),
       createdAt: new Date().toISOString(),
     };
 
     setTasks((current) => [next, ...current]);
     setTitle("");
     setPriority("normal");
-    setDue("오늘");
+    setDueRange(todayRange());
   }
 
   function deleteTask(id: string) {
@@ -321,12 +328,14 @@ export function TodoBoard() {
             <option value="high">중요</option>
             <option value="low">낮음</option>
           </select>
-          <input
-            value={due}
-            onChange={(event) => setDue(event.target.value)}
-            placeholder="기한"
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
-          />
+          <button
+            type="button"
+            onClick={() => setDateModalOpen(true)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition hover:border-blue-300 hover:bg-blue-50 focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
+          >
+            <CalendarClock className="h-4 w-4 text-slate-400" />
+            <span className="truncate">{formatDateRangeLabel(dueRange)}</span>
+          </button>
           <button
             type="button"
             onClick={addTask}
@@ -364,6 +373,17 @@ export function TodoBoard() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <DateRangeModal
+        open={dateModalOpen}
+        value={dueRange}
+        title="기한 선택"
+        onClose={() => setDateModalOpen(false)}
+        onApply={(next) => {
+          setDueRange(next);
+          setDateModalOpen(false);
+        }}
+      />
     </div>
   );
 }
