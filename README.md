@@ -21,7 +21,10 @@ Next.js 14 (App Router) + TypeScript + Tailwind CSS.
 
 ## 실행
 
+Node.js 22.12.0 이상을 사용한다. `nvm`을 쓰는 경우 저장소 루트에서 아래처럼 맞춘다.
+
 ```bash
+nvm use
 npm install
 npm run dev          # http://localhost:3000
 npm run build        # 프로덕션 빌드
