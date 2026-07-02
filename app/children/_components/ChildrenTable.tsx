@@ -89,7 +89,7 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
       key: "name",
       header: "이름",
       flexGrow: 2,
-      minWidth: 50,
+      minWidth: 170,
       align: "center",
       sortable: options.sortable,
       resizable: options.resizable,
@@ -102,7 +102,7 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
             icon={
               <ChevronRight
                 className={cn(
-                  "w-3.5 h-3.5 transition-transform text-slate-500",
+                  "w-4 h-4 transition-transform text-slate-500",
                   isExpanded && "rotate-90 text-brand-600",
                 )}
               />
@@ -122,7 +122,7 @@ export function ChildrenTable({ children: list, attendanceMap, options, onStatus
           >
             <div
               className={cn(
-                "w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold shrink-0",
+                "w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold shrink-0",
                 row.gender === "M"
                   ? "bg-blue-100 text-blue-700"
                   : "bg-pink-100 text-pink-700",
