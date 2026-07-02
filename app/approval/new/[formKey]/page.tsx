@@ -23,7 +23,7 @@ interface Props {
   params: Promise<{ formKey: string }>;
 }
 
-const STEPS = ["양식 선택", "신청서 작성", "미리보기"] as const;
+const STEPS = ["양식 선택", "신청서 작성", "결재창"] as const;
 type Step = (typeof STEPS)[number];
 type RightPanelTab = "approval" | "document" | "table";
 type TableDensity = "compact" | "regular" | "relaxed";
@@ -123,9 +123,16 @@ function WizardShell({
   const [files, setFiles] = useState<File[]>([]);
   const [approvers, setApprovers] = useState<ApprovalPerson[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [showDraftPrompt, setShowDraftPrompt] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const currentStepIndex = STEPS.indexOf(step);
+  const hasDraftContent =
+    Object.values(values).some((value) => value.trim().length > 0) ||
+    overview.trim().length > 0 ||
+    files.length > 0 ||
+    approvers.length > 0;
 
   function handleFieldChange(key: string, value: string) {
     setValues((prev) => {
@@ -185,6 +192,23 @@ function WizardShell({
     router.push(`/approval/doc/${req.id}`);
   }
 
+  function handleSaveDraft() {
+    setDraftSaved(true);
+  }
+
+  function handleStepClick(nextStep: Step) {
+    if (nextStep === step) return;
+    if (nextStep === "양식 선택") {
+      if (hasDraftContent && !draftSaved) {
+        setShowDraftPrompt(true);
+        return;
+      }
+      router.push("/approval/new");
+      return;
+    }
+    setStep(nextStep);
+  }
+
   if (submitted) {
     return <SubmitSuccess />;
   }
@@ -199,7 +223,7 @@ function WizardShell({
         </div>
         <button
           type="button"
-          onClick={() => (typeof window !== "undefined" ? (window.location.href = "/approval/new") : null)}
+          onClick={() => handleStepClick("양식 선택")}
           className="text-xs text-slate-500 hover:text-slate-900 transition"
         >
           ← 양식 선택
@@ -207,7 +231,7 @@ function WizardShell({
       </div>
 
       {/* ── 단계 인디케이터 ── */}
-      <StepIndicator steps={STEPS} current={step} />
+      <StepIndicator steps={STEPS} current={step} onStepClick={handleStepClick} />
 
       {/* ── 본문 ── */}
       <div className="min-h-[480px]">
@@ -225,7 +249,7 @@ function WizardShell({
             onApproversChange={setApprovers}
           />
         )}
-        {step === "미리보기" && (
+        {step === "결재창" && (
           <Step3Preview
             form={form}
             values={values}
@@ -241,7 +265,7 @@ function WizardShell({
         <button
           onClick={() => {
             if (step === "신청서 작성") {
-              router.push("/approval/new");
+              handleStepClick("양식 선택");
               return;
             }
             setStep("신청서 작성");
@@ -264,18 +288,19 @@ function WizardShell({
             미리보기
           </button>
           <button
+            onClick={handleSaveDraft}
             className="h-9 px-4 inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition"
           >
             <Save className="w-4 h-4" />
-            임시저장
+            {draftSaved ? "저장됨" : "임시저장"}
           </button>
           {currentStepIndex < STEPS.length - 1 ? (
             <button
-              onClick={() => setStep("미리보기")}
+              onClick={() => setStep("결재창")}
               disabled={!canGoNext}
               className="h-9 px-4 inline-flex items-center gap-1.5 bg-brand-600 text-white rounded-lg text-sm font-bold hover:bg-brand-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {step === "신청서 작성" ? "다음" : "신청서 작성"}
+              {step === "신청서 작성" ? "결재창" : "신청서 작성"}
               <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
@@ -298,6 +323,21 @@ function WizardShell({
           overview={overview}
           files={files}
           onClose={() => setShowPreview(false)}
+        />
+      )}
+
+      {showDraftPrompt && (
+        <DraftPromptModal
+          onSave={() => {
+            handleSaveDraft();
+            setShowDraftPrompt(false);
+            router.push("/approval/new");
+          }}
+          onCancel={() => {
+            setShowDraftPrompt(false);
+            router.push("/approval/new");
+          }}
+          onClose={() => setShowDraftPrompt(false)}
         />
       )}
     </div>
@@ -1486,7 +1526,15 @@ function PreviewModal({
 }
 
 // ─── Step Indicator ────────────────────────────────────────
-function StepIndicator({ steps, current }: { steps: readonly string[]; current: string }) {
+function StepIndicator({
+  steps,
+  current,
+  onStepClick,
+}: {
+  steps: readonly Step[];
+  current: Step;
+  onStepClick: (step: Step) => void;
+}) {
   const currentIndex = steps.indexOf(current);
 
   return (
@@ -1497,32 +1545,88 @@ function StepIndicator({ steps, current }: { steps: readonly string[]; current: 
           const active = i === currentIndex;
           return (
             <div key={s} className="flex h-full items-center gap-3">
-              <span
-                className={cn(
-                  "grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold",
-                  done && "bg-slate-900 text-white",
-                  active && "bg-brand-600 text-white",
-                  !done && !active && "bg-slate-100 text-slate-400",
-                )}
+              <button
+                type="button"
+                onClick={() => onStepClick(s)}
+                className="group flex h-full items-center gap-3"
               >
-                {done ? "✓" : i + 1}
-              </span>
-              <span
-                className={cn(
-                  "relative flex h-full items-center text-[12px] font-bold",
-                  active ? "text-slate-900" : done ? "text-slate-600" : "text-slate-400",
-                  active &&
-                    "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-brand-600",
-                )}
-              >
-                {s}
-              </span>
+                <span
+                  className={cn(
+                    "grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold transition",
+                    done && "bg-slate-900 text-white group-hover:bg-slate-700",
+                    active && "bg-brand-600 text-white",
+                    !done && !active && "bg-slate-100 text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-600",
+                  )}
+                >
+                  {done ? "✓" : i + 1}
+                </span>
+                <span
+                  className={cn(
+                    "relative flex h-full items-center text-[12px] font-bold transition",
+                    active ? "text-slate-900" : done ? "text-slate-600" : "text-slate-400",
+                    !active && "group-hover:text-slate-900",
+                    active &&
+                      "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-brand-600",
+                  )}
+                >
+                  {s}
+                </span>
+              </button>
               {i < steps.length - 1 && (
                 <span className="h-px w-10 bg-slate-200" />
               )}
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function DraftPromptModal({
+  onSave,
+  onCancel,
+  onClose,
+}: {
+  onSave: () => void;
+  onCancel: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 p-4">
+      <div className="w-full max-w-[420px] rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h3 className="m-0 text-[15px] font-bold text-slate-900">작성 중인 내용이 있습니다</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="닫기"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="px-5 py-5">
+          <p className="m-0 text-[13px] leading-6 text-slate-600">
+            작성된 내용이 있습니다. 양식 선택으로 이동하기 전에 임시저장하시겠습니까?
+          </p>
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-5 py-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 rounded-lg border border-slate-200 bg-white px-4 text-[12px] font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            취소하고 이동
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            className="h-9 rounded-lg bg-brand-600 px-4 text-[12px] font-bold text-white hover:bg-brand-700"
+          >
+            임시저장 후 이동
+          </button>
+        </div>
       </div>
     </div>
   );
