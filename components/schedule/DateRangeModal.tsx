@@ -26,19 +26,19 @@ const SIZE_OPTIONS: Array<{ value: DateRangeModalSize; label: string }> = [
 
 const SIZE_CLASS: Record<DateRangeModalSize, { panel: string; body: string; calendarGap: string }> = {
   sm: {
-    panel: "max-w-2xl",
-    body: "px-5 py-3",
+    panel: "max-w-[520px]",
+    body: "px-4 py-3",
     calendarGap: "mt-3 grid gap-3",
   },
   md: {
-    panel: "max-w-4xl",
-    body: "px-6 py-5",
-    calendarGap: "mt-5 grid gap-5 lg:grid-cols-2",
+    panel: "max-w-[760px]",
+    body: "px-4 py-3",
+    calendarGap: "mt-3 grid gap-4 sm:grid-cols-2",
   },
   lg: {
-    panel: "max-w-5xl",
-    body: "px-7 py-5",
-    calendarGap: "mt-5 grid gap-6 lg:grid-cols-2",
+    panel: "max-w-[860px]",
+    body: "px-5 py-4",
+    calendarGap: "mt-4 grid gap-5 sm:grid-cols-2",
   },
 };
 
@@ -163,6 +163,7 @@ export function DateRangeModal({
   const rightCursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
   const sizeClass = SIZE_CLASS[activeSize];
   const compact = activeSize === "sm";
+  const tight = activeSize !== "lg";
   const showSecondCalendar = activeSize !== "sm";
 
   function selectDate(key: string) {
@@ -189,18 +190,18 @@ export function DateRangeModal({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-      <section className={cn("flex max-h-[88vh] w-full flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:border dark:border-slate-700 dark:bg-slate-900", sizeClass.panel)}>
-        <header className={cn("flex items-center justify-between border-b border-slate-200 px-5 dark:border-slate-700", compact ? "h-12" : "h-14")}>
-          <h2 className={cn("font-black text-slate-900 dark:text-slate-50", compact ? "text-base" : "text-lg")}>{title}</h2>
+      <section className={cn("flex max-h-[86vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:border dark:border-slate-700 dark:bg-slate-900", sizeClass.panel)}>
+        <header className={cn("flex items-center justify-between border-b border-slate-200 px-5 dark:border-slate-700", tight ? "h-12" : "h-[52px]")}>
+          <h2 className={cn("font-black text-slate-900 dark:text-slate-50", tight ? "text-base" : "text-lg")}>{title}</h2>
           <div className="flex items-center gap-2">
-            <div className="hidden overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-950 sm:inline-flex">
+            <div className="hidden overflow-hidden rounded-md border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-950 sm:inline-flex">
               {SIZE_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setActiveSize(option.value)}
                   className={cn(
-                    "h-7 rounded-md px-2.5 text-xs font-black text-slate-500 transition dark:text-slate-400",
+                    "h-6 rounded px-2 text-[11px] font-black text-slate-500 transition dark:text-slate-400",
                     activeSize === option.value && "bg-white text-blue-600 shadow-sm dark:bg-slate-800 dark:text-blue-300",
                   )}
                 >
@@ -211,7 +212,7 @@ export function DateRangeModal({
             <button
               type="button"
               onClick={onClose}
-              className="grid h-8 w-8 place-items-center rounded-lg text-slate-300 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              className="grid h-8 w-8 place-items-center rounded-md text-slate-300 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
               aria-label="닫기"
             >
               <X className="h-5 w-5" />
@@ -220,23 +221,23 @@ export function DateRangeModal({
         </header>
 
         <div className={cn("overflow-y-auto", sizeClass.body)}>
-          <div className={cn("rounded-lg border border-slate-200 bg-slate-50 px-4 dark:border-slate-700 dark:bg-slate-950/30", compact ? "mb-2 py-2" : "mb-4 py-3")}>
-            <div className={cn("flex flex-wrap items-center justify-center font-bold text-slate-600 dark:text-slate-300", compact ? "gap-2 text-sm" : "gap-3 text-base")}>
+          <div className={cn("rounded-md border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-950/30", tight ? "mb-2 py-2" : "mb-3 py-3")}>
+            <div className={cn("flex flex-wrap items-center justify-center font-bold text-slate-600 dark:text-slate-300", tight ? "gap-2 text-sm" : "gap-3 text-base")}>
               <span>기준연도</span>
               <div className="inline-flex overflow-hidden rounded-md border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
-                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() - 1, cursor.getMonth(), 1))} className={cn("grid place-items-center border-r border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800", compact ? "h-8 w-8" : "h-9 w-9")}>
+                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() - 1, cursor.getMonth(), 1))} className={cn("grid place-items-center border-r border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800", tight ? "h-8 w-8" : "h-9 w-9")}>
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <div className={cn("grid place-items-center text-slate-900 dark:text-slate-50", compact ? "h-8 w-16" : "h-9 w-20")}>{cursor.getFullYear()}</div>
-                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() + 1, cursor.getMonth(), 1))} className={cn("grid place-items-center border-l border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800", compact ? "h-8 w-8" : "h-9 w-9")}>
+                <div className={cn("grid place-items-center text-slate-900 dark:text-slate-50", tight ? "h-8 w-16" : "h-9 w-20")}>{cursor.getFullYear()}</div>
+                <button type="button" onClick={() => setCursor(new Date(cursor.getFullYear() + 1, cursor.getMonth(), 1))} className={cn("grid place-items-center border-l border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800", tight ? "h-8 w-8" : "h-9 w-9")}>
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
-              <span className={cn("font-black text-slate-500 dark:text-slate-400", compact ? "text-xs" : "text-sm")}>{rangeLabel(draft)}</span>
+              <span className={cn("font-black text-slate-500 dark:text-slate-400", tight ? "text-xs" : "text-sm")}>{rangeLabel(draft)}</span>
             </div>
           </div>
 
-          <div className={cn(compact ? "flex gap-1.5 overflow-x-auto pb-1" : "grid grid-cols-2 gap-2 md:grid-cols-7")}>
+          <div className={cn(compact ? "flex gap-1.5 overflow-x-auto pb-1" : "grid grid-cols-7 gap-1.5")}>
             {PRESETS.map((preset) => (
               <button
                 key={preset.label}
@@ -244,7 +245,7 @@ export function DateRangeModal({
                 onClick={() => applyPreset(preset)}
                 className={cn(
                   "rounded-md border border-slate-300 bg-white font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40",
-                  compact ? "h-8 min-w-[72px] px-2 text-xs" : "h-9 text-sm",
+                  tight ? "h-7 min-w-[68px] px-2 text-xs" : "h-8 text-sm",
                 )}
               >
                 {preset.label}
@@ -252,7 +253,7 @@ export function DateRangeModal({
             ))}
           </div>
 
-          <div className={cn("mt-2", compact ? "flex gap-1.5 overflow-x-auto pb-1" : "grid grid-cols-4 gap-2 md:grid-cols-12")}>
+          <div className={cn("mt-2", compact ? "flex gap-1.5 overflow-x-auto pb-1" : "grid grid-cols-12 gap-1.5")}>
             {Array.from({ length: 12 }, (_, index) => (
               <button
                 key={index}
@@ -260,7 +261,7 @@ export function DateRangeModal({
                 onClick={() => applyMonth(index)}
                 className={cn(
                   "rounded-md border border-slate-300 bg-white font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40",
-                  compact ? "h-8 min-w-[54px] px-2 text-xs" : "h-9 text-sm",
+                  tight ? "h-7 min-w-[48px] px-2 text-xs" : "h-8 text-sm",
                 )}
               >
                 {index + 1}월
@@ -274,7 +275,7 @@ export function DateRangeModal({
               draft={draft}
               onSelect={selectDate}
               onPrev={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-              compact={compact}
+              size={activeSize}
             />
             {showSecondCalendar && (
               <MonthCalendar
@@ -282,17 +283,17 @@ export function DateRangeModal({
                 draft={draft}
                 onSelect={selectDate}
                 onNext={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-                compact={compact}
+                size={activeSize}
               />
             )}
           </div>
         </div>
 
-        <footer className="flex justify-end gap-2 border-t border-slate-200 px-6 py-4 dark:border-slate-700">
+        <footer className={cn("flex justify-end gap-2 border-t border-slate-200 px-5 dark:border-slate-700", tight ? "py-3" : "py-4")}>
           <button
             type="button"
             onClick={() => onApply(draft)}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-500 px-4 text-sm font-black text-white transition hover:bg-blue-600"
+            className={cn("inline-flex items-center gap-2 rounded-md bg-blue-500 font-black text-white transition hover:bg-blue-600", tight ? "h-9 px-3 text-sm" : "h-10 px-4 text-sm")}
           >
             <Check className="h-4 w-4" />
             적용
@@ -300,7 +301,7 @@ export function DateRangeModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            className={cn("inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white font-black text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800", tight ? "h-9 px-3 text-sm" : "h-10 px-4 text-sm")}
           >
             <X className="h-4 w-4" />
             취소
@@ -317,25 +318,27 @@ function MonthCalendar({
   onSelect,
   onPrev,
   onNext,
-  compact = false,
+  size = "md",
 }: {
   cursor: Date;
   draft: DateRangeValue;
   onSelect: (key: string) => void;
   onPrev?: () => void;
   onNext?: () => void;
-  compact?: boolean;
+  size?: DateRangeModalSize;
 }) {
   const cells = getMonthCells(cursor.getFullYear(), cursor.getMonth());
   const todayKey = toDateKey(new Date());
+  const compact = size === "sm";
+  const tight = size !== "lg";
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
-      <div className={cn("flex items-center justify-between bg-slate-100 px-3 dark:bg-slate-800", compact ? "h-9" : "h-11")}>
+      <div className={cn("flex items-center justify-between bg-slate-100 px-3 dark:bg-slate-800", tight ? "h-9" : "h-10")}>
         <button type="button" onClick={onPrev} className={cn("text-slate-400 hover:text-slate-700", !onPrev && "invisible")}>
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <button type="button" className={cn("inline-flex items-center gap-1 font-black text-slate-800 dark:text-slate-50", compact ? "text-sm" : "text-base")}>
+        <button type="button" className={cn("inline-flex items-center gap-1 font-black text-slate-800 dark:text-slate-50", tight ? "text-sm" : "text-base")}>
           {cursor.getMonth() + 1}월 {cursor.getFullYear()}
         </button>
         <button type="button" onClick={onNext} className={cn("text-slate-400 hover:text-slate-700", !onNext && "invisible")}>
@@ -344,7 +347,7 @@ function MonthCalendar({
       </div>
       <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-100 text-center dark:border-slate-700 dark:bg-slate-800">
         {WEEKDAYS.map((day) => (
-          <div key={day} className={cn("font-black text-slate-700 dark:text-slate-200", compact ? "py-1 text-xs" : "py-2 text-sm")}>
+          <div key={day} className={cn("font-black text-slate-700 dark:text-slate-200", tight ? "py-1 text-xs" : "py-1.5 text-sm")}>
             {day}
           </div>
         ))}
@@ -361,7 +364,7 @@ function MonthCalendar({
               onClick={() => onSelect(cell.key)}
               className={cn(
                 "grid place-items-center font-bold transition",
-                compact ? "h-7 text-xs" : "h-10 text-sm",
+                compact ? "h-7 text-xs" : tight ? "h-8 text-xs" : "h-9 text-sm",
                 cell.inMonth ? "text-slate-800 dark:text-slate-100" : "text-slate-300 dark:text-slate-600",
                 inRange && "bg-blue-100 dark:bg-blue-950/55",
                 selected && "bg-blue-500 text-white dark:bg-blue-500 dark:text-white",
@@ -373,11 +376,11 @@ function MonthCalendar({
           );
         })}
       </div>
-      <div className={cn("flex justify-center border-t border-slate-100 dark:border-slate-800", compact ? "py-1.5" : "py-3")}>
+      <div className={cn("flex justify-center border-t border-slate-100 dark:border-slate-800", tight ? "py-1.5" : "py-2")}>
         <button
           type="button"
           onClick={() => onSelect(todayKey)}
-          className={cn("rounded-md border border-slate-300 bg-white font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200", compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm")}
+          className={cn("rounded-md border border-slate-300 bg-white font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200", tight ? "px-2.5 py-1 text-xs" : "px-3 py-1 text-sm")}
         >
           오늘
         </button>
