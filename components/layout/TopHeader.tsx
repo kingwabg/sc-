@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LayoutGrid, Search, Sun, Moon, Bell, Settings, ChevronDown, Check, Building2, ArrowRight } from "lucide-react";
+import { LayoutGrid, Search, Sun, Moon, Bell, Settings, ChevronDown, Check, Building2, ArrowRight, BriefcaseBusiness, Calculator } from "lucide-react";
 import { useTenant } from "@/lib/tenant-context";
 import { TENANT_LIST, type Tenant } from "@/lib/tenants";
 import { TENANT_VISUAL } from "@/lib/features/tenants";
@@ -20,7 +20,12 @@ export function TopHeader() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>("light");
   const router = useRouter();
+  const pathname = usePathname();
   const ref = useRef<HTMLDivElement | null>(null);
+  const isAccountingPortal = pathname?.startsWith("/accounting");
+  const portalSwitch = isAccountingPortal
+    ? { href: "/portal", label: "업무포털", Icon: BriefcaseBusiness }
+    : { href: "/accounting", label: "회계포털", Icon: Calculator };
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -92,6 +97,14 @@ export function TopHeader() {
 
       {/* Right actions */}
       <div className="flex items-center gap-1">
+        <Link
+          href={portalSwitch.href}
+          prefetch={false}
+          className="mr-1 hidden h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-extrabold text-slate-700 shadow-sm transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 sm:inline-flex"
+        >
+          <portalSwitch.Icon className="h-4 w-4" />
+          {portalSwitch.label}
+        </Link>
         <IconBtn
           aria-label={theme === "dark" ? "라이트모드" : "다크모드"}
           aria-pressed={theme === "dark"}
