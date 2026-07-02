@@ -290,6 +290,7 @@ export function TreeResourceShell({
 
   return (
     <DndContext
+      id="tree-resource-shell"
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}

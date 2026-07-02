@@ -519,8 +519,11 @@ model Staff {
   email    String?
   status   StaffStatus @default(active)
 
-  attendances   StaffAttendance[]
-  leaveRequests LeaveRequest[]
+  attendances     StaffAttendance[]
+  leaveRequests   LeaveRequest[]
+  careers         StaffCareer[]
+  certifications StaffCertification[]
+  trainings       StaffTraining[]
 
   @@index([tenantId])
 }
