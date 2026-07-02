@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowLeftRight,
   Banknote,
   Calculator,
   ClipboardCheck,
@@ -104,14 +103,6 @@ export function AccountingSidebar() {
       <div className="mx-3 border-t border-slate-100" />
 
       <div className="px-2 py-3">
-        <Link
-          href="/portal"
-          prefetch={false}
-          className="mb-2 flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
-        >
-          <ArrowLeftRight className="h-4 w-4 text-slate-500" />
-          업무포털로 이동
-        </Link>
         <SidebarUserMenu />
       </div>
     </aside>
