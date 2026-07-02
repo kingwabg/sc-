@@ -189,6 +189,15 @@
   color: #cbd5e1 !important;
 }
 
+.resource-table-shell .rs-table-body-wheel-area {
+  box-sizing: content-box;
+  padding-bottom: 12px;
+}
+
+.resource-table-shell .rs-table-scrollbar-horizontal {
+  background-color: #f8fafc !important;
+}
+
 .dark .resource-table-shell .rs-table-row,
 .dark .resource-table-shell .rs-table-row-header,
 .dark .resource-table-shell .rs-table-cell,
