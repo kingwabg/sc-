@@ -16,6 +16,7 @@ import {
   Users,
   Star,
   X,
+  ChevronDown,
   LayoutGrid,
   Folder,
   FileText,
@@ -274,14 +275,15 @@ export function Sidebar() {
                     className={cn(
                       "flex items-center gap-2.5 h-8 px-3 rounded-lg text-[13px] font-medium flex-1 transition",
                       isActive
-                        ? "bg-brand-50 text-brand-700"
+                        ? "text-slate-950"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                     )}
                   >
                     <item.icon
-                      className={cn("w-[16px] h-[16px]", isActive ? "text-brand-600" : "text-slate-500")}
+                      className={cn("w-[16px] h-[16px]", isActive ? "text-slate-700" : "text-slate-500")}
                     />
                     <span className="flex-1 truncate">{item.label}</span>
+                    {isActive && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />}
                   </Link>
                   {editing && (
                     <button
@@ -395,7 +397,7 @@ function CollapsedSidebar({
               className={cn(
                 "relative w-10 h-10 grid place-items-center rounded-lg transition mx-auto",
                 isActive
-                  ? "bg-brand-50 text-brand-700"
+                  ? "text-brand-700"
                   : "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
               )}
             >
@@ -458,30 +460,13 @@ function NavGroup({
   onToggleFavorite: (href: string) => void;
   favorites: string[];
 }) {
-  const isGroupActive = items.some((item) => {
-    const isActive =
-      item.href === "/"
-        ? pathname === "/"
-        : pathname === item.href || pathname.startsWith(item.href + "/");
-    const childActive = item.children?.some(
-      (child) => pathname === child.href || pathname.startsWith(child.href + "/"),
-    );
-    return isActive || childActive;
-  });
-
   return (
     <div className="mb-3">
-      <h3
-        className={`px-3 mb-1 text-[11px] font-semibold tracking-wide flex items-center gap-1.5 ${
-          isGroupActive ? "text-brand-600" : "text-slate-400"
-        }`}
-      >
-        {label}
-        {isGroupActive && (
-          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 inline-block" />
-        )}
+      <h3 className="mb-1 flex items-center justify-between px-3 text-[11px] font-bold tracking-wide text-slate-400">
+        <span>{label}</span>
+        <ChevronDown className="h-3 w-3 text-slate-300" />
       </h3>
-      <nav className="space-y-0.5">
+      <nav className="space-y-1">
         {items.map((item) => {
           const isActive =
             item.href === "/"
@@ -495,7 +480,7 @@ function NavGroup({
                 (c) => pathname === c.href || pathname.startsWith(c.href + "/"),
               )
             : false;
-          const expanded = hasChildren && childActive;
+          const expanded = hasChildren;
           const badge = badges[item.href];
 
           return (
@@ -506,23 +491,26 @@ function NavGroup({
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 h-9 pl-3 rounded-lg text-[13.5px] font-medium transition",
+                  "flex h-8 items-center gap-2 rounded-md pl-3 text-[13px] font-bold transition",
                   editingFavorites ? (badge ? "pr-16" : "pr-10") : badge ? "pr-10" : "pr-3",
-                  isActive || childActive
-                    ? "bg-brand-50 text-brand-700"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                  isActive || childActive ? "text-slate-950" : "text-slate-700 hover:bg-slate-50 hover:text-slate-950",
                 )}
               >
                 <item.icon
                   className={cn(
-                    "w-[18px] h-[18px]",
-                    isActive || childActive ? "text-brand-600" : "text-slate-500",
+                    "h-4 w-4 shrink-0",
+                    isActive || childActive ? "text-slate-700" : "text-slate-500",
                   )}
                 />
                 <span className="flex-1 truncate">{item.label}</span>
                 {item.external && (
                   <ExternalLink className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 )}
+                {hasChildren ? (
+                  <ChevronDown className="h-3 w-3 shrink-0 text-slate-300" />
+                ) : isActive ? (
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
+                ) : null}
               </Link>
 
               {badge ? (
@@ -536,9 +524,9 @@ function NavGroup({
                 </span>
               ) : null}
 
-              {/* 하위 메뉴 — children이 있고, 그 중 하나가 active면 펼침 */}
+              {/* 하위 메뉴 */}
               {hasChildren && expanded && (
-                <div className="mt-0.5 ml-4 pl-2 border-l border-slate-200 space-y-0.5">
+                <div className="ml-5 border-l border-slate-200 pl-3">
                   {item.children!.map((child) => {
                     const isChildActive =
                       pathname === child.href ||
@@ -549,14 +537,14 @@ function NavGroup({
                         href={child.href}
                         prefetch={false}
                         className={cn(
-                          "flex items-center gap-2 h-7 px-2.5 rounded-md text-[12.5px] transition",
+                          "flex h-7 items-center rounded-md px-2 text-[12px] font-semibold transition",
                           isChildActive
-                            ? "bg-brand-50 text-brand-700 font-semibold"
+                            ? "text-slate-950"
                             : "text-slate-500 hover:bg-slate-50 hover:text-slate-900",
                         )}
                       >
-                        <child.icon className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{child.label}</span>
+                        <span className="min-w-0 flex-1 truncate">{child.label}</span>
+                        {isChildActive && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />}
                       </Link>
                     );
                   })}
