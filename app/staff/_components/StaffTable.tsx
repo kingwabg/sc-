@@ -130,7 +130,6 @@ export function StaffTable({ staff, attendanceMap, options, onEdit, onDelete }: 
             </div>
             <div className="min-w-0 leading-none">
               <span className="font-semibold text-slate-900 text-[13px]">{row.name}</span>
-              <span className="text-[10.5px] text-slate-400 font-normal"> · {row.id}</span>
             </div>
           </div>
         </div>
