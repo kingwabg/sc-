@@ -10,6 +10,7 @@ import {
   MOCK_STAFF_PROFILES,
   POSITION_LABELS,
 } from "@/lib/features/staff";
+import { useTenant } from "@/lib/auth/useTenant";
 import { Plus, Trash2, Save, ChevronLeft } from "lucide-react";
 
 // Lazy-load the 5 tabs this agent owns; others get a "준비 중" placeholder
@@ -137,7 +138,23 @@ export default function StaffDetailPage({ params }: PageProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>("기본사항");
 
+  // P17 — tenant scope: staff 단건 조회 시 tenantId 검증
+  const { tenant } = useTenant();
   const profile = getStaffProfileById(id);
+
+  // tenantId 불일치 시 not found 처리
+  if (profile && profile.tenantId !== tenant.id) {
+    return (
+      <AppShell>
+        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+          <p className="text-sm">접근 권한이 없습니다.</p>
+          <Link href="/staff/list" className="mt-3 text-xs text-indigo-500 hover:underline">
+            ← 목록으로
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!profile) {
     return (

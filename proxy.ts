@@ -1,5 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { getTenantByDomain, MOCK_TENANTS } from "@/lib/features/tenant/data";
+
+/**
+ * Host → tenant 자동 매핑
+ * x-forwarded-host 또는 host 헤더에서 도메인 추출 → tenant 매핑
+ * 매칭 안 되면 default tenant (t-001 서창지역아동센터) 사용
+ */
+function getTenantFromHost(request: NextRequest): { tenantId: string; tenantCode: string; siteName: string } {
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+  const normalized = host.split(":")[0].toLowerCase();
+  const tenant = getTenantByDomain(normalized);
+  if (tenant) return { tenantId: tenant.id, tenantCode: tenant.tenantCode, siteName: tenant.siteName };
+  return { tenantId: MOCK_TENANTS[0].id, tenantCode: MOCK_TENANTS[0].tenantCode, siteName: MOCK_TENANTS[0].siteName };
+}
 
 /**
  * 인증 + 역할 가드 미들웨어 (Edge Runtime).
@@ -99,7 +113,12 @@ export async function proxy(request: NextRequest) {
         return redirectWithNext(request, "/");
       }
     }
-    return NextResponse.next();
+    // Public 경로에도 tenant 헤더 주입 (일관성)
+    const tenant = getTenantFromHost(request);
+    const response = NextResponse.next();
+    response.headers.set("x-tenant-id", tenant.tenantId);
+    response.headers.set("x-tenant-code", tenant.tenantCode);
+    return response;
   }
 
   const { user } = await getSupabaseUser(request);
@@ -135,7 +154,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // ── Host → tenant 매핑 + 응답 헤더 주입 ──────────────────────
+  const tenant = getTenantFromHost(request);
+  const response = NextResponse.next();
+  response.headers.set("x-tenant-id", tenant.tenantId);
+  response.headers.set("x-tenant-code", tenant.tenantCode);
+  return response;
 }
 
 export const config = {

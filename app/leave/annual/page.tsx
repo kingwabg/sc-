@@ -1,3 +1,9 @@
+/**
+ * app/leave/annual/page.tsx
+ *
+ * P17 — tenant scope 적용:
+ * getServerTenant() 로 현재 tenant 확인 후 MONTHLY_LEAVE_HISTORY 필터링.
+ */
 import { Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { LeaveSidebar } from "@/components/layout/LeaveSidebar";
@@ -5,6 +11,7 @@ import { MONTHLY_LEAVE_HISTORY, LEAVE_KIND_LABELS, LEAVE_KIND_EMOJIS } from "@/l
 import type { LeaveRecord } from "@/lib/features/leave-mock";
 import { cn } from "@/lib/utils";
 import { CalendarDays } from "lucide-react";
+import { getServerTenant } from "@/lib/auth/getServerTenant";
 
 function StatusBadge({ status }: { status: LeaveRecord["status"] }) {
   const map: Record<LeaveRecord["status"], string> = {
@@ -46,7 +53,15 @@ function LeaveRow({ record }: { record: LeaveRecord }) {
   );
 }
 
-export default function LeaveAnnualPage() {
+export default async function LeaveAnnualPage() {
+  const { tenantId } = await getServerTenant();
+
+  // Tenant scope — monthly history 레코드를 tenantId로 필터링
+  const filteredHistory = MONTHLY_LEAVE_HISTORY.map((group) => ({
+    ...group,
+    records: group.records.filter((r) => r.tenantId === tenantId),
+  }));
+
   return (
     <AppShell>
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
@@ -58,7 +73,7 @@ export default function LeaveAnnualPage() {
             <h1 className="text-lg font-bold text-slate-900 mb-1">연차 내역</h1>
             <p className="text-sm text-slate-500">월별 휴가 사용 내역을 확인할 수 있습니다.</p>
           </div>
-          {MONTHLY_LEAVE_HISTORY.map((group) => (
+          {filteredHistory.map((group) => (
             <div key={group.month} className="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
               <div className="px-5 py-3 border-b border-slate-100">
                 <h2 className="text-sm font-bold text-slate-900">{group.month}</h2>
