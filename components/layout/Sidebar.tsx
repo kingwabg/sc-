@@ -501,7 +501,8 @@ function NavGroup({
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 h-9 px-3 rounded-lg text-[13.5px] font-medium transition",
+                  "flex items-center gap-2.5 h-9 pl-3 rounded-lg text-[13.5px] font-medium transition",
+                  editingFavorites ? "pr-3" : "pr-10",
                   isActive || childActive
                     ? "bg-brand-50 text-brand-700"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
@@ -554,7 +555,7 @@ function NavGroup({
               {!editingFavorites && (
                 <button
                   onClick={() => onToggleFavorite(item.href)}
-                  className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition"
+                  className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition"
                   title="즐겨찾기에 추가"
                 >
                   <Star className={cn("w-3.5 h-3.5", favorites.includes(item.href) ? "fill-amber-400 text-amber-400" : "")} />
