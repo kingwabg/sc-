@@ -6,7 +6,7 @@ import { createServerClient } from "@supabase/ssr";
  *
  * - Supabase `getUser()` 로 세션을 검증 (쿠키 기반).
  *   환경변수 미설정 시 dev mock 쿠키(`officex-session=1`)로 fallback.
- * - `/`, `/login`, `/signup`, `/demo-auth` 는 인증 없이 접근 가능.
+ * - `/login`, `/signup`, `/demo-auth` 는 인증 없이 접근 가능.
  * - 정적 자산(_next/*, 이미지, favicon 등)은 matcher에서 제외.
  *
  * 역할 분기 가드:
@@ -24,7 +24,7 @@ const SESSION_COOKIE = "officex-session";
 const ROLE_COOKIE = "officex-role";
 const DEV_MOCK_VALUE = "1";
 
-const PUBLIC_PATHS = new Set<string>(["/", "/login", "/signup", "/demo-auth"]);
+const PUBLIC_PATHS = new Set<string>(["/login", "/signup", "/demo-auth"]);
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;

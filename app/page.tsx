@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useSession } from "@/lib/session";
 import { useTenant } from "@/lib/tenant-context";
 import { TENANT_LIST, type Tenant, type TenantId, type TenantType } from "@/lib/tenants";
 import {
@@ -53,8 +52,6 @@ const KPI_ICON = {
 export default function TenantSelectPage() {
   const router = useRouter();
   const { tenant, setTenant, ready } = useTenant();
-  const { user } = useSession();
-  const [showLoading, setShowLoading] = useState(true);
   const [selected, setSelected] = useState<TenantId | null>(null);
   const [preview, setPreview] = useState<TenantId>(TENANT_LIST[0].id);
   const activeTenant = useMemo(
@@ -63,18 +60,8 @@ export default function TenantSelectPage() {
   );
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowLoading(false), 1200);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!ready || showLoading) return;
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-    if (tenant) router.replace("/portal");
-  }, [ready, user, tenant, showLoading, router]);
+    if (ready && tenant) router.replace("/portal");
+  }, [ready, tenant, router]);
 
   function onPick(t: Tenant) {
     setSelected(t.id);
@@ -84,10 +71,6 @@ export default function TenantSelectPage() {
 
   const facilities = TENANT_LIST.filter((t) => t.type === "facility");
   const academies = TENANT_LIST.filter((t) => t.type === "academy");
-
-  if (showLoading || !ready || !user) {
-    return <StartupLoadingPage />;
-  }
 
   return (
     <main className="min-h-screen bg-[#f7f9fc] text-slate-950">
@@ -135,34 +118,6 @@ export default function TenantSelectPage() {
         <aside className="border-t border-slate-200 bg-white px-5 py-6 shadow-[0_-12px_40px_rgba(15,23,42,0.06)] sm:px-8 lg:min-h-screen lg:border-l lg:border-t-0 lg:px-7 lg:py-8 lg:shadow-[-18px_0_60px_rgba(15,23,42,0.06)]">
           <PreviewPanel tenant={activeTenant} />
         </aside>
-      </div>
-    </main>
-  );
-}
-
-function StartupLoadingPage() {
-  return (
-    <main className="min-h-screen overflow-hidden bg-[#f7f9fc] text-slate-950">
-      <div className="relative flex min-h-screen items-center justify-center px-6">
-        <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.14),transparent_62%)]" />
-        <section className="relative flex w-full max-w-sm flex-col items-center text-center">
-          <div className="relative grid h-20 w-20 place-items-center rounded-3xl bg-white shadow-xl shadow-slate-950/10 ring-1 ring-slate-200">
-            <div className="absolute inset-0 rounded-3xl border border-blue-100" />
-            <Building2 className="h-9 w-9 text-blue-600" strokeWidth={2.3} />
-          </div>
-          <div className="mt-7">
-            <p className="m-0 text-sm font-black text-blue-600">Office</p>
-            <h1 className="m-0 mt-2 text-2xl font-black text-slate-950">
-              운영 환경을 준비하고 있어요
-            </h1>
-            <p className="m-0 mt-3 text-sm font-semibold leading-6 text-slate-500">
-              사업장 설정과 대시보드 모듈을 불러오는 중입니다.
-            </p>
-          </div>
-          <div className="mt-8 h-1.5 w-56 overflow-hidden rounded-full bg-slate-200">
-            <div className="h-full w-1/2 animate-[loading-bar_1.2s_ease-in-out_infinite] rounded-full bg-blue-600" />
-          </div>
-        </section>
       </div>
     </main>
   );
