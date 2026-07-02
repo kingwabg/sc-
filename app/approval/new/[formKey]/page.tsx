@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ApprovalSidebar } from "@/app/approval/_components/ApprovalSidebar";
@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { getFormByKey, type FormField } from "@/lib/features/approval-form";
+import { approvalService, type ApprovalFormKey } from "@/lib/features/approval";
 import { cn } from "@/lib/utils";
 
 // ─── Props ─────────────────────────────────────────────────
@@ -64,11 +65,20 @@ const DEFAULT_TABLE_SETTINGS: DocumentTableSettings = {
 };
 
 const APPROVAL_CANDIDATES: ApprovalPerson[] = [
-  { id: "a01", name: "왕준하", role: "팀장", team: "사회복지사" },
+  { id: "a01", name: "왕준하", role: "센터장", team: "사회복지사" },
   { id: "a02", name: "황인주", role: "사회복지사", team: "사회복지사 2" },
   { id: "a03", name: "박수연", role: "지원교사", team: "센터장 1" },
   { id: "a04", name: "김선영", role: "행정", team: "운영관리" },
 ];
+
+const APPROVAL_REQUEST_FORM_KEYS = new Set<ApprovalFormKey>([
+  "education",
+  "leave",
+  "expense",
+  "purchase",
+  "report",
+  "memo",
+]);
 
 // ─── Page ─────────────────────────────────────────────────
 export default function ApprovalFormWizardPage({ params }: Props) {
@@ -111,13 +121,21 @@ function WizardShell({
   const [values, setValues] = useState<Record<string, string>>({});
   const [overview, setOverview] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [approvers, setApprovers] = useState<ApprovalPerson[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const currentStepIndex = STEPS.indexOf(step);
 
   function handleFieldChange(key: string, value: string) {
-    setValues((prev) => ({ ...prev, [key]: value }));
+    setValues((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "start_date" || key === "end_date") {
+        const businessDays = getBusinessDays(next.start_date ?? "", next.end_date ?? "");
+        next.leave_days = businessDays > 0 ? String(businessDays) : "";
+      }
+      return next;
+    });
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -133,6 +151,39 @@ function WizardShell({
     step === "신청서 작성"
       ? form.fields.filter((f) => f.required).every((f) => values[f.key]?.trim())
       : true;
+
+  function handleSubmitApproval() {
+    const title = values._title?.trim() || `${form.label} 데모 결재`;
+    const line = (approvers.length > 0 ? approvers : [APPROVAL_CANDIDATES[0]]).map((approver) => ({
+      name: approver.name,
+      position: approver.role,
+    }));
+    const requestFormKey = APPROVAL_REQUEST_FORM_KEYS.has(formKey as ApprovalFormKey)
+      ? (formKey as ApprovalFormKey)
+      : "memo";
+    const snippet = [
+      form.description,
+      values.leave_type ? `휴가종류: ${values.leave_type}` : "",
+      values.start_date && values.end_date ? `기간: ${values.start_date} ~ ${values.end_date}` : "",
+      values.leave_days ? `사용일수: ${values.leave_days}일` : "",
+      values.reason ? `사유: ${values.reason}` : "",
+    ].filter(Boolean).join(" · ");
+
+    const req = approvalService.createRequest({
+      documentId: `approval-form-${Date.now()}`,
+      documentUrl: `/approval/new/${formKey}`,
+      documentKind: "other",
+      title,
+      form: requestFormKey,
+      line,
+      snippet,
+      urgent: false,
+      hasFile: files.length > 0,
+      requesterName: "김지민",
+    });
+
+    router.push(`/approval/doc/${req.id}`);
+  }
 
   if (submitted) {
     return <SubmitSuccess />;
@@ -170,6 +221,8 @@ function WizardShell({
             onOverviewChange={setOverview}
             onFileChange={handleFileChange}
             onRemoveFile={removeFile}
+            approvers={approvers}
+            onApproversChange={setApprovers}
           />
         )}
         {step === "미리보기" && (
@@ -227,7 +280,7 @@ function WizardShell({
             </button>
           ) : (
             <button
-              onClick={() => setSubmitted(true)}
+              onClick={handleSubmitApproval}
               className="h-10 px-5 inline-flex items-center gap-1.5 bg-brand-600 text-white rounded-lg text-sm font-bold hover:bg-brand-700 transition shadow-sm"
             >
               <Send className="w-4 h-4" />
@@ -257,19 +310,23 @@ function Step1Fields({
   values,
   overview,
   files,
+  approvers,
   onFieldChange,
   onOverviewChange,
   onFileChange,
   onRemoveFile,
+  onApproversChange,
 }: {
   form: NonNullable<ReturnType<typeof getFormByKey>>;
   values: Record<string, string>;
   overview: string;
   files: File[];
+  approvers: ApprovalPerson[];
   onFieldChange: (key: string, value: string) => void;
   onOverviewChange: (v: string) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveFile: (i: number) => void;
+  onApproversChange: (approvers: ApprovalPerson[]) => void;
 }) {
   return (
     <DocumentFormTemplate
@@ -277,10 +334,12 @@ function Step1Fields({
       values={values}
       overview={overview}
       files={files}
+      approvers={approvers}
       onFieldChange={onFieldChange}
       onOverviewChange={onOverviewChange}
       onFileChange={onFileChange}
       onRemoveFile={onRemoveFile}
+      onApproversChange={onApproversChange}
     />
   );
 }
@@ -291,24 +350,27 @@ function DocumentFormTemplate({
   values,
   overview,
   files,
+  approvers,
   onFieldChange,
   onOverviewChange,
   onFileChange,
   onRemoveFile,
+  onApproversChange,
 }: {
   form: NonNullable<ReturnType<typeof getFormByKey>>;
   values: Record<string, string>;
   overview: string;
   files: File[];
+  approvers: ApprovalPerson[];
   onFieldChange: (key: string, value: string) => void;
   onOverviewChange: (v: string) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveFile: (i: number) => void;
+  onApproversChange: (approvers: ApprovalPerson[]) => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>("approval");
   const [tableSettings, setTableSettings] = useState<DocumentTableSettings>(DEFAULT_TABLE_SETTINGS);
-  const [approvers, setApprovers] = useState<ApprovalPerson[]>([]);
   const isLeaveForm = form.key === "leave";
   const leaveFields = {
     leaveType: form.fields.find((field) => field.key === "leave_type"),
@@ -452,7 +514,7 @@ function DocumentFormTemplate({
           form={form}
           settings={tableSettings}
           today={today}
-          onApproversChange={setApprovers}
+          onApproversChange={onApproversChange}
           onTabChange={setRightPanelTab}
           onSettingsChange={(nextSettings) =>
             setTableSettings((current) => ({ ...current, ...nextSettings }))
@@ -1083,14 +1145,6 @@ function LeavePeriodRow({
   const borderColor = settings.borderTone === "black" ? "#000000" : "#64748b";
   const startDate = values.start_date ?? "";
   const endDate = values.end_date ?? "";
-
-  useEffect(() => {
-    const nextBusinessDays = getBusinessDays(startDate, endDate);
-    const nextValue = nextBusinessDays > 0 ? String(nextBusinessDays) : "";
-    if ((values.leave_days ?? "") !== nextValue) {
-      onFieldChange("leave_days", nextValue);
-    }
-  }, [startDate, endDate, values.leave_days, onFieldChange]);
 
   return (
     <tr>

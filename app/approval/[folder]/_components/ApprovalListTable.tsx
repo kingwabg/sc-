@@ -6,9 +6,11 @@
  * P11-1의 app/approval/_components/ApprovalDocTable.tsx와 별도 namespace
  * 12개 folder별 2~3건 mock 데이터 표시
  */
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Paperclip, Flame, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { approvalService, APPROVAL_FORMS, type ApprovalRequest } from "@/lib/features/approval";
 import { getListByFolder, FOLDER_LABELS } from "@/lib/features/approval-folder";
 import type { ApprovalListItem, FolderKey } from "@/lib/features/approval-folder";
 import { COL_LABELS } from "@/lib/features/approval-folder/labels";
@@ -58,7 +60,21 @@ function LinePreview({ line }: { line: ApprovalListItem["line"] }) {
 
 // ─── Table ───────────────────────────────────────────────
 export function ApprovalListTable({ folder }: Props) {
-  const items = getListByFolder(folder);
+  const [requests, setRequests] = useState<ApprovalRequest[]>([]);
+  const mockItems = useMemo(() => getListByFolder(folder), [folder]);
+  const items = useMemo(
+    () => [...getLocalItemsByFolder(folder, requests), ...mockItems],
+    [folder, mockItems, requests],
+  );
+
+  useEffect(() => {
+    setRequests(approvalService.list());
+    function onVisible() {
+      if (document.visibilityState === "visible") setRequests(approvalService.list());
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
 
   return (
     <div className="overflow-x-auto">
@@ -107,7 +123,7 @@ export function ApprovalListTable({ folder }: Props) {
                 </td>
                 <td className="px-3 py-2.5">
                   <Link
-                    href={`/approval/${item.id}`}
+                    href={item.id.startsWith("local:") ? `/approval/doc/${item.id.slice(6)}` : `/approval/doc/${item.id}`}
                     className="text-slate-900 font-medium text-[13px] hover:text-brand-600 hover:underline"
                   >
                     {item.title}
@@ -134,4 +150,35 @@ export function ApprovalListTable({ folder }: Props) {
       </table>
     </div>
   );
+}
+
+function getLocalItemsByFolder(folder: FolderKey, requests: ApprovalRequest[]): ApprovalListItem[] {
+  if (folder !== "standby" && folder !== "inbox" && folder !== "sign" && folder !== "default") {
+    return [];
+  }
+
+  return requests
+    .filter((request) => {
+      if (folder === "standby" || folder === "inbox") return request.status === "결재중";
+      return request.status === "완료" || request.status === "반려" || request.status === "회수";
+    })
+    .map((request) => {
+      const formLabel = APPROVAL_FORMS.find((form) => form.key === request.form)?.label ?? request.form;
+      return {
+        id: `local:${request.id}`,
+        date: new Date(request.createdAt).toISOString().slice(0, 10),
+        form: formLabel,
+        formKey: request.form,
+        urgent: request.urgent,
+        title: request.title,
+        hasFile: request.hasFile,
+        docNo: request.docNo,
+        status: request.status,
+        line: request.line.map((step) => ({
+          step: step.step,
+          name: step.name,
+          status: step.status,
+        })),
+      };
+    });
 }

@@ -3,8 +3,7 @@
 import { useState } from "react";
 import type { ApprovalRequest } from "@/lib/features/approval";
 import { Check, X, RotateCcw } from "lucide-react";
-
-const CURRENT_USER = "왕준하"; // mock: 현재 결재자
+import { useSession } from "@/lib/session";
 
 interface ApprovalActionsProps {
   req: ApprovalRequest;
@@ -15,9 +14,11 @@ interface ApprovalActionsProps {
 
 export function ApprovalActions({ req, onApprove, onReject, onCancel }: ApprovalActionsProps) {
   const [comment, setComment] = useState("");
+  const { user } = useSession();
+  const currentUserName = user?.name ?? "왕준하";
   const currentStep = req.line.find((s) => s.status === "current");
-  const isMyTurn = !!currentStep && currentStep.name === CURRENT_USER;
-  const isRequester = req.requesterName === "나";
+  const isMyTurn = !!currentStep && currentStep.name === currentUserName;
+  const isRequester = req.requesterName === currentUserName || req.requesterName === "나";
   const canCancel = isRequester && req.status === "결재중";
 
   return (

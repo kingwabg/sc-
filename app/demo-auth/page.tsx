@@ -15,11 +15,11 @@ function DemoAuthInner() {
       user: {
         id: "u_1",
         tenantId: "t_acme",
-        email: "[email protected]",
-        name: "김지민",
+        email: "center@example.com",
+        name: "왕준하",
         role: "owner",
-        department: "프로덕트팀",
-        position: "팀장",
+        department: "사회복지사",
+        position: "센터장",
         avatarColor: "#4f46e5",
       },
       tenant: {
