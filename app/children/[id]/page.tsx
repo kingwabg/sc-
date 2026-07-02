@@ -910,9 +910,11 @@ function InfoGroup({
   className?: string;
 }) {
   return (
-    <div className={className}>
-      <h3 className="mb-2 text-[12px] font-bold text-slate-500">{title}</h3>
-      <div className="divide-y divide-slate-100 border-y border-slate-100">
+    <div className={cn("overflow-hidden rounded-xl border border-slate-200 bg-white", className)}>
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5">
+        <h3 className="text-[13px] font-bold text-slate-800">{title}</h3>
+      </div>
+      <div className="divide-y divide-slate-100 px-4">
         {children}
       </div>
     </div>
@@ -921,12 +923,16 @@ function InfoGroup({
 
 function NotesField({ className }: { className?: string }) {
   return (
-    <div className={className}>
-      <h3 className="mb-2 text-[12px] font-bold text-slate-500">특이사항</h3>
-      <textarea
-        placeholder="특이사항을 입력하세요"
-        className="min-h-[132px] w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-[14px] font-semibold leading-relaxed text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-50"
-      />
+    <div className={cn("overflow-hidden rounded-xl border border-slate-200 bg-white", className)}>
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5">
+        <h3 className="text-[13px] font-bold text-slate-800">특이사항</h3>
+      </div>
+      <div className="p-4">
+        <textarea
+          placeholder="특이사항을 입력하세요"
+          className="min-h-[132px] w-full resize-y rounded-lg border border-slate-200 bg-white px-4 py-3 text-[14px] font-semibold leading-relaxed text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-50"
+        />
+      </div>
     </div>
   );
 }
