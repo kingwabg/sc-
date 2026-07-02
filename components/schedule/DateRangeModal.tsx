@@ -237,7 +237,7 @@ export function DateRangeModal({
             </div>
           </div>
 
-          <div className={cn(compact ? "flex gap-1.5 overflow-x-auto pb-1" : "grid grid-cols-7 gap-1.5")}>
+          <div className={cn("grid gap-1.5", compact ? "grid-cols-7" : "grid-cols-7")}>
             {PRESETS.map((preset) => (
               <button
                 key={preset.label}
@@ -245,7 +245,7 @@ export function DateRangeModal({
                 onClick={() => applyPreset(preset)}
                 className={cn(
                   "rounded-md border border-slate-300 bg-white font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40",
-                  tight ? "h-7 min-w-[68px] px-2 text-xs" : "h-8 text-sm",
+                  tight ? "h-7 px-1.5 text-xs" : "h-8 text-sm",
                 )}
               >
                 {preset.label}
@@ -253,7 +253,7 @@ export function DateRangeModal({
             ))}
           </div>
 
-          <div className={cn("mt-2", compact ? "flex gap-1.5 overflow-x-auto pb-1" : "grid grid-cols-12 gap-1.5")}>
+          <div className={cn("mt-2 grid gap-1.5", compact ? "grid-cols-6" : "grid-cols-12")}>
             {Array.from({ length: 12 }, (_, index) => (
               <button
                 key={index}
@@ -261,7 +261,7 @@ export function DateRangeModal({
                 onClick={() => applyMonth(index)}
                 className={cn(
                   "rounded-md border border-slate-300 bg-white font-black text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-blue-950/40",
-                  tight ? "h-7 min-w-[48px] px-2 text-xs" : "h-8 text-sm",
+                  tight ? "h-7 px-1.5 text-xs" : "h-8 text-sm",
                 )}
               >
                 {index + 1}월
